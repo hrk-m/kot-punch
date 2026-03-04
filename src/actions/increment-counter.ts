@@ -1,4 +1,5 @@
-import { action, KeyDownEvent, SingletonAction, WillAppearEvent } from "@elgato/streamdeck";
+import { action, SingletonAction } from "@elgato/streamdeck";
+import type { KeyDownEvent, WillAppearEvent } from "@elgato/streamdeck";
 
 /**
  * An example action class that displays a count that increments by one each time the button is pressed.
