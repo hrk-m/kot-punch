@@ -6,10 +6,20 @@
       "sourceType": "github",
       "computedHash": "4c6bf8fbd9a13d61e326ddeb210af5854fea3b253922a7981bd7718f3b765c08"
     },
+    "prd": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "1f3e1f005fc40fda85d250ae906c8ee4f7e8e833e23adfeca6542c19609fd7cd"
+    },
     "puppeteer-automation": {
       "source": "mindrally/skills",
       "sourceType": "github",
       "computedHash": "d24300d65f0114bed5d9779feb4df06d458adb684ce5bbcdd1907ece7fc9f07e"
+    },
+    "ralph-tui-create-beads": {
+      "source": "subsy/ralph-tui",
+      "sourceType": "github",
+      "computedHash": "9525e98bc0eec3824d0a980a9653b0021fb71cb7e8c476f2145554fc181a63d8"
     },
     "security-best-practices": {
       "source": "supercent-io/skills-template",
