@@ -38,7 +38,7 @@ src/
 com.hrk-m.kot-punch.sdPlugin/
   manifest.json      # プラグインメタデータ・アクション定義（UUID, アイコン, OS 要件等）
   imgs/              # アイコン画像（通常 + @2x）
-  ui/                # Property Inspector HTML（sdpi-components を使用: https://sdpi-components.dev/docs/components/button）
+  ui/                # Property Inspector HTML（sdpi-components を使用: https://sdpi-components.dev/docs/components）
   bin/               # ビルド成果物（gitignore 対象）
   logs/              # ランタイムログ（gitignore 対象）
 ```
