@@ -6,7 +6,7 @@
 		{
 			"Name": "出勤",
 			"UUID": "com.hrk-m.kot-punch.clock-in",
-			"Icon": "imgs/actions/counter/icon",
+			"Icon": "imgs/actions/attend/icon",
 			"Tooltip": "出勤ボタン。短押しで打刻済みを表示、長押しでリセット。",
 			"PropertyInspectorPath": "ui/clock-in.html",
 			"Controllers": [
@@ -14,7 +14,7 @@
 			],
 			"States": [
 				{
-					"Image": "imgs/actions/counter/key",
+					"Image": "imgs/actions/attend/key",
 					"TitleAlignment": "middle"
 				}
 			]
@@ -22,7 +22,7 @@
 		{
 			"Name": "退勤",
 			"UUID": "com.hrk-m.kot-punch.clock-out",
-			"Icon": "imgs/actions/counter/icon",
+			"Icon": "imgs/actions/leave/icon",
 			"Tooltip": "退勤ボタン。短押しで打刻済みを表示、長押しでリセット。",
 			"PropertyInspectorPath": "ui/clock-out.html",
 			"Controllers": [
@@ -30,7 +30,7 @@
 			],
 			"States": [
 				{
-					"Image": "imgs/actions/counter/key",
+					"Image": "imgs/actions/leave/key",
 					"TitleAlignment": "middle"
 				}
 			]
