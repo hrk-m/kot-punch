@@ -4,17 +4,33 @@
 	"Author": "hrk-m",
 	"Actions": [
 		{
-			"Name": "Counter",
-			"UUID": "com.hrk-m.kot-punch.increment",
-			"Icon": "imgs/actions/counter/icon",
-			"Tooltip": "Displays a count, which triples on each short press and resets to 1 on long press.",
-			"PropertyInspectorPath": "ui/increment-counter.html",
+			"Name": "出勤",
+			"UUID": "com.hrk-m.kot-punch.clock-in",
+			"Icon": "imgs/actions/attend/icon",
+			"Tooltip": "出勤ボタン。短押しで打刻済みを表示、長押しでリセット。",
+			"PropertyInspectorPath": "ui/clock-in.html",
 			"Controllers": [
 				"Keypad"
 			],
 			"States": [
 				{
-					"Image": "imgs/actions/counter/key",
+					"Image": "imgs/actions/attend/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "退勤",
+			"UUID": "com.hrk-m.kot-punch.clock-out",
+			"Icon": "imgs/actions/leave/icon",
+			"Tooltip": "退勤ボタン。短押しで打刻済みを表示、長押しでリセット。",
+			"PropertyInspectorPath": "ui/clock-out.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/leave/key",
 					"TitleAlignment": "middle"
 				}
 			]

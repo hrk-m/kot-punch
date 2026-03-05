@@ -13,13 +13,20 @@ KingOfTime (KOT) 向け Elgato Stream Deck プラグイン。Stream Deck のボ�
 
 ### 実装済み
 
-#### Counter アクション（`com.hrk-m.kot-punch.increment`）
+#### 出勤ボタン（`com.hrk-m.kot-punch.clock-in`）
 
-- 短押し（500ms 未満）でカウント値が 5 倍になる（1 → 5 → 25 → 125 → ...）
-  - 初回押下時は count が 0 の場合、1 にセットする
-- 長押し（500ms 以上）でカウントを 1 にリセットする
-- ボタン上にカウント値をタイトルとして表示する
-- カウント値はアクションの永続設定（`setSettings`）に保存される
+- 初期表示：ボタンに `出勤` を表示
+- 短押し（500ms 未満）：`✅` に表示を切り替え、打刻済みフラグを Settings に保存
+- 長押し（500ms 以上）：初期ラベル `出勤` にリセット
+- 打刻済み状態（`punched: true`）は永続化され、Stream Deck 再起動後も保持
+- Property Inspector には設定項目なし（UI は空）
+
+#### 退勤ボタン（`com.hrk-m.kot-punch.clock-out`）
+
+- 初期表示：ボタンに `退勤` を表示
+- 短押し（500ms 未満）：`✅` に表示を切り替え、打刻済みフラグを Settings に保存
+- 長押し（500ms 以上）：初期ラベル `退勤` にリセット
+- 打刻済み状態（`punched: true`）は永続化され、Stream Deck 再起動後も保持
 - Property Inspector には設定項目なし（UI は空）
 
 ---
@@ -36,6 +43,8 @@ KingOfTime (KOT) 向け Elgato Stream Deck プラグイン。Stream Deck のボ�
 
 ## 将来の機能候補
 
-- KOT 打刻アクション（出勤・退勤・休憩）
+- KOT（KingOfTime）API との実際の打刻連携（API 呼び出し・エラーハンドリング）
 - 打刻状態の表示（現在の勤怠ステータスをボタンに反映）
 - KOT 認証情報の設定
+- 休憩打刻ボタン
+- 出勤・退勤の排他制御（一方を押したらもう一方をリセット等）
