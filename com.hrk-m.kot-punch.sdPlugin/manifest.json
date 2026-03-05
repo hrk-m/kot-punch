@@ -4,6 +4,24 @@
 	"Author": "hrk-m",
 	"Actions": [
 		{
+			"Name": "KING OF TIMEを開く",
+			"UUID": "com.hrk-m.kot-punch.open-kot",
+			"Icon": "imgs/actions/open-kot/icon",
+			"Tooltip": "JWT 認証済み状態で KOT 勤怠画面を Chrome で開く",
+			"PropertyInspectorPath": "ui/open-kot.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"UserTitleEnabled": false,
+			"States": [
+				{
+					"Image": "imgs/actions/open-kot/key",
+					"Title": "KING OF TIMEを開く",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
 			"Name": "出勤",
 			"UUID": "com.hrk-m.kot-punch.clock-in",
 			"Icon": "imgs/actions/attend/icon",
