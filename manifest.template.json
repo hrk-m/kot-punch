@@ -1,0 +1,81 @@
+{
+	"Name": "KOT Punch",
+	"Version": "0.1.0.0",
+	"Author": "hrk-m",
+	"Actions": [
+		{
+			"Name": "{{open-kot.name}}",
+			"UUID": "com.hrk-m.kot-punch.open-kot",
+			"Icon": "imgs/actions/open-kot/icon",
+			"Tooltip": "JWT 認証済み状態で KOT 勤怠画面を Chrome で開く",
+			"PropertyInspectorPath": "ui/open-kot.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"UserTitleEnabled": false,
+			"States": [
+				{
+					"Image": "imgs/actions/open-kot/key",
+					"Title": "{{open-kot.name}}",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "{{clock-in.name}}",
+			"UUID": "com.hrk-m.kot-punch.clock-in",
+			"Icon": "imgs/actions/attend/icon",
+			"Tooltip": "出勤ボタン。短押しで打刻済みを表示、長押しでリセット。",
+			"PropertyInspectorPath": "ui/clock-in.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/attend/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "{{clock-out.name}}",
+			"UUID": "com.hrk-m.kot-punch.clock-out",
+			"Icon": "imgs/actions/leave/icon",
+			"Tooltip": "退勤ボタン。短押しで打刻済みを表示、長押しでリセット。",
+			"PropertyInspectorPath": "ui/clock-out.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/leave/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		}
+	],
+	"Category": "KOT Punch",
+	"CategoryIcon": "imgs/plugin/category-icon",
+	"CodePath": "bin/plugin.js",
+	"Description": "KingOfTime 向けの勤怠プラグイン",
+	"Icon": "imgs/plugin/marketplace",
+	"SDKVersion": 3,
+	"Software": {
+		"MinimumVersion": "6.9"
+	},
+	"OS": [
+		{
+			"Platform": "mac",
+			"MinimumVersion": "12"
+		},
+		{
+			"Platform": "windows",
+			"MinimumVersion": "10"
+		}
+	],
+	"Nodejs": {
+		"Version": "20",
+		"Debug": "enabled"
+	},
+	"UUID": "com.hrk-m.kot-punch"
+}
