@@ -69,7 +69,7 @@ describe("IncrementCounter", () => {
         });
     });
 
-    describe("onKeyDown + onKeyUp - 短押し: 5 倍カウントアップ", () => {
+    describe("onKeyDown + onKeyUp - 短押し: 2 倍カウントアップ", () => {
         it("count が 0 のとき、短押しで count を 1 にセットする", async () => {
             vi.useFakeTimers();
             const { action, setSettings, setTitle } = makeSharedAction();
@@ -84,7 +84,7 @@ describe("IncrementCounter", () => {
             expect(setTitle).toHaveBeenCalledWith("1");
         });
 
-        it("count が 1 のとき、短押しで count を 5 にセットする", async () => {
+        it("count が 1 のとき、短押しで count を 2 にセットする", async () => {
             vi.useFakeTimers();
             const { action, setSettings, setTitle } = makeSharedAction();
             const evDown = makeKeyDownEvent(action, { count: 1 });
@@ -94,22 +94,22 @@ describe("IncrementCounter", () => {
             await vi.advanceTimersByTimeAsync(100);
             await counter.onKeyUp(evUp as never);
 
-            expect(setSettings).toHaveBeenCalledWith({ count: 5 });
-            expect(setTitle).toHaveBeenCalledWith("5");
+            expect(setSettings).toHaveBeenCalledWith({ count: 2 });
+            expect(setTitle).toHaveBeenCalledWith("2");
         });
 
-        it("count が 5 のとき、短押しで count を 25 にセットする", async () => {
+        it("count が 2 のとき、短押しで count を 4 にセットする", async () => {
             vi.useFakeTimers();
             const { action, setSettings, setTitle } = makeSharedAction();
-            const evDown = makeKeyDownEvent(action, { count: 5 });
-            const evUp = makeKeyUpEvent(action, { count: 5 });
+            const evDown = makeKeyDownEvent(action, { count: 2 });
+            const evUp = makeKeyUpEvent(action, { count: 2 });
 
             counter.onKeyDown(evDown as never);
             await vi.advanceTimersByTimeAsync(100);
             await counter.onKeyUp(evUp as never);
 
-            expect(setSettings).toHaveBeenCalledWith({ count: 25 });
-            expect(setTitle).toHaveBeenCalledWith("25");
+            expect(setSettings).toHaveBeenCalledWith({ count: 4 });
+            expect(setTitle).toHaveBeenCalledWith("4");
         });
     });
 
@@ -149,8 +149,8 @@ describe("IncrementCounter", () => {
             await vi.advanceTimersByTimeAsync(500); // 長押し発火
             await counter.onKeyUp(evUp as never); // その後 keyUp
 
-            // count=15 にはなっていないこと
-            expect(setSettings).not.toHaveBeenCalledWith({ count: 15 });
+            // count=6 にはなっていないこと
+            expect(setSettings).not.toHaveBeenCalledWith({ count: 6 });
         });
 
         it("リセット後 onWillAppear で count=1 が表示される", async () => {
