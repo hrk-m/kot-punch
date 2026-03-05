@@ -2,7 +2,7 @@ import { action, SingletonAction } from "@elgato/streamdeck";
 import type { KeyDownEvent, KeyUpEvent, WillAppearEvent } from "@elgato/streamdeck";
 
 const LONG_PRESS_MS = 500;
-const MULTIPLIER = 5;
+const MULTIPLIER = 2;
 
 /**
  * An action class that displays a count that triples each time the button is pressed.
