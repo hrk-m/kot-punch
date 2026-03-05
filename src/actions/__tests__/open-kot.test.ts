@@ -7,7 +7,6 @@ vi.mock("@elgato/streamdeck", () => {
             target;
 
     class SingletonAction<_TSettings = unknown> {
-        onKeyDown(_ev: unknown): void | Promise<void> {}
         onKeyUp(_ev: unknown): void | Promise<void> {}
     }
 
@@ -26,9 +25,9 @@ vi.mock("../../lib/puppeteer.js", () => ({
     openKotPage: mockOpenKotPage,
 }));
 
-const mockNotifyError = vi.fn();
-vi.mock("../../lib/notify.js", () => ({
-    notifyError: mockNotifyError,
+const mockShowErrorImage = vi.fn();
+vi.mock("../../lib/showErrorImage.js", () => ({
+    showErrorImage: mockShowErrorImage,
 }));
 
 const { OpenKot } = await import("../open-kot.js");
@@ -37,10 +36,6 @@ function makeSharedAction() {
     const showAlert = vi.fn().mockResolvedValue(undefined);
     const setTitle = vi.fn().mockResolvedValue(undefined);
     return { action: { showAlert, setTitle }, showAlert, setTitle };
-}
-
-function makeKeyDownEvent(action: object) {
-    return { action };
 }
 
 function makeKeyUpEvent(action: object) {
@@ -56,7 +51,7 @@ describe("OpenKot", () => {
     });
 
     describe("onKeyUp - 成功", () => {
-        it("設定済みのとき、openKotPage を呼び、タイトルを LABEL に戻す", async () => {
+        it("設定済みのとき、openKotPage を呼び、タイトルは変更しない", async () => {
             const { action, setTitle } = makeSharedAction();
             mockGetGlobalSettings.mockResolvedValue({
                 kingOfTimeUrl: "https://example.com",
@@ -69,7 +64,7 @@ describe("OpenKot", () => {
             await openKot.onKeyUp(makeKeyUpEvent(action) as never);
 
             expect(mockOpenKotPage).toHaveBeenCalledOnce();
-            expect(setTitle).toHaveBeenCalledWith("");
+            expect(setTitle).not.toHaveBeenCalled();
         });
 
         it("成功後に _isProcessing が false に戻り、次回も処理できる", async () => {
@@ -117,7 +112,7 @@ describe("OpenKot", () => {
     });
 
     describe("onKeyUp - エラー", () => {
-        it("openKotPage が例外を投げたとき notifyError を呼ぶ", async () => {
+        it("openKotPage が例外を投げたとき showErrorImage を呼ぶ", async () => {
             const { action } = makeSharedAction();
             mockGetGlobalSettings.mockResolvedValue({
                 kingOfTimeUrl: "https://example.com",
@@ -129,8 +124,8 @@ describe("OpenKot", () => {
 
             await openKot.onKeyUp(makeKeyUpEvent(action) as never);
 
-            expect(mockNotifyError).toHaveBeenCalledOnce();
-            expect(mockNotifyError).toHaveBeenCalledWith("KOT Punch エラー", "Chrome not found", action);
+            expect(mockShowErrorImage).toHaveBeenCalledOnce();
+            expect(mockShowErrorImage).toHaveBeenCalledWith(action);
         });
 
         it("エラー後に _isProcessing が false に戻り、次回も処理できる", async () => {
@@ -170,21 +165,5 @@ describe("OpenKot", () => {
             expect(mockOpenKotPage).toHaveBeenCalledTimes(1);
         });
 
-        it("処理中に onKeyDown が来ても処理が正常に完了する", async () => {
-            const { action } = makeSharedAction();
-            mockGetGlobalSettings.mockResolvedValue({
-                kingOfTimeUrl: "https://example.com",
-                tokenKey: "htjwt_xxx",
-                token: "abc",
-            });
-            mockHasRequiredSettings.mockReturnValue(true);
-            mockOpenKotPage.mockResolvedValue(undefined);
-
-            const firstCall = openKot.onKeyUp(makeKeyUpEvent(action) as never);
-            openKot.onKeyDown(makeKeyDownEvent(action) as never);
-            await firstCall;
-
-            expect(mockOpenKotPage).toHaveBeenCalledTimes(1);
-        });
     });
 });
