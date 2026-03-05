@@ -1,0 +1,63 @@
+name: Claude Code
+
+on:
+  issue_comment:
+    types: [created, edited]
+  pull_request_review_comment:
+    types: [created, edited]
+  issues:
+    types: [opened, assigned, edited]
+  pull_request:
+    types: [opened, edited, ready_for_review]
+  pull_request_review:
+    types: [submitted, edited]
+
+concurrency:
+  group: claude-${{ github.event.issue.number || github.event.pull_request.number || github.event.number || github.run_id }}
+  cancel-in-progress: false
+
+jobs:
+  claude:
+    if: |
+      github.actor != 'claude[bot]' &&
+      github.actor != 'github-actions[bot]' &&
+      (
+        (github.event_name == 'issue_comment' && contains(github.event.comment.body || '', '@claude')) ||
+        (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body || '', '@claude')) ||
+        (github.event_name == 'pull_request_review' && contains(github.event.review.body || '', '@claude')) ||
+        (github.event_name == 'pull_request' && (contains(github.event.pull_request.body || '', '@claude') || contains(github.event.pull_request.title || '', '@claude'))) ||
+        (github.event_name == 'issues' && (contains(github.event.issue.body || '', '@claude') || contains(github.event.issue.title || '', '@claude')))
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read # Required for Claude to read CI results on PRs
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code
+        id: claude
+        uses: anthropics/claude-code-action@5754b35b0e8771a979727706b2a366dd5d7cf562 # v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+
+          # This is an optional setting that allows Claude to read CI results on PRs
+          additional_permissions: |
+            actions: read
+          use_sticky_comment: true
+          exclude_comments_by_actor: "claude[bot],github-actions[bot]"
+
+          # Optional: Give a custom prompt to Claude. If this is not specified, Claude will perform the instructions specified in the comment that tagged it.
+          # prompt: 'Update the pull request description to include a summary of changes.'
+
+          # Optional: Add claude_args to customize behavior and configuration
+          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
+          # or https://docs.claude.com/en/docs/claude-code/cli-reference for available options
+          # claude_args: '--allowed-tools Bash(gh pr:*)'

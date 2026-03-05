@@ -1,0 +1,85 @@
+name: PR Review with Progress Tracking
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: claude-pr-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review-with-tracking:
+    if: ${{ !github.event.pull_request.draft && !github.event.pull_request.head.repo.fork }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+
+      - name: PR Review with Progress Tracking
+        uses: anthropics/claude-code-action@5754b35b0e8771a979727706b2a366dd5d7cf562 # v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          track_progress: true
+          use_sticky_comment: true
+
+          prompt: |
+            /review-pr REPO: ${{ github.repository }} PR_NUMBER: ${{ github.event.pull_request.number }}
+
+            このリポジトリは Stream Deck プラグイン（TypeScript + Rollup + Vitest）です。
+            レビュー時は `CLAUDE.md` と `docs/architecture.md` を参照し、以下の方針で確認してください。
+
+            レビュー標準:
+            - design / functionality / complexity / tests / naming / comments / style / consistency / documentation の順で確認する
+            - 変更行だけでなく周辺コンテキストも読む（全差分を網羅）
+            - 完璧さより「コードヘルスを確実に改善しているか」を重視する
+            - 指摘は重要度順に優先し、些細な nit だけでレビューを埋めない
+
+            プロジェクト固有チェック:
+            - `src/plugin.ts` はアクション登録と `streamDeck.connect()` の責務に留まっているか
+            - `src/actions/*.ts` で `SingletonAction<Settings>` / `@action({ UUID })` の実装が適切か
+            - `com.hrk-m.kot-punch.sdPlugin/manifest.json` の `Actions` / UUID / UI / アイコン / Tooltip が実装と整合しているか
+            - `onKeyDown` / `onKeyUp` の長押し判定タイマー、`clearTimeout`、短押し/長押し分岐が安全か
+            - Multi Action (`isInMultiAction`, `userDesiredState`) の状態制御が正しいか
+            - Vitest（fake timers とモック含む）のテストが変更に追随しているか
+            - 型安全性、可読性、保守性、潜在バグ、セキュリティ上の懸念
+
+            コメント運用ルール:
+            - すべて日本語
+            - インラインコメントは改善点・懸念点・バグ可能性のみ（肯定コメントは禁止）
+            - 各コメントは先頭を `[MUST]` / `[SHOULD]` / `[NIT]` / `[FYI]` で始める
+            - 各コメントは先頭1行で結論を示し、その後に「理由」「修正案」を書く
+            - 修正方針が明確な場合は suggestion を使う
+            - レビュー提出時の総括コメントは空文字列("")、`REQUEST_CHANGES` は使わない
+
+            問題なし時の自動コメント:
+            - レビューで指摘事項が 0 件だった場合は、以下のテンプレートで `gh pr comment` を使ってコメントを投稿する
+            - コマンド例: gh pr comment ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --body "..."
+            - テンプレート（観点ごとの結果を表形式で示し、最後に「指摘事項はありません。」で締める）:
+              ```
+              ## レビュー結果: 問題なし ✅
+
+              | 観点 | 結果 |
+              |------|------|
+              | 保守性・可読性 | ✅ 問題なし |
+              | 設計・アーキテクチャ | ✅ 問題なし |
+              | コード品質 | ✅ 問題なし |
+              | 潜在的なバグ | ✅ 問題なし |
+              | セキュリティ | ✅ 問題なし |
+              | テストの追随 | ✅ 問題なし |
+
+              指摘事項はありません。
+              ```
+            - 各行の「問題なし」は実際の確認内容を 1 行で具体的に書き換える
+            - 指摘事項が 1 件でもある場合はこのコメントを投稿しない
+
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,mcp__context7__*,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
+            --max-turns 16
