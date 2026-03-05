@@ -1,35 +1,41 @@
 import { action, SingletonAction } from "@elgato/streamdeck";
-import type { KeyDownEvent, WillAppearEvent } from "@elgato/streamdeck";
+import type { KeyDownEvent, KeyUpEvent, WillAppearEvent } from "@elgato/streamdeck";
+
+const LONG_PRESS_MS = 500;
 
 /**
- * An example action class that displays a count that increments by one each time the button is pressed.
+ * An action class that displays a count that triples each time the button is pressed.
+ * Long press (500ms) resets the count to 1.
  */
 @action({ UUID: "com.hrk-m.kot-punch.increment" })
 export class IncrementCounter extends SingletonAction<CounterSettings> {
-	/**
-	 * The {@link SingletonAction.onWillAppear} event is useful for setting the visual representation of an action when it becomes visible. This could be due to the Stream Deck first
-	 * starting up, or the user navigating between pages / folders etc.. There is also an inverse of this event in the form of {@link streamDeck.client.onWillDisappear}. In this example,
-	 * we're setting the title to the "count" that is incremented in {@link IncrementCounter.onKeyDown}.
-	 */
+	private _longPressTimer: ReturnType<typeof setTimeout> | undefined;
+	private _isLongPress = false;
+
 	override onWillAppear(ev: WillAppearEvent<CounterSettings>): void | Promise<void> {
-		return ev.action.setTitle(`${ev.payload.settings.count ?? 0}`);
+		return ev.action.setTitle(`${ev.payload.settings.count ?? 1}`);
 	}
 
-	/**
-	 * Listens for the {@link SingletonAction.onKeyDown} event which is emitted by Stream Deck when an action is pressed. Stream Deck provides various events for tracking interaction
-	 * with devices including key down/up, dial rotations, and device connectivity, etc. When triggered, {@link ev} object contains information about the event including any payloads
-	 * and action information where applicable. In this example, our action will display a counter that increments by one each press. We track the current count on the action's persisted
-	 * settings using `setSettings` and `getSettings`.
-	 */
-	override async onKeyDown(ev: KeyDownEvent<CounterSettings>): Promise<void> {
-		// Update the count from the settings.
-		const { settings } = ev.payload;
-		settings.incrementBy ??= 1;
-		settings.count = (settings.count ?? 0) + settings.incrementBy;
+	override onKeyDown(ev: KeyDownEvent<CounterSettings>): void | Promise<void> {
+		this._isLongPress = false;
+		this._longPressTimer = setTimeout(() => {
+			this._isLongPress = true;
+			ev.action.setSettings({ count: 1 }).then(() => {
+				ev.action.setTitle("1");
+			});
+		}, LONG_PRESS_MS);
+	}
 
-		// Update the current count in the action's settings, and change the title.
-		await ev.action.setSettings(settings);
-		await ev.action.setTitle(`${settings.count}`);
+	override async onKeyUp(ev: KeyUpEvent<CounterSettings>): Promise<void> {
+		clearTimeout(this._longPressTimer);
+		this._longPressTimer = undefined;
+
+		if (this._isLongPress) return;
+
+		const current = ev.payload.settings.count ?? 0;
+		const newCount = current === 0 ? 1 : current * 3;
+		await ev.action.setSettings({ count: newCount });
+		await ev.action.setTitle(`${newCount}`);
 	}
 }
 
@@ -38,5 +44,4 @@ export class IncrementCounter extends SingletonAction<CounterSettings> {
  */
 type CounterSettings = {
 	count?: number;
-	incrementBy?: number;
 };

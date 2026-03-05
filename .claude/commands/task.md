@@ -30,6 +30,12 @@
 3. **Vertical Slice First**: 最初の 1 画面を end-to-end で完成させる
 4. **Integration Later**: 実データ統合は別タスクとして明示的に切り出す
 
+## ボタン設定確認（Required）
+
+- `docs/tasks/{タスク名}/prd.md` を読む際は、**ボタン設定**（例: ボタン種別、活性/非活性条件、クリック時アクション）に関する記述を優先して確認する
+- 既存 `docs/tasks/{タスク名}/tasks.md` と比較して、ボタン設定由来の変更点が見つかった場合は、反映前に `AskUserQuestion` で確認を取る
+- `AskUserQuestion` の回答が空または未選択なら、推測で反映せず質問を再提示する
+
 ## 生成するタスク構造（必須順序: 3フェーズ）
 
 1. Phase 1: Impact and Change Analysis
@@ -92,6 +98,7 @@
 
 - PRD のユーザーストーリーと受け入れ条件を、上記 3 フェーズへ配賦する
 - フェーズ1では「どのファイルを改修するか」を必ず明記する
+- ボタン設定に関する変更点は Phase 1 で明示し、影響ファイルと変更理由をセットで記載する
 - フェーズ1に「全体コードを俯瞰する」項目を置く場合は `- [ ]*` とし、初期フェーズの完了判定に含めない（未チェックのままにする）
 - フェーズ2では「全体が空のモック状態で動作すること」を最優先にする
 - フェーズ3では PRD から抽出した主要ユースケースを `操作前提 / 操作 / 期待結果` で追跡可能にする
@@ -128,7 +135,7 @@
 
 - `Glob`: `docs/tasks/{タスク名}/` の存在確認
 - `Read`: `prd.md` / `architecture.md` / 既存 `tasks.md` の読み込み
-- `AskUserQuestion`: 要件の不明点確認に使う
+- `AskUserQuestion`: 要件の不明点確認、およびボタン設定変更の反映可否確認に使う
 - `Write`: `docs/tasks/{タスク名}/tasks.md` の更新
 
 ## Output Description
@@ -147,6 +154,8 @@
 
 - **Task Name Missing**: `$ARGUMENTS` が空ならタスク名を確認する
 - **Ambiguous Requirement**: ユースケース解像度が不足している場合は AskUserQuestion で補完する
+- **Button Config Changed**: ボタン設定に関する差分がある場合は AskUserQuestion で反映可否の確認が取れるまで `tasks.md` へ確定反映しない
+- **Empty Answer**: AskUserQuestion の回答が空または未選択の場合、推測で進めず質問を再提示する
 - **PRD Missing**: `docs/tasks/{タスク名}/prd.md` がなければ `/planning {タスク名}` を先に案内する
 - **Architecture Missing**: `docs/architecture.md` がなければ `/steering` 実行を案内する
 - **Write Failure**: 失敗したパスと原因候補（権限/パス誤り/ディスク容量）を提示する

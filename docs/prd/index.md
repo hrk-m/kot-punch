@@ -15,10 +15,12 @@ KingOfTime (KOT) 向け Elgato Stream Deck プラグイン。Stream Deck のボ�
 
 #### Counter アクション（`com.hrk-m.kot-punch.increment`）
 
-- Stream Deck ボタンを押すたびにカウンターが増加する
+- 短押し（500ms 未満）でカウント値が 3 倍になる（1 → 3 → 9 → 27 → ...）
+  - 初回押下時は count が 0 の場合、1 にセットする
+- 長押し（500ms 以上）でカウントを 1 にリセットする
 - ボタン上にカウント値をタイトルとして表示する
-- `incrementBy`（1〜5）を Property Inspector でユーザーが設定可能
 - カウント値はアクションの永続設定（`setSettings`）に保存される
+- Property Inspector には設定項目なし（UI は空）
 
 ---
 
