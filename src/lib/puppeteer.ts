@@ -8,40 +8,31 @@ export async function openKotPage(settings: GlobalSettings): Promise<void> {
 
     let browser;
     try {
-        try {
-            browser = await puppeteer.launch({
-                executablePath: CHROME_PATH,
-                headless: false,
-            });
-        } catch (cause) {
-            throw new Error("Chrome の起動に失敗しました。インストール済みか確認してください。", { cause });
-        }
+        browser = await puppeteer.launch({
+            executablePath: CHROME_PATH,
+            headless: false,
+        });
 
-        const page = await browser.newPage();
+        const pages = await browser.pages();
+        const page = pages[0] ?? (await browser.newPage());
 
         // 1. 勤怠画面へアクセス（domain 確立）
-        try {
-            await page.goto(kingOfTimeUrl);
-        } catch (cause) {
-            throw new Error(`KOT URL への接続に失敗しました: ${kingOfTimeUrl}`, { cause });
-        }
+        await page.goto(kingOfTimeUrl);
 
         // 2. JWT クッキーをセット（domain 指定なし → 現在ページのドメインが自動適用）
         await page.setCookie({ name: tokenKey, value: token });
 
         // 3. 再アクセスして認証適用（ダイアログ = 認証失敗として扱う）
-        let authDialogError: Error | undefined;
+        let hasAuthDialog = false;
         page.on("dialog", async (dialog) => {
-            authDialogError = new Error(
-                `認証に失敗しました。トークンキーまたはトークンを確認してください。（${dialog.message()}）`,
-            );
+            hasAuthDialog = true;
             await dialog.dismiss();
         });
 
         await page.goto(kingOfTimeUrl);
 
-        if (authDialogError) {
-            throw authDialogError;
+        if (hasAuthDialog) {
+            throw new Error();
         }
     } finally {
         await browser?.disconnect();

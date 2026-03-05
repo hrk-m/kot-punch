@@ -5,7 +5,8 @@ const mockSetCookie = vi.fn().mockResolvedValue(null);
 const mockDisconnect = vi.fn().mockResolvedValue(null);
 const mockOn = vi.fn();
 const mockNewPage = vi.fn().mockResolvedValue({ goto: mockGoto, setCookie: mockSetCookie, on: mockOn });
-const mockLaunch = vi.fn().mockResolvedValue({ newPage: mockNewPage, disconnect: mockDisconnect });
+const mockPages = vi.fn().mockResolvedValue([{ goto: mockGoto, setCookie: mockSetCookie, on: mockOn }]);
+const mockLaunch = vi.fn().mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect });
 
 vi.mock("puppeteer-core", () => ({
     default: { launch: mockLaunch },
@@ -25,8 +26,9 @@ describe("openKotPage", () => {
         mockGoto.mockResolvedValue(null);
         mockSetCookie.mockResolvedValue(null);
         mockDisconnect.mockResolvedValue(null);
+        mockPages.mockResolvedValue([{ goto: mockGoto, setCookie: mockSetCookie, on: mockOn }]);
         mockNewPage.mockResolvedValue({ goto: mockGoto, setCookie: mockSetCookie, on: mockOn });
-        mockLaunch.mockResolvedValue({ newPage: mockNewPage, disconnect: mockDisconnect });
+        mockLaunch.mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect });
     });
 
     it("Chrome を headless: false で起動する", async () => {
@@ -42,6 +44,12 @@ describe("openKotPage", () => {
         expect(mockGoto).toHaveBeenCalledTimes(2);
         expect(mockGoto).toHaveBeenNthCalledWith(1, settings.kingOfTimeUrl);
         expect(mockGoto).toHaveBeenNthCalledWith(2, settings.kingOfTimeUrl);
+    });
+
+    it("既存タブを再利用し、不要な newPage を作らない", async () => {
+        await openKotPage(settings);
+        expect(mockPages).toHaveBeenCalledOnce();
+        expect(mockNewPage).not.toHaveBeenCalled();
     });
 
     it("JWT cookie を setCookie でセットする（domain 指定なし）", async () => {
@@ -83,6 +91,8 @@ describe("openKotPage", () => {
         // mockGoto はコールカウンタで 2回目のみダイアログを発火させる
         type DialogHandler = (dialog: { message(): string; dismiss(): Promise<void> }) => Promise<void>;
         let capturedHandler: DialogHandler | undefined;
+        const dialogMessage = vi.fn().mockReturnValue("証明書が正しくありません");
+        const dialogDismiss = vi.fn().mockResolvedValue(undefined);
         mockOn.mockImplementation((event: string, handler: DialogHandler) => {
             if (event === "dialog") capturedHandler = handler;
         });
@@ -91,22 +101,21 @@ describe("openKotPage", () => {
         mockGoto.mockImplementation(async () => {
             gotoCallCount++;
             if (gotoCallCount === 2 && capturedHandler) {
-                await capturedHandler({ message: () => "証明書が正しくありません", dismiss: vi.fn().mockResolvedValue(undefined) });
+                await capturedHandler({ message: dialogMessage, dismiss: dialogDismiss });
             }
         });
 
-        await expect(openKotPage(settings)).rejects.toThrow(
-            "認証に失敗しました。トークンキーまたはトークンを確認してください。",
-        );
+        await expect(openKotPage(settings)).rejects.toThrow();
+        expect(dialogMessage).not.toHaveBeenCalled();
+        expect(dialogDismiss).toHaveBeenCalledOnce();
         expect(mockDisconnect).toHaveBeenCalledOnce();
     });
 
-    it("page 操作で例外が発生しても browser.disconnect() でクリーンアップする", async () => {
-        mockGoto.mockRejectedValueOnce(new Error("navigation failed"));
+    it("page 操作で例外が発生したらそのまま rethrow しつつ browser.disconnect() でクリーンアップする", async () => {
+        const navigationError = new Error("navigation failed");
+        mockGoto.mockRejectedValueOnce(navigationError);
 
-        await expect(openKotPage(settings)).rejects.toThrow(
-            `KOT URL への接続に失敗しました: ${settings.kingOfTimeUrl}`,
-        );
+        await expect(openKotPage(settings)).rejects.toBe(navigationError);
         expect(mockDisconnect).toHaveBeenCalledOnce();
     });
 });
