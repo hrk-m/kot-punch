@@ -174,3 +174,9 @@ docs/
 - `settings/` の内容は docs ファイルに記述しない（settings はメタデータであり、プロジェクト知識ではない）
 - 全体要件は `docs/prd/index.md` に集約する
 - アプリ全体のディレクトリアーキテクチャは `docs/architecture.md` に集約する
+
+## Property Inspector 変更時の追記事項
+
+- `com.hrk-m.kot-punch.sdPlugin/ui/` の差分で設定項目を削除した場合は、削除した UI（例: `Increment By` スライダー）を明示して報告する
+- UI 差分のみで検証コマンドを実行しない場合は「ビルドへの影響なしのため未実施」と明記し、実施済みと断定しない
+- Property Inspector 反映には Stream Deck の再起動が必要なため、再起動後に変更が見えることを案内する
