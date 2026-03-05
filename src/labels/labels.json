@@ -11,8 +11,6 @@
     },
     "open-kot": {
         "name": "KING OF TIMEを開く",
-        "label": "",
-        "labelProcessing": "処理中...",
-        "labelError": "エラー"
+        "label": ""
     }
 }

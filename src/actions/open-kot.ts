@@ -2,9 +2,11 @@ import { action, SingletonAction } from "@elgato/streamdeck";
 import type { KeyDownEvent, KeyUpEvent, WillAppearEvent } from "@elgato/streamdeck";
 import { getGlobalSettings, hasRequiredSettings } from "../lib/settings.js";
 import { openKotPage } from "../lib/puppeteer.js";
+import { notifyError } from "../lib/notify.js";
 import labels from "../labels/labels.json";
 
-const { label: LABEL, labelProcessing: LABEL_PROCESSING, labelError: LABEL_ERROR } = labels["open-kot"];
+const { label: LABEL } = labels["open-kot"];
+const ERROR_DISPLAY_MS = 3000;
 
 @action({ UUID: "com.hrk-m.kot-punch.open-kot" })
 export class OpenKot extends SingletonAction {
@@ -27,12 +29,14 @@ export class OpenKot extends SingletonAction {
                 await ev.action.showAlert();
                 return;
             }
-            await ev.action.setTitle(LABEL_PROCESSING);
             await openKotPage(settings);
             await ev.action.setTitle(LABEL);
-        } catch {
-            await ev.action.showAlert();
-            await ev.action.setTitle(LABEL_ERROR);
+        } catch (e) {
+            const message = e instanceof Error ? e.message : "不明なエラーが発生しました。";
+            notifyError("KOT Punch エラー", message, ev.action);
+            setTimeout(async () => {
+                await ev.action.setTitle(LABEL);
+            }, ERROR_DISPLAY_MS);
         } finally {
             this._isProcessing = false;
         }
