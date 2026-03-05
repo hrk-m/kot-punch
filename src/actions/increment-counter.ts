@@ -2,6 +2,7 @@ import { action, SingletonAction } from "@elgato/streamdeck";
 import type { KeyDownEvent, KeyUpEvent, WillAppearEvent } from "@elgato/streamdeck";
 
 const LONG_PRESS_MS = 500;
+const MULTIPLIER = 5;
 
 /**
  * An action class that displays a count that triples each time the button is pressed.
@@ -33,7 +34,7 @@ export class IncrementCounter extends SingletonAction<CounterSettings> {
 		if (this._isLongPress) return;
 
 		const current = ev.payload.settings.count ?? 0;
-		const newCount = current === 0 ? 1 : current * 3;
+		const newCount = current === 0 ? 1 : current * MULTIPLIER;
 		await ev.action.setSettings({ count: newCount });
 		await ev.action.setTitle(`${newCount}`);
 	}
