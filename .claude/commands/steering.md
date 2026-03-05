@@ -20,6 +20,7 @@
 ## 共通ルール
 
 - **言語**: 日本語（技術用語は英語）
+- **全体一次情報**: `docs/prd/index.md` と `docs/architecture.md` を「アプリ全体のコード知識」として最優先で参照する
 
 ---
 
@@ -39,6 +40,13 @@ docs/
     {feature-name}.md        # 機能ごとの要件詳細（必要時のみ）
   architecture.md            # アプリ全体のディレクトリ構成と実装責務
 ```
+
+### 全体コード把握の起点（必須）
+
+- `docs/prd/index.md`: 全体サマリー・機能要件の起点として読む
+- `docs/prd/{feature-name}.md`: 機能単位の要件差分を確認する
+- `docs/architecture.md`: ディレクトリ構成と実装責務の起点として読む
+- `/planning` や `/task` で生成された `docs/tasks/{タスク名}/prd.md` が存在する場合は、上記全体情報と矛盾しないか確認する
 
 ---
 
@@ -100,6 +108,7 @@ docs/
 - `read_file`: docs や設定ファイルを読む
 - `grep`: パターンを検索する
 - `list_dir`: 構造を分析する
+- `AskUserQuestion`: docs とコードの不整合や要件の不明点確認に使う
 
 **JIT 方針**: 必要になった時点で取得し、先読みしすぎない。
 

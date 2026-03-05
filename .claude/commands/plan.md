@@ -1,4 +1,4 @@
-# /planning — 要件定義・設計コマンド
+# /plan — 要件定義・設計コマンド
 
 <background_information>
 
@@ -14,11 +14,18 @@
 ## Core Task
 `$ARGUMENTS` からタスク名を特定し、**`prd` スキルを使って要件を見直し**ながら `docs/tasks/{タスク名}/prd.md` を確定版に更新する。
 
+## Task Name Resolution (Required)
+
+- `$ARGUMENTS` が既存のタスク名（kebab-case）なら、そのまま採用する
+- `$ARGUMENTS` が自然文（要望文）なら、要件の意味を保った **英小文字 kebab-case** のタスク名へ正規化する
+- 正規化後のタスク名は `docs/tasks/{タスク名}/` の作成先として固定し、以降の `/task` でも同一名を使う
+- 例: `/plan countupを3倍づつにして` → タスク名 `countup-triple-multiplier`
+
 ## Skill Usage (Required)
 
 - このコマンドでは `prd` スキルを必ず使う
 - 要件ヒアリング・構造化・品質チェックの進め方は `prd` スキルのワークフローに従う
-- `planning.md` では `prd` スキルと重複する手順説明を持たない
+- `plan.md` では `prd` スキルと重複する手順説明を持たない
 
 ## ドキュメント構造
 
@@ -35,6 +42,7 @@ docs/
 - `docs/tasks/{タスク名}/prd.md` を作成または更新する
 - 要件の不明点はユーザーに確認し、確定事項のみ `prd.md` へ反映する
 - 要件確定後にのみ Architecture / 実装タスクへ進む（フェーズ分離）
+- 要件確定後の次アクションは `/task {タスク名}` を明示する
 
 ## Important Constraints
 
@@ -58,7 +66,7 @@ docs/
 1. **Task Name**: 確定したタスク名
 2. **Requirements Review**: `prd` スキルに基づく見直し結果（不足・矛盾・確定事項）
 3. **Updated File**: `docs/tasks/{タスク名}/prd.md` の更新結果
-4. **Next Step**: 要件確定後に進むコマンド（`/planning` 継続または `/task {最初のタスク名}`）
+4. **Next Step**: 要件確定後に進むコマンド（`/plan` 継続または `/task {最初のタスク名}`）
 
 **Format Requirements**:
 
