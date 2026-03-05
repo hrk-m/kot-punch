@@ -7,7 +7,7 @@
 			"Name": "Counter",
 			"UUID": "com.hrk-m.kot-punch.increment",
 			"Icon": "imgs/actions/counter/icon",
-			"Tooltip": "Displays a count, which increments by one on press.",
+			"Tooltip": "Displays a count, which triples on each short press and resets to 1 on long press.",
 			"PropertyInspectorPath": "ui/increment-counter.html",
 			"Controllers": [
 				"Keypad"
