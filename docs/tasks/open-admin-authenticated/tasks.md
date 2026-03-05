@@ -45,7 +45,7 @@ cookie セット後に `browser.disconnect()` でウィンドウを残したま�
 
 ### Phase 2.1: モック契約を固定する（**MOCK-CONTRACT**）
 
-- [ ] **MOCK-CONTRACT**: `GlobalSettings` 型を `src/lib/settings.ts` に定義する
+- [x] **MOCK-CONTRACT**: `GlobalSettings` 型を `src/lib/settings.ts` に定義する
   ```typescript
   type GlobalSettings = {
     kingOfTimeUrl?: string;
@@ -53,13 +53,13 @@ cookie セット後に `browser.disconnect()` でウィンドウを残したま�
     token?: string;
   };
   ```
-- [ ] **MOCK-CONTRACT**: アクションの状態遷移を確定する
+- [x] **MOCK-CONTRACT**: アクションの状態遷移を確定する
   - 初期状態: ボタン表示 → タイトルなし（アイコン表示）
   - 短押し（設定あり）: `setTitle("処理中...")` → `openKotPage()` 呼び出し → タイトルをリセット
   - 短押し（設定なし）: `showAlert()` で Property Inspector へ誘導
   - 処理中に再押下: 連打防止フラグで即 return
   - エラー発生: `showAlert()` + `setTitle("エラー")`
-- [ ] **MOCK-CONTRACT**: `openKotPage()` の関数シグネチャを定義する
+- [x] **MOCK-CONTRACT**: `openKotPage()` の関数シグネチャを定義する
   ```typescript
   // src/lib/puppeteer.ts
   export async function openKotPage(settings: GlobalSettings): Promise<void>
@@ -67,38 +67,28 @@ cookie セット後に `browser.disconnect()` でウィンドウを残したま�
 
 ### Phase 2.2: 空モックで全体を成立させる（**MOCK-IMPL**）
 
-- [ ] **MOCK-IMPL**: `src/lib/settings.ts` を作成する
+- [x] **MOCK-IMPL**: `src/lib/settings.ts` を作成する（TDD: RED→GREEN 7テスト pass）
   - `getGlobalSettings()`: `streamDeck.settings.getGlobalSettings<GlobalSettings>()` をラップ
   - `hasRequiredSettings(s: GlobalSettings)`: `kingOfTimeUrl` / `tokenKey` / `token` が空でないことを検証して `boolean` を返す
-- [ ] **MOCK-IMPL**: `src/lib/puppeteer.ts` を作成する（モックスタブ）
+- [x] **MOCK-IMPL**: `src/lib/puppeteer.ts` を作成する（モックスタブ）
   ```typescript
   // Phase 3 で実装を埋める。Phase 2 では即 resolve するスタブ
   export async function openKotPage(_settings: GlobalSettings): Promise<void> {
     // MOCK: stub — Chrome 起動処理は Phase 3 で実装
   }
   ```
-- [ ] **MOCK-IMPL**: `src/actions/open-admin-action.ts` を作成する
+- [x] **MOCK-IMPL**: `src/actions/open-admin-action.ts` を作成する
   - `@action({ UUID: "com.hrk-m.kot-punch.open-admin" })` デコレータ付与
   - `onKeyDown`: 処理中フラグが立っていれば即 return（連打防止）
   - `onKeyUp`: 設定チェック → `setTitle("処理中...")` → `openKotPage()` → タイトルリセット → エラー時 `showAlert()`
   - 処理中フラグ: `private _isProcessing = false` でガード
-- [ ] `src/plugin.ts` に `OpenAdminAction` を `registerAction` で登録する
-- [ ] `manifest.json` の `Actions` 配列に `open-admin` エントリを追加する
-  ```json
-  {
-    "Name": "勤怠画面を開く",
-    "UUID": "com.hrk-m.kot-punch.open-admin",
-    "Icon": "imgs/actions/open-admin/icon",
-    "Tooltip": "JWT 認証済み状態で KOT 勤怠画面を Chrome で開く",
-    "PropertyInspectorPath": "ui/open-admin.html",
-    "Controllers": ["Keypad"]
-  }
-  ```
-- [ ] `com.hrk-m.kot-punch.sdPlugin/ui/open-admin.html` を作成する
-  - `kingOfTimeUrl`（テキスト入力）、`tokenKey`（テキスト入力）、`token`（`type="password"` マスク入力）のフォーム
-- [ ] アイコン画像（`imgs/actions/open-admin/icon.png` 等）のプレースホルダーを配置する（既存アイコンを仮用）
-- [ ] `bun run build` でビルドが通ることを確認する
-- [ ] **CHECKPOINT**: 実データなし + 空モックで end-to-end 実行可能（ボタン押下で「処理中...」が表示される）
+- [x] `src/plugin.ts` に `OpenAdminAction` を `registerAction` で登録する
+- [x] `manifest.json` の `Actions` 配列に `open-admin` エントリを追加する（アイコンは既存の attend アイコンを仮用）
+- [x] `com.hrk-m.kot-punch.sdPlugin/ui/open-admin.html` を作成する
+  - `kingOfTimeUrl`（テキスト入力）、`tokenKey`（テキスト入力）、`token`（`sdpi-password` マスク入力）のフォーム（sdpi-components v3 CDN 使用）
+- [x] アイコン画像: 既存 `imgs/actions/attend/icon` を仮用（manifest 参照のみ、Phase 3 以降に差し替え）
+- [x] `bun run build` でビルドが通ることを確認する（777ms、エラーなし）
+- [x] **CHECKPOINT**: 実データなし + 空モックで end-to-end 実行可能（ボタン押下で「処理中...」が表示される）
 
 ---
 
@@ -106,53 +96,34 @@ cookie セット後に `browser.disconnect()` でウィンドウを残したま�
 
 ### Phase 3.1: 穴埋め対象を優先度付けする
 
-- [ ] Phase 2 で作成したモック箇所を洗い出す
-  1. (高) `openKotPage()` の実 Puppeteer 実装（Chrome 起動 → `kingOfTimeUrl` へ goto → cookie セット → 再 goto → disconnect）
-  2. (高) `getGlobalSettings()` の実 Global Settings 読み込み
-  3. (高) 設定未完了時の `showAlert()` + Property Inspector 誘導
-  4. (中) 連打防止フラグの正確な reset タイミング（成功・失敗両ケース）
-  5. (低) アイコン画像の本番用素材への差し替え
+- [x] Phase 2 で作成したモック箇所を洗い出す
+  1. (高) `openKotPage()` の実 Puppeteer 実装（`src/lib/puppeteer.ts` — 空スタブ）
+  2. (高) `getGlobalSettings()` の実 Global Settings 読み込み（`src/lib/settings.ts` — 実装済み）
+  3. (高) 設定未完了時の `showAlert()` + Property Inspector 誘導（`open-admin-action.ts` — 実装済み）
+  4. (中) 連打防止フラグの正確な reset（`open-admin-action.ts` `finally` で対応済み）
+  5. (低) アイコン画像の本番用素材への差し替え（manifest で仮用中）
 
 ### Phase 3.2: `openKotPage()` を実装する
 
-- [ ] `puppeteer-core` を `bun add puppeteer-core` でインストールする（未インストールの場合）
-- [ ] `src/lib/puppeteer.ts` に実装を埋める
-
-  ```typescript
-  const CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
-
-  export async function openKotPage(settings: GlobalSettings): Promise<void> {
-    const browser = await puppeteer.launch({
-      executablePath: CHROME_PATH,
-      headless: false,
-    });
-    const page = await browser.newPage();
-    // 1. 勤怠画面へアクセス（domain 確立）
-    await page.goto(settings.kingOfTimeUrl!);
-    // 2. JWT クッキーをセット（domain 指定なし → 現在ページのドメインが適用）
-    await page.setCookie({ name: settings.tokenKey!, value: settings.token! });
-    // 3. 再アクセスして認証適用
-    await page.goto(settings.kingOfTimeUrl!);
-    // 4. ウィンドウを残したまま切断
-    await browser.disconnect();
-  }
-  ```
-
+- [x] `puppeteer-core` を `bun add puppeteer-core` でインストールする（v24.38.0）
+- [x] `src/lib/puppeteer.ts` に実装を埋める（TDD: RED 5テスト失敗 → GREEN 5テスト pass）
+  - `goto(kingOfTimeUrl)` → `setCookie({ name, value })` → `goto(kingOfTimeUrl)` → `disconnect()` の順序をテストで担保
+  - rollup ビルド対応: `@rollup/plugin-json` 追加・`inlineDynamicImports: true` 設定
   - ユースケース: 操作前提（kingOfTimeUrl・tokenKey・token が設定済み）/ 操作（ボタン短押し）/ 期待結果（Chrome が認証済み勤怠画面を表示したままになる）
 
 ### Phase 3.3: アクションの状態管理を完成させる
 
-- [ ] `onKeyDown` / `onKeyUp` の処理中フラグリセットを正確に実装する
+- [x] `onKeyDown` / `onKeyUp` の処理中フラグリセットを正確に実装する
   - ユースケース（成功）: 操作前提（設定あり、処理中でない）/ 操作（短押し）/ 期待結果（「処理中...」表示 → Chrome 起動 → タイトルリセット）
   - ユースケース（設定なし）: 操作前提（`kingOfTimeUrl` / `tokenKey` / `token` のいずれかが空）/ 操作（短押し）/ 期待結果（`showAlert()` が呼ばれ、`_isProcessing` が `false` に戻る）
   - ユースケース（エラー）: 操作前提（Puppeteer 例外）/ 操作（短押し）/ 期待結果（`showAlert()` + `setTitle("エラー")` + `_isProcessing` が `false` に戻る）
   - ユースケース（連打）: 操作前提（`_isProcessing = true`）/ 操作（再押下）/ 期待結果（即 return、重複処理なし）
-- [ ] `src/actions/__tests__/open-admin-action.test.ts` を作成する
+- [x] `src/actions/__tests__/open-admin-action.test.ts` を作成する
   - `openKotPage` を `vi.mock("../lib/puppeteer")` でスタブ化して検証する
   - 上記 4 ユースケースに対応したテストケースを実装する
-- [ ] `bun run test` で全ユニットテスト pass を確認する
-- [ ] `bun run build` でビルド成功を確認する
-- [ ] **CHECKPOINT**: 主要ユースケースがモックで再現可能、全テスト pass
+- [x] `bun run test` で全ユニットテスト pass を確認する（34 tests pass）
+- [x] `bun run build` でビルド成功を確認する
+- [x] **CHECKPOINT**: 主要ユースケースがモックで再現可能、全テスト pass
 
 **INTEGRATION-LATER**: 実 Chrome での動作確認（実際の JWT トークンを使った手動 E2E テスト）
 **INTEGRATION-LATER**: `browser.disconnect()` の代替検討（Puppeteer バージョンによる挙動差異の検証）
