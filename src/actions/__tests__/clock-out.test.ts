@@ -78,6 +78,19 @@ describe("ClockOut", () => {
             expect(setSettings).toHaveBeenCalledWith({ punched: true });
             expect(setTitle).toHaveBeenCalledWith("✅");
         });
+
+        it("punched が true のとき、短押しで setSettings が punched: true で呼ばれる", async () => {
+            vi.useFakeTimers();
+            const { action, setSettings } = makeSharedAction();
+            const evDown = makeKeyDownEvent(action, { punched: true });
+            const evUp = makeKeyUpEvent(action, { punched: true });
+
+            clockOut.onKeyDown(evDown as never);
+            await vi.advanceTimersByTimeAsync(100);
+            await clockOut.onKeyUp(evUp as never);
+
+            expect(setSettings).toHaveBeenCalledWith({ punched: true });
+        });
     });
 
     describe("長押しリセット", () => {
@@ -91,6 +104,19 @@ describe("ClockOut", () => {
 
             expect(setSettings).toHaveBeenCalledWith({ punched: false });
             expect(setTitle).toHaveBeenCalledWith("退勤");
+        });
+
+        it("onKeyDown 後 500ms 以内に onKeyUp が来たとき、リセットされない", async () => {
+            vi.useFakeTimers();
+            const { action, setSettings } = makeSharedAction();
+            const evDown = makeKeyDownEvent(action, { punched: true });
+            const evUp = makeKeyUpEvent(action, { punched: true });
+
+            clockOut.onKeyDown(evDown as never);
+            await vi.advanceTimersByTimeAsync(499);
+            await clockOut.onKeyUp(evUp as never);
+
+            expect(setSettings).not.toHaveBeenCalledWith({ punched: false });
         });
 
         it("長押しタイマー発火後に onKeyUp が来ても短押しアクションが実行されない", async () => {

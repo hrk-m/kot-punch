@@ -21,11 +21,14 @@ export class ClockOut extends SingletonAction<ClockSettings> {
 
 	override onKeyDown(ev: KeyDownEvent<ClockSettings>): void | Promise<void> {
 		this._isLongPress = false;
-		this._longPressTimer = setTimeout(() => {
+		this._longPressTimer = setTimeout(async () => {
 			this._isLongPress = true;
-			ev.action.setSettings({ punched: false }).then(() => {
-				ev.action.setTitle(LABEL);
-			});
+			try {
+				await ev.action.setSettings({ punched: false });
+				await ev.action.setTitle(LABEL);
+			} catch {
+				// Prevent unhandled rejections from async timer callback.
+			}
 		}, LONG_PRESS_MS);
 	}
 
