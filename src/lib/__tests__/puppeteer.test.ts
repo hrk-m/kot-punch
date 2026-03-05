@@ -3,7 +3,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockGoto = vi.fn().mockResolvedValue(null);
 const mockSetCookie = vi.fn().mockResolvedValue(null);
 const mockDisconnect = vi.fn().mockResolvedValue(null);
-const mockNewPage = vi.fn().mockResolvedValue({ goto: mockGoto, setCookie: mockSetCookie });
+const mockOn = vi.fn();
+const mockNewPage = vi.fn().mockResolvedValue({ goto: mockGoto, setCookie: mockSetCookie, on: mockOn });
 const mockLaunch = vi.fn().mockResolvedValue({ newPage: mockNewPage, disconnect: mockDisconnect });
 
 vi.mock("puppeteer-core", () => ({
@@ -20,8 +21,11 @@ describe("openKotPage", () => {
     };
 
     beforeEach(() => {
-        vi.clearAllMocks();
-        mockNewPage.mockResolvedValue({ goto: mockGoto, setCookie: mockSetCookie });
+        vi.resetAllMocks();
+        mockGoto.mockResolvedValue(null);
+        mockSetCookie.mockResolvedValue(null);
+        mockDisconnect.mockResolvedValue(null);
+        mockNewPage.mockResolvedValue({ goto: mockGoto, setCookie: mockSetCookie, on: mockOn });
         mockLaunch.mockResolvedValue({ newPage: mockNewPage, disconnect: mockDisconnect });
     });
 
@@ -71,5 +75,38 @@ describe("openKotPage", () => {
         await openKotPage(settings);
 
         expect(order).toEqual(["goto", "setCookie", "goto", "disconnect"]);
+    });
+
+    it("2回目の goto 中にダイアログが表示されたとき、認証エラーを throw してブラウザを切断する", async () => {
+        // page.on("dialog", handler) でハンドラをキャプチャする
+        // page.on は 1回目と 2回目の goto の間で呼ばれるため、
+        // mockGoto はコールカウンタで 2回目のみダイアログを発火させる
+        type DialogHandler = (dialog: { message(): string; dismiss(): Promise<void> }) => Promise<void>;
+        let capturedHandler: DialogHandler | undefined;
+        mockOn.mockImplementation((event: string, handler: DialogHandler) => {
+            if (event === "dialog") capturedHandler = handler;
+        });
+
+        let gotoCallCount = 0;
+        mockGoto.mockImplementation(async () => {
+            gotoCallCount++;
+            if (gotoCallCount === 2 && capturedHandler) {
+                await capturedHandler({ message: () => "証明書が正しくありません", dismiss: vi.fn().mockResolvedValue(undefined) });
+            }
+        });
+
+        await expect(openKotPage(settings)).rejects.toThrow(
+            "認証に失敗しました。トークンキーまたはトークンを確認してください。",
+        );
+        expect(mockDisconnect).toHaveBeenCalledOnce();
+    });
+
+    it("page 操作で例外が発生しても browser.disconnect() でクリーンアップする", async () => {
+        mockGoto.mockRejectedValueOnce(new Error("navigation failed"));
+
+        await expect(openKotPage(settings)).rejects.toThrow(
+            `KOT URL への接続に失敗しました: ${settings.kingOfTimeUrl}`,
+        );
+        expect(mockDisconnect).toHaveBeenCalledOnce();
     });
 });

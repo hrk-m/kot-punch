@@ -26,6 +26,11 @@ vi.mock("../../lib/puppeteer.js", () => ({
     openKotPage: mockOpenKotPage,
 }));
 
+const mockNotifyError = vi.fn();
+vi.mock("../../lib/notify.js", () => ({
+    notifyError: mockNotifyError,
+}));
+
 const { OpenKot } = await import("../open-kot.js");
 
 function makeSharedAction() {
@@ -51,7 +56,7 @@ describe("OpenKot", () => {
     });
 
     describe("onKeyUp - 成功", () => {
-        it("設定済みのとき、処理中表示 → openKotPage 呼び出し → タイトルリセット", async () => {
+        it("設定済みのとき、openKotPage を呼び、タイトルを LABEL に戻す", async () => {
             const { action, setTitle } = makeSharedAction();
             mockGetGlobalSettings.mockResolvedValue({
                 kingOfTimeUrl: "https://example.com",
@@ -63,9 +68,8 @@ describe("OpenKot", () => {
 
             await openKot.onKeyUp(makeKeyUpEvent(action) as never);
 
-            expect(setTitle).toHaveBeenCalledWith("処理中...");
             expect(mockOpenKotPage).toHaveBeenCalledOnce();
-            expect(setTitle).toHaveBeenCalledWith("勤怠確認");
+            expect(setTitle).toHaveBeenCalledWith("");
         });
 
         it("成功後に _isProcessing が false に戻り、次回も処理できる", async () => {
@@ -113,8 +117,8 @@ describe("OpenKot", () => {
     });
 
     describe("onKeyUp - エラー", () => {
-        it("openKotPage が例外を投げたとき showAlert と setTitle('エラー') を呼ぶ", async () => {
-            const { action, showAlert, setTitle } = makeSharedAction();
+        it("openKotPage が例外を投げたとき notifyError を呼ぶ", async () => {
+            const { action } = makeSharedAction();
             mockGetGlobalSettings.mockResolvedValue({
                 kingOfTimeUrl: "https://example.com",
                 tokenKey: "htjwt_xxx",
@@ -125,8 +129,8 @@ describe("OpenKot", () => {
 
             await openKot.onKeyUp(makeKeyUpEvent(action) as never);
 
-            expect(showAlert).toHaveBeenCalledOnce();
-            expect(setTitle).toHaveBeenCalledWith("エラー");
+            expect(mockNotifyError).toHaveBeenCalledOnce();
+            expect(mockNotifyError).toHaveBeenCalledWith("KOT Punch エラー", "Chrome not found", action);
         });
 
         it("エラー後に _isProcessing が false に戻り、次回も処理できる", async () => {

@@ -1,7 +1,7 @@
 {
     "scripts": {
         "generate-manifest": "node scripts/generate-manifest.mjs",
-        "build": "bun run generate-manifest && rollup -c && streamdeck restart com.hrk-m.kot-punch",
+        "build": "bun run generate-manifest && rollup -c",
         "watch": "bun run generate-manifest && rollup -c -w --watch.onEnd=\"streamdeck restart com.hrk-m.kot-punch\"",
         "lint": "oxlint src",
         "test": "vitest run"
