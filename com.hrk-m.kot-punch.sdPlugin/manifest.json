@@ -16,7 +16,6 @@
 			"States": [
 				{
 					"Image": "imgs/actions/open-kot/key",
-					"Title": "KING OF TIMEを開く",
 					"TitleAlignment": "middle"
 				}
 			]
