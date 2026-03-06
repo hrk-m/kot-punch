@@ -14,6 +14,16 @@ const errorImageDataUri = (() => {
 
 export interface ImageSettable {
     setImage(image?: string): Promise<void>;
+    showAlert?(): Promise<void>;
+}
+
+async function showFallbackAlert(action: ImageSettable): Promise<void> {
+    if (!action.showAlert) return;
+    try {
+        await action.showAlert();
+    } catch {
+        process.emitWarning("Failed to show alert while handling error image.");
+    }
 }
 
 /**
@@ -21,8 +31,16 @@ export interface ImageSettable {
  * すべてのアクションから共通で使用できる。
  */
 export async function showErrorImage(action: ImageSettable): Promise<void> {
-    await action.setImage(errorImageDataUri);
-    setTimeout(async () => {
-        await action.setImage();
+    try {
+        await action.setImage(errorImageDataUri);
+    } catch {
+        await showFallbackAlert(action);
+        return;
+    }
+
+    setTimeout(() => {
+        void action.setImage().catch(() => {
+            // コンテキスト破棄後の setImage 失敗で未処理 rejection を出さない。
+        });
     }, ERROR_IMAGE_DISPLAY_MS);
 }
