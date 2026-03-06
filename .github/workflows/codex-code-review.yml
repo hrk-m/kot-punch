@@ -16,7 +16,6 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-      id-token: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -31,18 +30,18 @@ jobs:
             --header "Accept: application/vnd.github.v3.diff" \
             repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }} > pr.diff
 
-      - name: Check OpenAI API key
-        id: openai_key
+      - name: Check Anthropic API key
+        id: anthropic_key
         run: |
-          if [ -z "${{ secrets.OPENAI_API_KEY }}" ]; then
+          if [ -z "${{ secrets.ANTHROPIC_API_KEY }}" ]; then
             echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "OPENAI_API_KEY is not set. Skip Codex run."
+            echo "ANTHROPIC_API_KEY is not set. Skip Claude review."
           else
             echo "available=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build Codex prompt
-        if: steps.openai_key.outputs.available == 'true'
+      - name: Build Claude prompt
+        if: steps.anthropic_key.outputs.available == 'true'
         run: |
           cat <<'EOF' > codex-review-prompt.md
           このリポジトリは Stream Deck プラグイン（TypeScript + Rollup + Vitest）です。
@@ -86,49 +85,24 @@ jobs:
           EOF
           cat pr.diff >> codex-review-prompt.md
 
-      - name: Run Codex review
-        if: steps.openai_key.outputs.available == 'true'
-        uses: openai/codex-action@086169432f1d2ab2f4057540b1754d550f6a1189 # v1
-        with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          prompt-file: codex-review-prompt.md
-          output-file: codex-review.json
-          sandbox: read-only
-          output-schema: |
-            {
-              "type": "object",
-              "additionalProperties": false,
-              "required": ["comments"],
-              "properties": {
-                "comments": {
-                  "type": "array",
-                  "maxItems": 20,
-                  "items": {
-                    "type": "object",
-                    "additionalProperties": false,
-                    "required": ["path", "line", "body"],
-                    "properties": {
-                      "path": {
-                        "type": "string",
-                        "minLength": 1
-                      },
-                      "line": {
-                        "type": "integer",
-                        "minimum": 1
-                      },
-                      "body": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 2000
-                      }
-                    }
-                  }
-                }
-              }
-            }
+      - name: Run Claude review
+        if: steps.anthropic_key.outputs.available == 'true'
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          PROMPT=$(cat codex-review-prompt.md | jq -Rs .)
+          curl -s https://api.anthropic.com/v1/messages \
+            -H "x-api-key: $ANTHROPIC_API_KEY" \
+            -H "anthropic-version: 2023-06-01" \
+            -H "content-type: application/json" \
+            -d "{
+              \"model\": \"claude-sonnet-4-6\",
+              \"max_tokens\": 4096,
+              \"messages\": [{\"role\": \"user\", \"content\": $PROMPT}]
+            }" | jq '.content[0].text' -r > codex-review.json
 
       - name: Post inline review comments
-        if: steps.openai_key.outputs.available == 'true'
+        if: steps.anthropic_key.outputs.available == 'true'
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -257,7 +231,7 @@ jobs:
               pull_number: prNumber,
               commit_id: pr.head.sha,
               event: 'COMMENT',
-              body: 'Codex による自動レビューコメントです。',
+              body: 'Claude による自動レビューコメントです。',
               comments: finalComments,
             });
 
