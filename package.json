@@ -25,6 +25,6 @@
     },
     "dependencies": {
         "@elgato/streamdeck": "^2.0.0",
-        "puppeteer-core": "^24.38.0"
+        "puppeteer": "^24.38.0"
     }
 }
