@@ -31,9 +31,14 @@ export async function openKotPage(settings: GlobalSettings): Promise<void> {
         await page.goto(kingOfTimeUrl);
 
         if (hasAuthDialog) {
+            await browser.close();
+            browser = undefined;
             throw new Error("Authentication failed: dialog appeared while opening KING OF TIME.");
         }
-    } finally {
+
         await browser?.disconnect();
+    } catch (e) {
+        await browser?.close();
+        throw e;
     }
 }
