@@ -26,6 +26,10 @@ src/plugin.ts
 | `plugin.ts` | エントリポイント。アクション登録と `streamDeck.connect()` のみ記述 |
 | `actions/` | `SingletonAction<Settings>` を継承したアクションクラス群 |
 | `actions/__tests__/` | アクションのユニットテスト（vitest） |
+| `lib/settings.ts` | Global Settings 読み書きヘルパー。`GlobalSettings` 型定義・`getGlobalSettings()` / `hasRequiredSettings()` を提供 |
+| `lib/puppeteer.ts` | `openKotPage(settings)` 関数。Puppeteer で Chrome を起動し JWT クッキーをセット後に `disconnect()` |
+| `lib/showErrorImage.ts` | 共通エラー表示ユーティリティ。エラー画像を 3 秒表示し元の画像に戻す。フォールバックで `showAlert()` |
+| `lib/__tests__/` | ライブラリのユニットテスト（vitest） |
 
 ### `com.hrk-m.kot-punch.sdPlugin/`
 
@@ -46,8 +50,18 @@ src/plugin.ts
 1. `src/actions/<name>.ts` に `SingletonAction<Settings>` 継承クラスを作成
 2. `@action({ UUID: "com.hrk-m.kot-punch.<name>" })` デコレータを付与
 3. `src/plugin.ts` で `streamDeck.actions.registerAction()` に登録
-4. `manifest.json` の `Actions` 配列に UUID・アイコン・Controllers を追記
+4. `manifest.template.json` の `Actions` 配列に UUID・アイコン・Controllers を追記し `bun run generate-manifest` で再生成
 5. `com.hrk-m.kot-punch.sdPlugin/ui/<name>.html` に Property Inspector を追加（必要な場合）
+
+### エラー表示パターン
+
+エラー発生時は `showErrorImage(ev.action)` を fire-and-forget で呼ぶ（内部でエラー画像表示 → 3 秒後リセット。`setImage` 失敗時は `showAlert()` にフォールバック）。
+
+```typescript
+} catch {
+    void showErrorImage(ev.action);
+}
+```
 
 ### SDK ライフサイクルの使い分け
 
