@@ -5,15 +5,35 @@ const mockSetCookie = vi.fn().mockResolvedValue(null);
 const mockDisconnect = vi.fn().mockResolvedValue(null);
 const mockClose = vi.fn().mockResolvedValue(null);
 const mockOn = vi.fn();
-const mockNewPage = vi.fn().mockResolvedValue({ goto: mockGoto, setCookie: mockSetCookie, on: mockOn });
-const mockPages = vi.fn().mockResolvedValue([{ goto: mockGoto, setCookie: mockSetCookie, on: mockOn }]);
+const mockClick = vi.fn().mockResolvedValue(null);
+const mockType = vi.fn().mockResolvedValue(null);
+
+function makePage() {
+    return { goto: mockGoto, setCookie: mockSetCookie, on: mockOn, click: mockClick, type: mockType };
+}
+
+const mockNewPage = vi.fn().mockResolvedValue(makePage());
+const mockPages = vi.fn().mockResolvedValue([makePage()]);
 const mockLaunch = vi.fn().mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect, close: mockClose });
 
 vi.mock("puppeteer", () => ({
     default: { launch: mockLaunch },
 }));
 
-const { openKotPage } = await import("../puppeteer.js");
+const { openKotPage, punchKot } = await import("../puppeteer.js");
+
+function resetMocks() {
+    vi.resetAllMocks();
+    mockGoto.mockResolvedValue(null);
+    mockSetCookie.mockResolvedValue(null);
+    mockDisconnect.mockResolvedValue(null);
+    mockClose.mockResolvedValue(null);
+    mockClick.mockResolvedValue(null);
+    mockType.mockResolvedValue(null);
+    mockPages.mockResolvedValue([makePage()]);
+    mockNewPage.mockResolvedValue(makePage());
+    mockLaunch.mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect, close: mockClose });
+}
 
 describe("openKotPage", () => {
     const settings = {
@@ -23,14 +43,7 @@ describe("openKotPage", () => {
     };
 
     beforeEach(() => {
-        vi.resetAllMocks();
-        mockGoto.mockResolvedValue(null);
-        mockSetCookie.mockResolvedValue(null);
-        mockDisconnect.mockResolvedValue(null);
-        mockClose.mockResolvedValue(null);
-        mockPages.mockResolvedValue([{ goto: mockGoto, setCookie: mockSetCookie, on: mockOn }]);
-        mockNewPage.mockResolvedValue({ goto: mockGoto, setCookie: mockSetCookie, on: mockOn });
-        mockLaunch.mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect, close: mockClose });
+        resetMocks();
     });
 
     it("ブラウザを可視モードかつ最大化で起動する", async () => {
@@ -124,5 +137,62 @@ describe("openKotPage", () => {
         await expect(openKotPage(settings)).rejects.toBe(navigationError);
         expect(mockClose).toHaveBeenCalledOnce();
         expect(mockDisconnect).not.toHaveBeenCalled();
+    });
+});
+
+describe("punchKot", () => {
+    const settings = {
+        kingOfTimeUrl: "https://kingoftime-recorder.appspot.com/login?section=1000",
+        tokenKey: "htjwt_xxx",
+        token: "abc123",
+        username: "山田 太郎",
+        password: "pass1234",
+    };
+
+    beforeEach(() => {
+        resetMocks();
+    });
+
+    it("dryRun=false: #attend クリック → ユーザー選択 → パスワード入力 → submit が実行される", async () => {
+        await punchKot("#attend", settings);
+
+        const clickArgs = mockClick.mock.calls.map((c) => c[0]);
+        expect(clickArgs).toContain("#attend");
+        expect(clickArgs).toContain(`::-p-text(${settings.username})`);
+        expect(clickArgs).toContain("button[type=submit]");
+        expect(mockType).toHaveBeenCalledWith("input[type=password]", settings.password, { delay: 100 });
+        expect(mockClose).toHaveBeenCalledOnce();
+        expect(mockDisconnect).not.toHaveBeenCalled();
+    });
+
+    it("dryRun=true: submit クリックがスキップされる", async () => {
+        await punchKot("#attend", { ...settings, dryRun: true });
+
+        const clickArgs = mockClick.mock.calls.map((c) => c[0]);
+        expect(clickArgs).not.toContain("button[type=submit]");
+        expect(mockDisconnect).toHaveBeenCalledOnce();
+        expect(mockClose).not.toHaveBeenCalled();
+    });
+
+    it("認証失敗（dialog イベント）: エラーが throw されブラウザが閉じる", async () => {
+        type DialogHandler = (dialog: { message(): string; dismiss(): Promise<void> }) => Promise<void>;
+        let capturedHandler: DialogHandler | undefined;
+        mockOn.mockImplementation((event: string, handler: DialogHandler) => {
+            if (event === "dialog") capturedHandler = handler;
+        });
+
+        let gotoCallCount = 0;
+        mockGoto.mockImplementation(async () => {
+            gotoCallCount++;
+            if (gotoCallCount === 2 && capturedHandler) {
+                await capturedHandler({ message: vi.fn().mockReturnValue(""), dismiss: vi.fn().mockResolvedValue(undefined) });
+            }
+        });
+
+        await expect(punchKot("#attend", settings)).rejects.toThrow(
+            "Authentication failed: dialog appeared while opening KING OF TIME.",
+        );
+        expect(mockClose).toHaveBeenCalledOnce();
+        expect(mockClick).not.toHaveBeenCalled();
     });
 });
