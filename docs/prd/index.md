@@ -13,6 +13,15 @@ KingOfTime (KOT) 向け Elgato Stream Deck プラグイン。Stream Deck のボ�
 
 ### 実装済み
 
+#### 勤怠画面を開くボタン（`com.hrk-m.kot-punch.open-kot`）
+
+- ボタン押下（`onKeyUp`）：JWT クッキーをセット済みの Chrome ウィンドウで KOT 勤怠画面を開く
+- 設定未完了（`kingOfTimeUrl` / `tokenKey` / `token` のいずれかが空）：`showAlert()` で Property Inspector へ誘導
+- 認証失敗（遷移後にダイアログ検出）：ブラウザを閉じてエラーをスロー
+- エラー発生：`showErrorImage()` でエラー画像を 3 秒表示（フォールバック: `showAlert()`）
+- 連打防止：`_isProcessing` フラグで `onKeyUp` をガード
+- Property Inspector：`kingOfTimeUrl`（テキスト）/ `tokenKey`（テキスト）/ `token`（パスワード入力）を Global Settings に保存
+
 #### 出勤ボタン（`com.hrk-m.kot-punch.clock-in`）
 
 - 初期表示：ボタンに `出勤` を表示
@@ -45,6 +54,6 @@ KingOfTime (KOT) 向け Elgato Stream Deck プラグイン。Stream Deck のボ�
 
 - KOT（KingOfTime）API との実際の打刻連携（API 呼び出し・エラーハンドリング）
 - 打刻状態の表示（現在の勤怠ステータスをボタンに反映）
-- KOT 認証情報の設定
 - 休憩打刻ボタン
 - 出勤・退勤の排他制御（一方を押したらもう一方をリセット等）
+- Windows 対応（`open-kot` アクション）

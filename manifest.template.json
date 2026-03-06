@@ -4,7 +4,7 @@
 	"Author": "hrk-m",
 	"Actions": [
 		{
-			"Name": "KING OF TIMEを開く",
+			"Name": "{{open-kot.name}}",
 			"UUID": "com.hrk-m.kot-punch.open-kot",
 			"Icon": "imgs/actions/open-kot/icon",
 			"Tooltip": "JWT 認証済み状態で KOT 勤怠画面をブラウザで開く",
@@ -21,7 +21,7 @@
 			]
 		},
 		{
-			"Name": "出勤",
+			"Name": "{{clock-in.name}}",
 			"UUID": "com.hrk-m.kot-punch.clock-in",
 			"Icon": "imgs/actions/attend/icon",
 			"Tooltip": "出勤ボタン。短押しで打刻済みを表示、長押しでリセット。",
@@ -37,7 +37,7 @@
 			]
 		},
 		{
-			"Name": "退勤",
+			"Name": "{{clock-out.name}}",
 			"UUID": "com.hrk-m.kot-punch.clock-out",
 			"Icon": "imgs/actions/leave/icon",
 			"Tooltip": "退勤ボタン。短押しで打刻済みを表示、長押しでリセット。",

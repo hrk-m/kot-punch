@@ -1,0 +1,169 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+vi.mock("@elgato/streamdeck", () => {
+    const action =
+        (_definition: { UUID: string }) =>
+        <T>(target: T, _context: ClassDecoratorContext): T =>
+            target;
+
+    class SingletonAction<_TSettings = unknown> {
+        onKeyUp(_ev: unknown): void | Promise<void> {}
+    }
+
+    return { action, SingletonAction };
+});
+
+const mockGetGlobalSettings = vi.fn();
+const mockHasRequiredSettings = vi.fn();
+vi.mock("../../lib/settings.js", () => ({
+    getGlobalSettings: mockGetGlobalSettings,
+    hasRequiredSettings: mockHasRequiredSettings,
+}));
+
+const mockOpenKotPage = vi.fn();
+vi.mock("../../lib/puppeteer.js", () => ({
+    openKotPage: mockOpenKotPage,
+}));
+
+const mockShowErrorImage = vi.fn();
+vi.mock("../../lib/showErrorImage.js", () => ({
+    showErrorImage: mockShowErrorImage,
+}));
+
+const { OpenKot } = await import("../open-kot.js");
+
+function makeSharedAction() {
+    const showAlert = vi.fn().mockResolvedValue(undefined);
+    const setTitle = vi.fn().mockResolvedValue(undefined);
+    return { action: { showAlert, setTitle }, showAlert, setTitle };
+}
+
+function makeKeyUpEvent(action: object) {
+    return { action };
+}
+
+describe("OpenKot", () => {
+    let openKot: InstanceType<typeof OpenKot>;
+
+    beforeEach(() => {
+        openKot = new OpenKot();
+        vi.clearAllMocks();
+    });
+
+    describe("onKeyUp - 成功", () => {
+        it("設定済みのとき、openKotPage を呼び、タイトルは変更しない", async () => {
+            const { action, setTitle } = makeSharedAction();
+            mockGetGlobalSettings.mockResolvedValue({
+                kingOfTimeUrl: "https://example.com",
+                tokenKey: "htjwt_xxx",
+                token: "abc",
+            });
+            mockHasRequiredSettings.mockReturnValue(true);
+            mockOpenKotPage.mockResolvedValue(undefined);
+
+            await openKot.onKeyUp(makeKeyUpEvent(action) as never);
+
+            expect(mockOpenKotPage).toHaveBeenCalledOnce();
+            expect(setTitle).not.toHaveBeenCalled();
+        });
+
+        it("成功後に _isProcessing が false に戻り、次回も処理できる", async () => {
+            const { action } = makeSharedAction();
+            mockGetGlobalSettings.mockResolvedValue({
+                kingOfTimeUrl: "https://example.com",
+                tokenKey: "htjwt_xxx",
+                token: "abc",
+            });
+            mockHasRequiredSettings.mockReturnValue(true);
+            mockOpenKotPage.mockResolvedValue(undefined);
+
+            await openKot.onKeyUp(makeKeyUpEvent(action) as never);
+            await openKot.onKeyUp(makeKeyUpEvent(action) as never);
+
+            expect(mockOpenKotPage).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe("onKeyUp - 設定未完了", () => {
+        it("設定が未完了のとき showAlert を呼び、openKotPage を呼ばない", async () => {
+            const { action, showAlert } = makeSharedAction();
+            mockGetGlobalSettings.mockResolvedValue({ kingOfTimeUrl: "", tokenKey: "", token: "" });
+            mockHasRequiredSettings.mockReturnValue(false);
+
+            await openKot.onKeyUp(makeKeyUpEvent(action) as never);
+
+            expect(showAlert).toHaveBeenCalledOnce();
+            expect(mockOpenKotPage).not.toHaveBeenCalled();
+        });
+
+        it("設定未完了後に _isProcessing が false に戻り、次回も処理できる", async () => {
+            const { action } = makeSharedAction();
+            mockGetGlobalSettings.mockResolvedValue({ kingOfTimeUrl: "", tokenKey: "", token: "" });
+            mockHasRequiredSettings.mockReturnValue(false);
+
+            await openKot.onKeyUp(makeKeyUpEvent(action) as never);
+
+            mockHasRequiredSettings.mockReturnValue(true);
+            mockOpenKotPage.mockResolvedValue(undefined);
+            await openKot.onKeyUp(makeKeyUpEvent(action) as never);
+
+            expect(mockOpenKotPage).toHaveBeenCalledOnce();
+        });
+    });
+
+    describe("onKeyUp - エラー", () => {
+        it("openKotPage が例外を投げたとき showErrorImage を呼ぶ", async () => {
+            const { action } = makeSharedAction();
+            mockGetGlobalSettings.mockResolvedValue({
+                kingOfTimeUrl: "https://example.com",
+                tokenKey: "htjwt_xxx",
+                token: "abc",
+            });
+            mockHasRequiredSettings.mockReturnValue(true);
+            mockOpenKotPage.mockRejectedValue(new Error("browser launch failed"));
+
+            await openKot.onKeyUp(makeKeyUpEvent(action) as never);
+
+            expect(mockShowErrorImage).toHaveBeenCalledOnce();
+            expect(mockShowErrorImage).toHaveBeenCalledWith(action);
+        });
+
+        it("エラー後に _isProcessing が false に戻り、次回も処理できる", async () => {
+            const { action } = makeSharedAction();
+            mockGetGlobalSettings.mockResolvedValue({
+                kingOfTimeUrl: "https://example.com",
+                tokenKey: "htjwt_xxx",
+                token: "abc",
+            });
+            mockHasRequiredSettings.mockReturnValue(true);
+            mockOpenKotPage.mockRejectedValueOnce(new Error("browser launch failed"));
+            mockOpenKotPage.mockResolvedValueOnce(undefined);
+
+            await openKot.onKeyUp(makeKeyUpEvent(action) as never);
+            await openKot.onKeyUp(makeKeyUpEvent(action) as never);
+
+            expect(mockOpenKotPage).toHaveBeenCalledTimes(2);
+        });
+    });
+
+    describe("連打防止", () => {
+        it("同時に 2 回 onKeyUp が来ても openKotPage を 1 回しか呼ばない", async () => {
+            const { action } = makeSharedAction();
+            mockGetGlobalSettings.mockResolvedValue({
+                kingOfTimeUrl: "https://example.com",
+                tokenKey: "htjwt_xxx",
+                token: "abc",
+            });
+            mockHasRequiredSettings.mockReturnValue(true);
+            mockOpenKotPage.mockResolvedValue(undefined);
+
+            await Promise.all([
+                openKot.onKeyUp(makeKeyUpEvent(action) as never),
+                openKot.onKeyUp(makeKeyUpEvent(action) as never),
+            ]);
+
+            expect(mockOpenKotPage).toHaveBeenCalledTimes(1);
+        });
+
+    });
+});

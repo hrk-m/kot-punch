@@ -1,9 +1,9 @@
 import { action, SingletonAction } from "@elgato/streamdeck";
 import type { KeyDownEvent, KeyUpEvent, WillAppearEvent } from "@elgato/streamdeck";
+import labels from "../labels/labels.json";
 
 const LONG_PRESS_MS = 500;
-const LABEL = "退勤";
-const LABEL_PUNCHED = "✅";
+const { label: LABEL, labelPunched: LABEL_PUNCHED } = labels["clock-out"];
 
 /**
  * An action class for clocking out.
