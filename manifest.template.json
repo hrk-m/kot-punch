@@ -24,17 +24,23 @@
 			"Name": "{{clock-in.name}}",
 			"UUID": "com.hrk-m.kot-punch.clock-in",
 			"Icon": "imgs/actions/attend/icon",
-			"Tooltip": "出勤ボタン。短押しで打刻済みを表示、長押しでリセット。",
+			"Tooltip": "出勤ボタン。短押しで KOT に打刻、打刻済み状態で押すと未打刻に戻す。",
 			"PropertyInspectorPath": "ui/clock-in.html",
 			"Controllers": [
 				"Keypad"
 			],
+			"UserTitleEnabled": false,
 			"States": [
 				{
 					"Image": "imgs/actions/attend/key",
 					"TitleAlignment": "middle"
+				},
+				{
+					"Image": "imgs/actions/attend/key1",
+					"TitleAlignment": "middle"
 				}
-			]
+			],
+			"SupportedInMultiActions": false
 		},
 		{
 			"Name": "{{clock-out.name}}",

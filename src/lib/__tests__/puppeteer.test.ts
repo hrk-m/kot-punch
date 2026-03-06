@@ -5,15 +5,48 @@ const mockSetCookie = vi.fn().mockResolvedValue(null);
 const mockDisconnect = vi.fn().mockResolvedValue(null);
 const mockClose = vi.fn().mockResolvedValue(null);
 const mockOn = vi.fn();
-const mockNewPage = vi.fn().mockResolvedValue({ goto: mockGoto, setCookie: mockSetCookie, on: mockOn });
-const mockPages = vi.fn().mockResolvedValue([{ goto: mockGoto, setCookie: mockSetCookie, on: mockOn }]);
+const mockOnce = vi.fn();
+const mockClick = vi.fn().mockResolvedValue(null);
+const mockType = vi.fn().mockResolvedValue(null);
+const mockWaitForNavigation = vi.fn().mockResolvedValue(null);
+
+function makePage() {
+    return {
+        goto: mockGoto,
+        setCookie: mockSetCookie,
+        on: mockOn,
+        once: mockOnce,
+        click: mockClick,
+        type: mockType,
+        waitForNavigation: mockWaitForNavigation,
+    };
+}
+
+const mockNewPage = vi.fn().mockResolvedValue(makePage());
+const mockPages = vi.fn().mockResolvedValue([makePage()]);
 const mockLaunch = vi.fn().mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect, close: mockClose });
 
 vi.mock("puppeteer", () => ({
     default: { launch: mockLaunch },
 }));
 
-const { openKotPage } = await import("../puppeteer.js");
+const { openKotPage, punchKot } = await import("../puppeteer.js");
+
+function resetMocks() {
+    vi.resetAllMocks();
+    mockGoto.mockResolvedValue(null);
+    mockSetCookie.mockResolvedValue(null);
+    mockDisconnect.mockResolvedValue(null);
+    mockClose.mockResolvedValue(null);
+    mockOn.mockReset();
+    mockOnce.mockReset();
+    mockClick.mockResolvedValue(null);
+    mockType.mockResolvedValue(null);
+    mockWaitForNavigation.mockResolvedValue(null);
+    mockPages.mockResolvedValue([makePage()]);
+    mockNewPage.mockResolvedValue(makePage());
+    mockLaunch.mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect, close: mockClose });
+}
 
 describe("openKotPage", () => {
     const settings = {
@@ -23,14 +56,7 @@ describe("openKotPage", () => {
     };
 
     beforeEach(() => {
-        vi.resetAllMocks();
-        mockGoto.mockResolvedValue(null);
-        mockSetCookie.mockResolvedValue(null);
-        mockDisconnect.mockResolvedValue(null);
-        mockClose.mockResolvedValue(null);
-        mockPages.mockResolvedValue([{ goto: mockGoto, setCookie: mockSetCookie, on: mockOn }]);
-        mockNewPage.mockResolvedValue({ goto: mockGoto, setCookie: mockSetCookie, on: mockOn });
-        mockLaunch.mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect, close: mockClose });
+        resetMocks();
     });
 
     it("ブラウザを可視モードかつ最大化で起動する", async () => {
@@ -89,14 +115,14 @@ describe("openKotPage", () => {
     });
 
     it("2回目の goto 中にダイアログが表示されたとき、認証エラーを throw してブラウザを閉じる", async () => {
-        // page.on("dialog", handler) でハンドラをキャプチャする
-        // page.on は 1回目と 2回目の goto の間で呼ばれるため、
+        // page.once("dialog", handler) でハンドラをキャプチャする
+        // page.once は 1回目と 2回目の goto の間で呼ばれるため、
         // mockGoto はコールカウンタで 2回目のみダイアログを発火させる
         type DialogHandler = (dialog: { message(): string; dismiss(): Promise<void> }) => Promise<void>;
         let capturedHandler: DialogHandler | undefined;
         const dialogMessage = vi.fn().mockReturnValue("証明書が正しくありません");
         const dialogDismiss = vi.fn().mockResolvedValue(undefined);
-        mockOn.mockImplementation((event: string, handler: DialogHandler) => {
+        mockOnce.mockImplementation((event: string, handler: DialogHandler) => {
             if (event === "dialog") capturedHandler = handler;
         });
 
@@ -113,6 +139,7 @@ describe("openKotPage", () => {
         );
         expect(dialogMessage).not.toHaveBeenCalled();
         expect(dialogDismiss).toHaveBeenCalledOnce();
+        expect(mockOnce).toHaveBeenCalledWith("dialog", expect.any(Function));
         expect(mockClose).toHaveBeenCalledOnce();
         expect(mockDisconnect).not.toHaveBeenCalled();
     });
@@ -124,5 +151,102 @@ describe("openKotPage", () => {
         await expect(openKotPage(settings)).rejects.toBe(navigationError);
         expect(mockClose).toHaveBeenCalledOnce();
         expect(mockDisconnect).not.toHaveBeenCalled();
+    });
+});
+
+describe("punchKot", () => {
+    const settings = {
+        kingOfTimeUrl: "https://kingoftime-recorder.appspot.com/login?section=1000",
+        tokenKey: "htjwt_xxx",
+        token: "abc123",
+        username: "山田 太郎",
+        password: "pass1234",
+    };
+
+    beforeEach(() => {
+        resetMocks();
+    });
+
+    it("dryRun=false: #attend クリック → ユーザー選択 → パスワード入力 → submit が実行される", async () => {
+        await punchKot("#attend", settings);
+
+        const clickArgs = mockClick.mock.calls.map((c) => c[0]);
+        expect(clickArgs).toContain("#attend");
+        expect(clickArgs).toContain(`::-p-text(${settings.username})`);
+        expect(clickArgs).toContain("button[type=submit]");
+        expect(mockType).toHaveBeenCalledWith("input[type=password]", settings.password, { delay: 0 });
+        expect(mockWaitForNavigation).toHaveBeenCalledWith({ waitUntil: "networkidle0" });
+        expect(mockClose).toHaveBeenCalledOnce();
+        expect(mockDisconnect).not.toHaveBeenCalled();
+    });
+
+    it("dryRun=false: 操作順序が #attend → ユーザー選択 → パスワード入力 → submit になる", async () => {
+        const order: string[] = [];
+        mockClick.mockImplementation((selector: string) => {
+            if (selector === "#attend") {
+                order.push("attend");
+            } else if (selector === `::-p-text(${settings.username})`) {
+                order.push("selectUser");
+            } else if (selector === "button[type=submit]") {
+                order.push("submit");
+            }
+            return Promise.resolve(null);
+        });
+        mockType.mockImplementation(() => {
+            order.push("typePassword");
+            return Promise.resolve(null);
+        });
+
+        await punchKot("#attend", settings);
+
+        expect(order).toEqual(["attend", "selectUser", "typePassword", "submit"]);
+    });
+
+    it("dryRun=true: submit クリックがスキップされる", async () => {
+        await punchKot("#attend", { ...settings, dryRun: true });
+
+        const clickArgs = mockClick.mock.calls.map((c) => c[0]);
+        expect(clickArgs).not.toContain("button[type=submit]");
+        expect(mockType).toHaveBeenCalledWith("input[type=password]", settings.password, { delay: 100 });
+        expect(mockDisconnect).toHaveBeenCalledOnce();
+        expect(mockClose).not.toHaveBeenCalled();
+    });
+
+    it("ユーザー名に ) が含まれても ::-p-text セレクタをエスケープしてクリックできる", async () => {
+        await punchKot("#attend", { ...settings, username: "山田(太郎)", dryRun: true });
+
+        const clickArgs = mockClick.mock.calls.map((c) => c[0]);
+        expect(clickArgs).toContain("::-p-text(山田(太郎\\))");
+    });
+
+    it("#leave 指定時に #leave ボタンをクリックする", async () => {
+        await punchKot("#leave", { ...settings, dryRun: true });
+
+        const clickArgs = mockClick.mock.calls.map((c) => c[0]);
+        expect(clickArgs).toContain("#leave");
+        expect(mockDisconnect).toHaveBeenCalledOnce();
+    });
+
+    it("認証失敗（dialog イベント）: エラーが throw されブラウザが閉じる", async () => {
+        type DialogHandler = (dialog: { message(): string; dismiss(): Promise<void> }) => Promise<void>;
+        let capturedHandler: DialogHandler | undefined;
+        mockOnce.mockImplementation((event: string, handler: DialogHandler) => {
+            if (event === "dialog") capturedHandler = handler;
+        });
+
+        let gotoCallCount = 0;
+        mockGoto.mockImplementation(async () => {
+            gotoCallCount++;
+            if (gotoCallCount === 2 && capturedHandler) {
+                await capturedHandler({ message: vi.fn().mockReturnValue(""), dismiss: vi.fn().mockResolvedValue(undefined) });
+            }
+        });
+
+        await expect(punchKot("#attend", settings)).rejects.toThrow(
+            "Authentication failed: dialog appeared while opening KING OF TIME.",
+        );
+        expect(mockOnce).toHaveBeenCalledWith("dialog", expect.any(Function));
+        expect(mockClose).toHaveBeenCalledOnce();
+        expect(mockClick).not.toHaveBeenCalled();
     });
 });

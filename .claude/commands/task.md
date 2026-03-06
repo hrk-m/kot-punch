@@ -36,6 +36,18 @@
 - 既存 `docs/tasks/{タスク名}/tasks.md` と比較して、ボタン設定由来の変更点が見つかった場合は、反映前に `AskUserQuestion` で確認を取る
 - `AskUserQuestion` の回答が空または未選択なら、推測で反映せず質問を再提示する
 
+## 共通化方針確認（Required）
+
+- 新規実装・改修対象を洗い出す際、既存コードで共通化できる候補（重複ロジック、共通 UI、ユーティリティ）を確認する
+- 共通化候補がある場合は、`AskUserQuestion` で「今回のタスクで処理をまとめるか（実施/見送り）」を確認する
+- `AskUserQuestion` の回答が空または未選択なら、推測で反映せず質問を再提示する
+
+## Phase 2 モック範囲確認（Required）
+
+- Phase 2 のタスク化前に、`AskUserQuestion` で「どこまでモック画面を作るか（対象画面/操作フロー/異常系）」を確認する
+- 回答内容を Phase 2 の小タスクへ反映し、範囲外は `**INTEGRATION-LATER**` へ分離する
+- `AskUserQuestion` の回答が空または未選択なら、推測で反映せず質問を再提示する
+
 ## 生成するタスク構造（必須順序: 3フェーズ）
 
 1. Phase 1: Impact and Change Analysis
@@ -60,10 +72,12 @@
 ### Phase 1.2: 変更候補を特定する
 - [ ] 影響/改修がありそうなファイルを列挙し、変更理由を 1 行で記載する
 - [ ] 再利用可能コンポーネント・ユーティリティを列挙する
+- [ ] 共通化候補がある場合は `AskUserQuestion` で統合方針（実施/見送り）を確認する
 - [ ] **CHECKPOINT**: 変更対象ファイルと影響範囲が明確
 
 ## Phase 2: Mock Empty-State Baseline
 ### Phase 2.1: モック契約を固定する
+- [ ] `AskUserQuestion` でモック画面の作成範囲（対象画面/操作フロー/異常系）を確認する
 - [ ] `**MOCK-CONTRACT**` で API/Store の入出力型とレスポンス shape（正常/空/異常）を定義する
 
 ### Phase 2.2: 空モックで全体を成立させる
@@ -99,8 +113,10 @@
 - PRD のユーザーストーリーと受け入れ条件を、上記 3 フェーズへ配賦する
 - フェーズ1では「どのファイルを改修するか」を必ず明記する
 - ボタン設定に関する変更点は Phase 1 で明示し、影響ファイルと変更理由をセットで記載する
+- フェーズ1で共通化候補を確認し、候補がある場合は `AskUserQuestion` で統合方針（実施/見送り）を確認する
 - フェーズ1に「全体コードを俯瞰する」項目を置く場合は `- [ ]*` とし、初期フェーズの完了判定に含めない（未チェックのままにする）
 - フェーズ2では「全体が空のモック状態で動作すること」を最優先にする
+- フェーズ2の小タスク確定前に `AskUserQuestion` でモック画面の範囲を確認し、回答をタスクへ反映する
 - フェーズ3では PRD から抽出した主要ユースケースを `操作前提 / 操作 / 期待結果` で追跡可能にする
 - 実データ統合をフェーズ2-3の本体作業に混在させない
 - 各タスクに成果物（対象ファイル or テスト観点）を最低 1 つ書く
@@ -135,7 +151,7 @@
 
 - `Glob`: `docs/tasks/{タスク名}/` の存在確認
 - `Read`: `prd.md` / `architecture.md` / 既存 `tasks.md` の読み込み
-- `AskUserQuestion`: 要件の不明点確認、およびボタン設定変更の反映可否確認に使う
+- `AskUserQuestion`: 要件の不明点確認、ボタン設定変更、共通化方針、Phase 2 モック範囲の確認に使う
 - `Write`: `docs/tasks/{タスク名}/tasks.md` の更新
 
 ## Output Description
@@ -155,6 +171,8 @@
 - **Task Name Missing**: `$ARGUMENTS` が空ならタスク名を確認する
 - **Ambiguous Requirement**: ユースケース解像度が不足している場合は AskUserQuestion で補完する
 - **Button Config Changed**: ボタン設定に関する差分がある場合は AskUserQuestion で反映可否の確認が取れるまで `tasks.md` へ確定反映しない
+- **Shared Logic Candidate Found**: 共通化候補がある場合は AskUserQuestion で統合方針が確定するまで `tasks.md` へ確定反映しない
+- **Phase2 Scope Unconfirmed**: モック画面の作成範囲が未確定なら、AskUserQuestion で確認が取れるまで Phase 2 の確定タスクを書かない
 - **Empty Answer**: AskUserQuestion の回答が空または未選択の場合、推測で進めず質問を再提示する
 - **PRD Missing**: `docs/tasks/{タスク名}/prd.md` がなければ `/planning {タスク名}` を先に案内する
 - **Architecture Missing**: `docs/architecture.md` がなければ `/steering` 実行を案内する

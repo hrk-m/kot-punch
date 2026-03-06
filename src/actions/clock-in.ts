@@ -1,48 +1,43 @@
 import { action, SingletonAction } from "@elgato/streamdeck";
-import type { KeyDownEvent, KeyUpEvent, WillAppearEvent } from "@elgato/streamdeck";
-import labels from "../labels/labels.json";
-
-const LONG_PRESS_MS = 500;
-const { label: LABEL, labelPunched: LABEL_PUNCHED } = labels["clock-in"];
+import type { KeyUpEvent } from "@elgato/streamdeck";
+import { getGlobalSettings, hasRequiredPunchSettings } from "../lib/settings.js";
+import { punchKot } from "../lib/puppeteer.js";
+import { showErrorImage } from "../lib/showErrorImage.js";
 
 /**
  * An action class for clocking in.
- * Short press marks as punched (shows ✅). Long press (500ms) resets to initial label.
+ * State 0: 未打刻（通常アイコン）
+ * State 1: 打刻済み（チェックマークアイコン）
+ * State はセッション内のみ保持（プラグイン再起動でリセット）。当日限りの打刻管理として意図的に非永続化。
  */
 @action({ UUID: "com.hrk-m.kot-punch.clock-in" })
-export class ClockIn extends SingletonAction<ClockSettings> {
-	private _longPressTimer: ReturnType<typeof setTimeout> | undefined;
-	private _isLongPress = false;
+export class ClockIn extends SingletonAction {
+	private _isProcessing = false;
 
-	override onWillAppear(ev: WillAppearEvent<ClockSettings>): void | Promise<void> {
-		const title = ev.payload.settings.punched ? LABEL_PUNCHED : LABEL;
-		return ev.action.setTitle(title);
-	}
+	override async onKeyUp(ev: KeyUpEvent): Promise<void> {
+		if (this._isProcessing) return;
 
-	override onKeyDown(ev: KeyDownEvent<ClockSettings>): void | Promise<void> {
-		this._isLongPress = false;
-		this._longPressTimer = setTimeout(async () => {
-			this._isLongPress = true;
-			try {
-				await ev.action.setSettings({ punched: false });
-				await ev.action.setTitle(LABEL);
-			} catch {
-				// Prevent unhandled rejections from async timer callback.
+		if (ev.payload.state === 1) {
+			await ev.action.setState(0);
+			return;
+		}
+
+		this._isProcessing = true;
+		try {
+			const settings = await getGlobalSettings();
+			if (!hasRequiredPunchSettings(settings)) {
+				await ev.action.showAlert();
+				return;
 			}
-		}, LONG_PRESS_MS);
-	}
 
-	override async onKeyUp(ev: KeyUpEvent<ClockSettings>): Promise<void> {
-		clearTimeout(this._longPressTimer);
-		this._longPressTimer = undefined;
-
-		if (this._isLongPress) return;
-
-		await ev.action.setSettings({ punched: true });
-		await ev.action.setTitle(LABEL_PUNCHED);
+			await punchKot("#attend", settings);
+			await ev.action.showOk();
+			await ev.action.setState(1);
+		} catch {
+			void showErrorImage(ev.action);
+			await ev.action.setState(0);
+		} finally {
+			this._isProcessing = false;
+		}
 	}
 }
-
-type ClockSettings = {
-	punched?: boolean;
-};
