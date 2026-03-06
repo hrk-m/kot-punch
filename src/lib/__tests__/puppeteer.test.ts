@@ -8,7 +8,7 @@ const mockNewPage = vi.fn().mockResolvedValue({ goto: mockGoto, setCookie: mockS
 const mockPages = vi.fn().mockResolvedValue([{ goto: mockGoto, setCookie: mockSetCookie, on: mockOn }]);
 const mockLaunch = vi.fn().mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect });
 
-vi.mock("puppeteer-core", () => ({
+vi.mock("puppeteer", () => ({
     default: { launch: mockLaunch },
 }));
 
@@ -31,11 +31,12 @@ describe("openKotPage", () => {
         mockLaunch.mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect });
     });
 
-    it("Chrome を headless: false で起動する", async () => {
+    it("ブラウザを可視モードかつ最大化で起動する", async () => {
         await openKotPage(settings);
         expect(mockLaunch).toHaveBeenCalledWith({
-            executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
             headless: false,
+            defaultViewport: null,
+            args: ["--start-maximized"],
         });
     });
 
@@ -105,7 +106,9 @@ describe("openKotPage", () => {
             }
         });
 
-        await expect(openKotPage(settings)).rejects.toThrow();
+        await expect(openKotPage(settings)).rejects.toThrow(
+            "Authentication failed: dialog appeared while opening KING OF TIME.",
+        );
         expect(dialogMessage).not.toHaveBeenCalled();
         expect(dialogDismiss).toHaveBeenCalledOnce();
         expect(mockDisconnect).toHaveBeenCalledOnce();

@@ -1,7 +1,5 @@
-import puppeteer from "puppeteer-core";
+import puppeteer from "puppeteer";
 import type { GlobalSettings } from "./settings.js";
-
-const CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
 export async function openKotPage(settings: GlobalSettings): Promise<void> {
     const { kingOfTimeUrl = "", tokenKey = "", token = "" } = settings;
@@ -9,8 +7,9 @@ export async function openKotPage(settings: GlobalSettings): Promise<void> {
     let browser;
     try {
         browser = await puppeteer.launch({
-            executablePath: CHROME_PATH,
             headless: false,
+            defaultViewport: null,
+            args: ["--start-maximized"],
         });
 
         const pages = await browser.pages();
@@ -32,7 +31,7 @@ export async function openKotPage(settings: GlobalSettings): Promise<void> {
         await page.goto(kingOfTimeUrl);
 
         if (hasAuthDialog) {
-            throw new Error();
+            throw new Error("Authentication failed: dialog appeared while opening KING OF TIME.");
         }
     } finally {
         await browser?.disconnect();
