@@ -17,6 +17,9 @@ bun install
 # ビルド（本番用）
 bun run build
 
+# manifest 再生成（labels / template 変更時）
+bun run generate-manifest
+
 # 開発用ウォッチモード（変更検知 + Stream Deck プラグイン自動再起動）
 bun run watch
 ```
@@ -36,7 +39,7 @@ src/
   plugin.ts          # エントリポイント: アクション登録 + streamDeck.connect()
   actions/           # アクションクラス群（@elgato/streamdeck の SingletonAction を継承）
 com.hrk-m.kot-punch.sdPlugin/
-  manifest.json      # プラグインメタデータ・アクション定義（UUID, アイコン, OS 要件等）
+  manifest.json      # 自動生成ファイル（manifest.template.json + labels から生成）
   imgs/              # アイコン画像（通常 + @2x）
   ui/                # Property Inspector HTML（sdpi-components を使用: https://sdpi-components.dev/docs/components）
                      # 設定項目がない場合は空 body で OK
@@ -49,8 +52,9 @@ com.hrk-m.kot-punch.sdPlugin/
 1. `src/actions/` に `SingletonAction<Settings>` を継承したクラスを作成
 2. `@action({ UUID: "com.hrk-m.kot-punch.<name>" })` デコレータを付与
 3. `src/plugin.ts` で `streamDeck.actions.registerAction()` に登録
-4. `manifest.json` の `Actions` 配列に UUID・アイコン・コントローラ等を追記
-5. 必要に応じて `com.hrk-m.kot-punch.sdPlugin/ui/` に Property Inspector HTML を追加
+4. `manifest.template.json` の `Actions` 配列に UUID・アイコン・コントローラ等を追記
+5. `bun run generate-manifest` で `com.hrk-m.kot-punch.sdPlugin/manifest.json` を再生成
+6. 必要に応じて `com.hrk-m.kot-punch.sdPlugin/ui/` に Property Inspector HTML を追加
 
 ### SDK イベントの主なライフサイクル
 
