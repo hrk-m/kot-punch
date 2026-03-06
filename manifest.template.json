@@ -39,7 +39,8 @@
 					"Image": "imgs/actions/attend/key1",
 					"TitleAlignment": "middle"
 				}
-			]
+			],
+			"SupportedInMultiActions": false
 		},
 		{
 			"Name": "{{clock-out.name}}",
