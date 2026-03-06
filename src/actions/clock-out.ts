@@ -3,7 +3,8 @@ import type { KeyDownEvent, KeyUpEvent, WillAppearEvent } from "@elgato/streamde
 import labels from "../labels/labels.json";
 
 const LONG_PRESS_MS = 500;
-const { label: LABEL, labelPunched: LABEL_PUNCHED } = labels["clock-out"];
+const LABEL_PUNCHED = "✅";
+const { label: LABEL } = labels["clock-out"];
 
 /**
  * An action class for clocking out.

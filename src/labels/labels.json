@@ -1,13 +1,11 @@
 {
     "clock-in": {
         "name": "出勤",
-        "label": "出勤",
-        "labelPunched": "✅"
+        "label": "出勤"
     },
     "clock-out": {
         "name": "退勤",
-        "label": "退勤",
-        "labelPunched": "✅"
+        "label": "退勤"
     },
     "open-kot": {
         "name": "KING OF TIMEを開く"
