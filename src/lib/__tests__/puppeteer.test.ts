@@ -3,10 +3,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockGoto = vi.fn().mockResolvedValue(null);
 const mockSetCookie = vi.fn().mockResolvedValue(null);
 const mockDisconnect = vi.fn().mockResolvedValue(null);
+const mockClose = vi.fn().mockResolvedValue(null);
 const mockOn = vi.fn();
 const mockNewPage = vi.fn().mockResolvedValue({ goto: mockGoto, setCookie: mockSetCookie, on: mockOn });
 const mockPages = vi.fn().mockResolvedValue([{ goto: mockGoto, setCookie: mockSetCookie, on: mockOn }]);
-const mockLaunch = vi.fn().mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect });
+const mockLaunch = vi.fn().mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect, close: mockClose });
 
 vi.mock("puppeteer", () => ({
     default: { launch: mockLaunch },
@@ -26,9 +27,10 @@ describe("openKotPage", () => {
         mockGoto.mockResolvedValue(null);
         mockSetCookie.mockResolvedValue(null);
         mockDisconnect.mockResolvedValue(null);
+        mockClose.mockResolvedValue(null);
         mockPages.mockResolvedValue([{ goto: mockGoto, setCookie: mockSetCookie, on: mockOn }]);
         mockNewPage.mockResolvedValue({ goto: mockGoto, setCookie: mockSetCookie, on: mockOn });
-        mockLaunch.mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect });
+        mockLaunch.mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect, close: mockClose });
     });
 
     it("ブラウザを可視モードかつ最大化で起動する", async () => {
@@ -86,7 +88,7 @@ describe("openKotPage", () => {
         expect(order).toEqual(["goto", "setCookie", "goto", "disconnect"]);
     });
 
-    it("2回目の goto 中にダイアログが表示されたとき、認証エラーを throw してブラウザを切断する", async () => {
+    it("2回目の goto 中にダイアログが表示されたとき、認証エラーを throw してブラウザを閉じる", async () => {
         // page.on("dialog", handler) でハンドラをキャプチャする
         // page.on は 1回目と 2回目の goto の間で呼ばれるため、
         // mockGoto はコールカウンタで 2回目のみダイアログを発火させる
@@ -111,14 +113,16 @@ describe("openKotPage", () => {
         );
         expect(dialogMessage).not.toHaveBeenCalled();
         expect(dialogDismiss).toHaveBeenCalledOnce();
-        expect(mockDisconnect).toHaveBeenCalledOnce();
+        expect(mockClose).toHaveBeenCalledOnce();
+        expect(mockDisconnect).not.toHaveBeenCalled();
     });
 
-    it("page 操作で例外が発生したらそのまま rethrow しつつ browser.disconnect() でクリーンアップする", async () => {
+    it("page 操作で例外が発生したらそのまま rethrow しつつ browser.close() でクリーンアップする", async () => {
         const navigationError = new Error("navigation failed");
         mockGoto.mockRejectedValueOnce(navigationError);
 
         await expect(openKotPage(settings)).rejects.toBe(navigationError);
-        expect(mockDisconnect).toHaveBeenCalledOnce();
+        expect(mockClose).toHaveBeenCalledOnce();
+        expect(mockDisconnect).not.toHaveBeenCalled();
     });
 });
