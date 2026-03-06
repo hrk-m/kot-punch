@@ -61,10 +61,10 @@ jobs:
           - レビュー提出時の総括コメントは空文字列("")、`REQUEST_CHANGES` は使わない
 
           出力ルール:
-          - JSON 配列のみを返す（Markdown や説明文は禁止）
+          - `{ "comments": [...] }` の JSON オブジェクトのみを返す（Markdown や説明文は禁止）
           - 各要素は `path` / `line` / `body` を持つ
           - `line` は head file の行番号を返す（diff position ではない）
-          - 指摘がない場合は `[]` を返す
+          - 指摘がない場合は `{ "comments": [] }` を返す
 
           Pull request number: #${{ github.event.pull_request.number }}
           Base SHA: ${{ github.event.pull_request.base.sha }}
@@ -84,25 +84,32 @@ jobs:
           sandbox: read-only
           output-schema: |
             {
-              "type": "array",
-              "maxItems": 20,
-              "items": {
-                "type": "object",
-                "additionalProperties": false,
-                "required": ["path", "line", "body"],
-                "properties": {
-                  "path": {
-                    "type": "string",
-                    "minLength": 1
-                  },
-                  "line": {
-                    "type": "integer",
-                    "minimum": 1
-                  },
-                  "body": {
-                    "type": "string",
-                    "minLength": 1,
-                    "maxLength": 2000
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["comments"],
+              "properties": {
+                "comments": {
+                  "type": "array",
+                  "maxItems": 20,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": ["path", "line", "body"],
+                    "properties": {
+                      "path": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "line": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "body": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 2000
+                      }
+                    }
                   }
                 }
               }
@@ -156,7 +163,8 @@ jobs:
 
             let findings;
             try {
-              findings = JSON.parse(fs.readFileSync(reviewPath, 'utf8'));
+              const parsed = JSON.parse(fs.readFileSync(reviewPath, 'utf8'));
+              findings = Array.isArray(parsed) ? parsed : (parsed?.comments ?? []);
             } catch (error) {
               core.warning(`Failed to parse codex-review.json: ${error.message}`);
               return;
