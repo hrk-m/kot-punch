@@ -1,12 +1,31 @@
 <!DOCTYPE html>
 <html>
 
-<head lang="en">
-    <title>Clock In Settings</title>
+<head lang="ja">
+    <title>出勤設定</title>
     <meta charset="utf-8" />
+    <script src="https://sdpi-components.dev/releases/v4/sdpi-components.js"></script>
 </head>
 
 <body>
+    <sdpi-item label="打刻URL">
+        <sdpi-textfield global setting="kingOfTimeUrl" placeholder="https://kingoftime-recorder.appspot.com/..."></sdpi-textfield>
+    </sdpi-item>
+    <sdpi-item label="ユーザー名">
+        <sdpi-textfield global setting="username" placeholder="KOT に表示される名前"></sdpi-textfield>
+    </sdpi-item>
+    <sdpi-item label="パスワード">
+        <sdpi-password global setting="password" placeholder="打刻確認パスワード"></sdpi-password>
+    </sdpi-item>
+    <sdpi-item label="トークン名">
+        <sdpi-textfield global setting="tokenKey" placeholder="htjwt_xxxxx"></sdpi-textfield>
+    </sdpi-item>
+    <sdpi-item label="トークン値">
+        <sdpi-password global setting="token" placeholder="JWT token"></sdpi-password>
+    </sdpi-item>
+    <sdpi-item label="テストモード（submit スキップ）">
+        <sdpi-checkbox global setting="dryRun"></sdpi-checkbox>
+    </sdpi-item>
 </body>
 
 </html>
