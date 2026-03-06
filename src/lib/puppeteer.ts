@@ -66,7 +66,7 @@ export async function punchKot(selector: "#attend" | "#leave", settings: GlobalS
         await page.click(selector);
 
         // 5. ユーザーを選択（テキスト照合）
-        await page.click(`::-p-text(${username})`);
+        await page.click(`::-p-text(${username.replace(/\)/g, "\\)")})`);
 
         // 6. パスワード入力
         await page.type("input[type=password]", password, { delay: dryRun ? 100 : 0 });

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { showErrorImage } from "../../lib/showErrorImage.js";
 
 vi.mock("@elgato/streamdeck", () => {
     const action =
@@ -45,8 +46,7 @@ function makeSharedAction() {
     const setState = vi.fn().mockResolvedValue(undefined);
     const showOk = vi.fn().mockResolvedValue(undefined);
     const showAlert = vi.fn().mockResolvedValue(undefined);
-    const setImage = vi.fn().mockResolvedValue(undefined);
-    return { action: { setState, showOk, showAlert, setImage }, setState, showOk, showAlert, setImage };
+    return { action: { setState, showOk, showAlert }, setState, showOk, showAlert };
 }
 
 function makeKeyUpEvent(action: object, state: number) {
@@ -85,6 +85,7 @@ describe("ClockIn", () => {
 
             await clockIn.onKeyUp(ev as never);
 
+            expect(showErrorImage).toHaveBeenCalledOnce();
             expect(setState).toHaveBeenCalledWith(0);
         });
     });

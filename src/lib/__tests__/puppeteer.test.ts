@@ -212,6 +212,13 @@ describe("punchKot", () => {
         expect(mockClose).not.toHaveBeenCalled();
     });
 
+    it("ユーザー名に ) が含まれても ::-p-text セレクタをエスケープしてクリックできる", async () => {
+        await punchKot("#attend", { ...settings, username: "山田(太郎)", dryRun: true });
+
+        const clickArgs = mockClick.mock.calls.map((c) => c[0]);
+        expect(clickArgs).toContain("::-p-text(山田(太郎\\))");
+    });
+
     it("#leave 指定時に #leave ボタンをクリックする", async () => {
         await punchKot("#leave", { ...settings, dryRun: true });
 
