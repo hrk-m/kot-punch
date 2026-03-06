@@ -120,7 +120,7 @@ describe("OpenKot", () => {
                 token: "abc",
             });
             mockHasRequiredSettings.mockReturnValue(true);
-            mockOpenKotPage.mockRejectedValue(new Error("Chrome not found"));
+            mockOpenKotPage.mockRejectedValue(new Error("browser launch failed"));
 
             await openKot.onKeyUp(makeKeyUpEvent(action) as never);
 
@@ -136,7 +136,7 @@ describe("OpenKot", () => {
                 token: "abc",
             });
             mockHasRequiredSettings.mockReturnValue(true);
-            mockOpenKotPage.mockRejectedValueOnce(new Error("Chrome not found"));
+            mockOpenKotPage.mockRejectedValueOnce(new Error("browser launch failed"));
             mockOpenKotPage.mockResolvedValueOnce(undefined);
 
             await openKot.onKeyUp(makeKeyUpEvent(action) as never);

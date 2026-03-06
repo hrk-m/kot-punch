@@ -7,7 +7,7 @@
 			"Name": "{{open-kot.name}}",
 			"UUID": "com.hrk-m.kot-punch.open-kot",
 			"Icon": "imgs/actions/open-kot/icon",
-			"Tooltip": "JWT 認証済み状態で KOT 勤怠画面を Chrome で開く",
+			"Tooltip": "JWT 認証済み状態で KOT 勤怠画面をブラウザで開く",
 			"PropertyInspectorPath": "ui/open-kot.html",
 			"Controllers": [
 				"Keypad"
