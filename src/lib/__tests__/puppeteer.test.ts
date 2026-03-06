@@ -5,6 +5,7 @@ const mockSetCookie = vi.fn().mockResolvedValue(null);
 const mockDisconnect = vi.fn().mockResolvedValue(null);
 const mockClose = vi.fn().mockResolvedValue(null);
 const mockOn = vi.fn();
+const mockOnce = vi.fn();
 const mockClick = vi.fn().mockResolvedValue(null);
 const mockType = vi.fn().mockResolvedValue(null);
 const mockWaitForNavigation = vi.fn().mockResolvedValue(null);
@@ -14,6 +15,7 @@ function makePage() {
         goto: mockGoto,
         setCookie: mockSetCookie,
         on: mockOn,
+        once: mockOnce,
         click: mockClick,
         type: mockType,
         waitForNavigation: mockWaitForNavigation,
@@ -36,6 +38,8 @@ function resetMocks() {
     mockSetCookie.mockResolvedValue(null);
     mockDisconnect.mockResolvedValue(null);
     mockClose.mockResolvedValue(null);
+    mockOn.mockReset();
+    mockOnce.mockReset();
     mockClick.mockResolvedValue(null);
     mockType.mockResolvedValue(null);
     mockWaitForNavigation.mockResolvedValue(null);
@@ -111,14 +115,14 @@ describe("openKotPage", () => {
     });
 
     it("2回目の goto 中にダイアログが表示されたとき、認証エラーを throw してブラウザを閉じる", async () => {
-        // page.on("dialog", handler) でハンドラをキャプチャする
-        // page.on は 1回目と 2回目の goto の間で呼ばれるため、
+        // page.once("dialog", handler) でハンドラをキャプチャする
+        // page.once は 1回目と 2回目の goto の間で呼ばれるため、
         // mockGoto はコールカウンタで 2回目のみダイアログを発火させる
         type DialogHandler = (dialog: { message(): string; dismiss(): Promise<void> }) => Promise<void>;
         let capturedHandler: DialogHandler | undefined;
         const dialogMessage = vi.fn().mockReturnValue("証明書が正しくありません");
         const dialogDismiss = vi.fn().mockResolvedValue(undefined);
-        mockOn.mockImplementation((event: string, handler: DialogHandler) => {
+        mockOnce.mockImplementation((event: string, handler: DialogHandler) => {
             if (event === "dialog") capturedHandler = handler;
         });
 
@@ -135,6 +139,7 @@ describe("openKotPage", () => {
         );
         expect(dialogMessage).not.toHaveBeenCalled();
         expect(dialogDismiss).toHaveBeenCalledOnce();
+        expect(mockOnce).toHaveBeenCalledWith("dialog", expect.any(Function));
         expect(mockClose).toHaveBeenCalledOnce();
         expect(mockDisconnect).not.toHaveBeenCalled();
     });
@@ -169,7 +174,7 @@ describe("punchKot", () => {
         expect(clickArgs).toContain("#attend");
         expect(clickArgs).toContain(`::-p-text(${settings.username})`);
         expect(clickArgs).toContain("button[type=submit]");
-        expect(mockType).toHaveBeenCalledWith("input[type=password]", settings.password, { delay: 100 });
+        expect(mockType).toHaveBeenCalledWith("input[type=password]", settings.password, { delay: 0 });
         expect(mockWaitForNavigation).toHaveBeenCalledWith({ waitUntil: "networkidle0" });
         expect(mockClose).toHaveBeenCalledOnce();
         expect(mockDisconnect).not.toHaveBeenCalled();
@@ -202,6 +207,7 @@ describe("punchKot", () => {
 
         const clickArgs = mockClick.mock.calls.map((c) => c[0]);
         expect(clickArgs).not.toContain("button[type=submit]");
+        expect(mockType).toHaveBeenCalledWith("input[type=password]", settings.password, { delay: 100 });
         expect(mockDisconnect).toHaveBeenCalledOnce();
         expect(mockClose).not.toHaveBeenCalled();
     });
@@ -217,7 +223,7 @@ describe("punchKot", () => {
     it("認証失敗（dialog イベント）: エラーが throw されブラウザが閉じる", async () => {
         type DialogHandler = (dialog: { message(): string; dismiss(): Promise<void> }) => Promise<void>;
         let capturedHandler: DialogHandler | undefined;
-        mockOn.mockImplementation((event: string, handler: DialogHandler) => {
+        mockOnce.mockImplementation((event: string, handler: DialogHandler) => {
             if (event === "dialog") capturedHandler = handler;
         });
 
@@ -232,6 +238,7 @@ describe("punchKot", () => {
         await expect(punchKot("#attend", settings)).rejects.toThrow(
             "Authentication failed: dialog appeared while opening KING OF TIME.",
         );
+        expect(mockOnce).toHaveBeenCalledWith("dialog", expect.any(Function));
         expect(mockClose).toHaveBeenCalledOnce();
         expect(mockClick).not.toHaveBeenCalled();
     });

@@ -28,7 +28,7 @@ async function setupAuthenticatedPage(settings: GlobalSettings) {
 
         // 3. 再アクセスして認証適用（ダイアログ = 認証失敗として扱う）
         let hasAuthDialog = false;
-        page.on("dialog", async (dialog) => {
+        page.once("dialog", async (dialog) => {
             hasAuthDialog = true;
             await dialog.dismiss();
         });
@@ -69,7 +69,7 @@ export async function punchKot(selector: "#attend" | "#leave", settings: GlobalS
         await page.click(`::-p-text(${username})`);
 
         // 6. パスワード入力
-        await page.type("input[type=password]", password, { delay: 100 });
+        await page.type("input[type=password]", password, { delay: dryRun ? 100 : 0 });
 
         // 7. submit（dryRun=false のときのみ）
         if (dryRun) {
