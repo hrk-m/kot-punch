@@ -18,11 +18,12 @@ export class OpenKot extends SingletonAction {
             // 必須項目が未入力の場合はアラートを表示
             if (!hasRequiredSettings(settings)) {
                 await ev.action.showAlert();
-                return;
+            } else {
+                // KING OF TIME を開く
+                await openKotPage(settings);
             }
-            // KING OF TIME を開く
-            await openKotPage(settings);
         } catch {
+            // showErrorImage は内部で失敗を処理するため fire-and-forget で呼ぶ。
             void showErrorImage(ev.action);
         } finally {
             this._isProcessing = false;
