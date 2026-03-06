@@ -7,9 +7,17 @@ const mockClose = vi.fn().mockResolvedValue(null);
 const mockOn = vi.fn();
 const mockClick = vi.fn().mockResolvedValue(null);
 const mockType = vi.fn().mockResolvedValue(null);
+const mockWaitForNavigation = vi.fn().mockResolvedValue(null);
 
 function makePage() {
-    return { goto: mockGoto, setCookie: mockSetCookie, on: mockOn, click: mockClick, type: mockType };
+    return {
+        goto: mockGoto,
+        setCookie: mockSetCookie,
+        on: mockOn,
+        click: mockClick,
+        type: mockType,
+        waitForNavigation: mockWaitForNavigation,
+    };
 }
 
 const mockNewPage = vi.fn().mockResolvedValue(makePage());
@@ -30,6 +38,7 @@ function resetMocks() {
     mockClose.mockResolvedValue(null);
     mockClick.mockResolvedValue(null);
     mockType.mockResolvedValue(null);
+    mockWaitForNavigation.mockResolvedValue(null);
     mockPages.mockResolvedValue([makePage()]);
     mockNewPage.mockResolvedValue(makePage());
     mockLaunch.mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect, close: mockClose });
@@ -161,8 +170,31 @@ describe("punchKot", () => {
         expect(clickArgs).toContain(`::-p-text(${settings.username})`);
         expect(clickArgs).toContain("button[type=submit]");
         expect(mockType).toHaveBeenCalledWith("input[type=password]", settings.password, { delay: 100 });
+        expect(mockWaitForNavigation).toHaveBeenCalledWith({ waitUntil: "networkidle0" });
         expect(mockClose).toHaveBeenCalledOnce();
         expect(mockDisconnect).not.toHaveBeenCalled();
+    });
+
+    it("dryRun=false: 操作順序が #attend → ユーザー選択 → パスワード入力 → submit になる", async () => {
+        const order: string[] = [];
+        mockClick.mockImplementation((selector: string) => {
+            if (selector === "#attend") {
+                order.push("attend");
+            } else if (selector === `::-p-text(${settings.username})`) {
+                order.push("selectUser");
+            } else if (selector === "button[type=submit]") {
+                order.push("submit");
+            }
+            return Promise.resolve(null);
+        });
+        mockType.mockImplementation(() => {
+            order.push("typePassword");
+            return Promise.resolve(null);
+        });
+
+        await punchKot("#attend", settings);
+
+        expect(order).toEqual(["attend", "selectUser", "typePassword", "submit"]);
     });
 
     it("dryRun=true: submit クリックがスキップされる", async () => {
@@ -172,6 +204,14 @@ describe("punchKot", () => {
         expect(clickArgs).not.toContain("button[type=submit]");
         expect(mockDisconnect).toHaveBeenCalledOnce();
         expect(mockClose).not.toHaveBeenCalled();
+    });
+
+    it("#leave 指定時に #leave ボタンをクリックする", async () => {
+        await punchKot("#leave", { ...settings, dryRun: true });
+
+        const clickArgs = mockClick.mock.calls.map((c) => c[0]);
+        expect(clickArgs).toContain("#leave");
+        expect(mockDisconnect).toHaveBeenCalledOnce();
     });
 
     it("認証失敗（dialog イベント）: エラーが throw されブラウザが閉じる", async () => {

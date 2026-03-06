@@ -76,7 +76,10 @@ export async function punchKot(selector: "#attend" | "#leave", settings: GlobalS
             // テストモード: パスワード入力まで確認できるようブラウザを開いたまま切断
             await browser.disconnect();
         } else {
-            await page.click("button[type=submit]");
+            await Promise.all([
+                page.waitForNavigation({ waitUntil: "networkidle0" }),
+                page.click("button[type=submit]"),
+            ]);
             await browser.close();
         }
         browser = undefined; // catch ブロックでの二重 close を防ぐ
