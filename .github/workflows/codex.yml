@@ -14,7 +14,7 @@ on:
 
 concurrency:
   group: codex-${{ github.event.issue.number || github.event.pull_request.number || github.event.number || github.run_id }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   codex:
@@ -94,7 +94,7 @@ jobs:
       - name: Run Codex
         if: steps.openai_key.outputs.available == 'true'
         id: codex
-        uses: openai/codex-action@v1
+        uses: openai/codex-action@086169432f1d2ab2f4057540b1754d550f6a1189 # v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           prompt-file: codex-prompt.md
