@@ -8,6 +8,7 @@ import { showErrorImage } from "../lib/showErrorImage.js";
  * An action class for clocking in.
  * State 0: 未打刻（通常アイコン）
  * State 1: 打刻済み（チェックマークアイコン）
+ * State はセッション内のみ保持（プラグイン再起動でリセット）。当日限りの打刻管理として意図的に非永続化。
  */
 @action({ UUID: "com.hrk-m.kot-punch.clock-in" })
 export class ClockIn extends SingletonAction {
