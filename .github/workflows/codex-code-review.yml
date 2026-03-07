@@ -54,7 +54,7 @@ jobs:
             /review-pr REPO: ${{ github.repository }} PR_NUMBER: ${{ github.event.pull_request.number }}
 
             このリポジトリは Stream Deck プラグイン（TypeScript + Rollup + Vitest）です。
-            レビュー時は `CLAUDE.md` と `docs/architecture.md` を参照し、以下の方針で確認してください。
+            レビュー晤 `AGENTS.md` と `docs/architecture.md` を参照し、以下の方針で確認してください。
 
             レビュー標準:
             - design / functionality / complexity / tests / naming / comments / style / consistency / documentation の順で確認する
@@ -85,7 +85,7 @@ jobs:
             - コマンド例: gh pr comment ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --body "..."
             - テンプレート（観点ごとの結果を表形式で示し、最後に「指摘事項はありません。」で締める）:
               ```
-              ## レビュー結果: 問題なし ✅
+              ## Codex レビュー結果: 問題なし ✅
 
               | 観点 | 結果 |
               |------|------|
