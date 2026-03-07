@@ -12,11 +12,17 @@ const errorImageDataUri = (() => {
     return `data:image/png;base64,${base64}`;
 })();
 
+/**
+ * 画像を設定できるアクションのインターフェース
+ */
 export interface ImageSettable {
     setImage(image?: string): Promise<void>;
     showAlert?(): Promise<void>;
 }
 
+/**
+ * エラー画像を表示したときに、アラートを表示する。
+ */
 async function showFallbackAlert(action: ImageSettable): Promise<void> {
     if (!action.showAlert) return;
     try {
