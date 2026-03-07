@@ -81,7 +81,7 @@ jobs:
             - 各行の「問題なし」は実際の確認内容を 1 行で具体的に書き換える
             - 指摘事項が 1 件でもある場合はこのコメントを投稿しない
 
+          allowed_tools: "mcp__github_inline_comment__create_inline_comment,mcp__context7__*,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
           claude_args: |
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,mcp__context7__*,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
             --max-turns 24
             --model claude-opus-4-6
