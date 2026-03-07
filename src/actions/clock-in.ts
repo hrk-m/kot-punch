@@ -20,7 +20,6 @@ export class ClockIn extends SingletonAction {
 		if (this._isProcessing) return;
 
 		// State 1 の場合はリセット
-
 		if (ev.payload.state === 1) {
 			await ev.action.setState(0);
 			return;

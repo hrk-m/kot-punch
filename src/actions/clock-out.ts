@@ -12,6 +12,7 @@ import { showErrorImage } from "../lib/showErrorImage.js";
  */
 @action({ UUID: "com.hrk-m.kot-punch.clock-out" })
 export class ClockOut extends SingletonAction {
+	// 処理中フラグ
 	private _isProcessing = false;
 
 	override async onKeyUp(ev: KeyUpEvent): Promise<void> {
@@ -26,7 +27,7 @@ export class ClockOut extends SingletonAction {
 
 		// 処理中フラグを立てる
 		this._isProcessing = true;
-		
+
 		try {
 			// グローバル設定を取得
 			const settings = await getGlobalSettings();

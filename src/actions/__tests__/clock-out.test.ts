@@ -131,6 +131,10 @@ describe("ClockOut", () => {
 
             resolvePunch();
             await firstCall;
+
+            // finally でフラグがリセットされたことを確認（3回目は通る）
+            await clockOut.onKeyUp(ev as never);
+            expect(mockPunchKot).toHaveBeenCalledTimes(2);
         });
     });
 });
