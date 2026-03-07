@@ -70,7 +70,7 @@ docs/
 
 ## 同期フロー
 
-1. 既存 docs をすべて読み込む（`docs/spec.md` / `docs/spec-*.md` / `docs/architecture.md`）
+1. 既存 docs をすべて読み込む（`docs/spec.md` / `docs/spec/*.md` / `docs/architecture.md`）
 2. コードベースの変更を分析する（JIT）
 3. ドリフトを検出する:
    - **Docs → Code**: 欠落要素 → 警告
@@ -90,7 +90,7 @@ docs/
 - 役割・実装箇所が異なる機能 → 別ファイルに分ける
 
 **スキップ条件**:
-- すでに `spec-*.md` へのリンクのみのセクション
+- すでに `spec/*.md` へのリンクのみのセクション
 - 「## 機能詳細」などリンクインデックス自体のセクション
 
 **承認時の処理**:

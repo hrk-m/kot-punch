@@ -13,7 +13,7 @@
 
 `$ARGUMENTS` でタスク名を特定し、`docs/tasks/{タスク名}/prd.md` を元に **モックベース開発用の実装タスク** を `docs/tasks/{タスク名}/tasks.md` に生成する。
 
-- `$ARGUMENTS` は `/planning` で確定したタスク名を受け取る（例: `countup-triple-multiplier`）
+- `$ARGUMENTS` は `/plan` で確定したタスク名を受け取る（例: `countup-triple-multiplier`）
 - 対象 prd が特定できない場合は `AskUserQuestion` でタスク名を確認する
 
 ## Mock First 原則
@@ -145,6 +145,6 @@
 - **Shared Logic Candidate Found**: 共通化候補がある場合は統合方針が確定するまで `tasks.md` へ確定反映しない
 - **Phase2 Scope Unconfirmed**: モック範囲未確定なら確認が取れるまで Phase 2 の確定タスクを書かない
 - **Empty Answer**: `AskUserQuestion` の回答が空または未選択なら推測で進めず質問を再提示する
-- **PRD Missing**: `docs/tasks/{タスク名}/prd.md` がなければ `/planning {タスク名}` を先に案内する
+- **PRD Missing**: `docs/tasks/{タスク名}/prd.md` がなければ `/plan {タスク名}` を先に案内する
 - **Architecture Missing**: `docs/architecture.md` がなければ `/steering` 実行を案内する
 - **Write Failure**: 失敗したパスと原因候補（権限/パス誤り/ディスク容量）を提示する

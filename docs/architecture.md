@@ -68,41 +68,15 @@ src/plugin.ts
 | イベント | 用途 |
 |----------|------|
 | `onWillAppear` | ボタン表示時の初期タイトル・状態設定 |
-| `onKeyDown` | キー押下時に発火。長押し判定タイマーを起動し、メイン処理は `onKeyUp` で行う |
-| `onKeyUp` | キー離し時のメイン処理（短押し判定後にアクションを実行） |
+| `onKeyUp` | キー離し時のメイン処理。`_isProcessing` ガードで連打を防止し、State 0/1 を切り替えてアクションを実行する |
 | `setSettings` / `getSettings` | アクション設定の永続化 |
 | `setTitle` | ボタン上のテキスト更新 |
 
-> **注意**: `onKeyDown` / `onKeyUp` はキー（ボタン）専用イベント。ダイアル・タッチスクリーンには `onDialDown` / `onDialUp` を使う。
+> **注意**: `onKeyUp` はキー（ボタン）専用イベント。ダイアル・タッチスクリーンには `onDialUp` を使う。
 
 #### Multi-Action での状態制御
 
 マルチアクション内では `ev.payload.isInMultiAction` が `true` になり、`ev.payload.userDesiredState` で目的の状態インデックス（0 or 1）を取得できる。
-
-### 長押し検出パターン
-
-SDK にネイティブの長押しイベントがないため、タイマーで実装する：
-
-```typescript
-// onKeyDown: タイマーを起動
-private _longPressTimer: ReturnType<typeof setTimeout> | undefined;
-private _isLongPress = false;
-
-onKeyDown(ev) {
-    this._isLongPress = false;
-    this._longPressTimer = setTimeout(() => {
-        this._isLongPress = true;
-        // 長押しアクションを実行
-    }, 500); // 閾値: 500ms
-}
-
-// onKeyUp: タイマーをキャンセルし、短押しアクションを実行
-onKeyUp(ev) {
-    clearTimeout(this._longPressTimer);
-    if (this._isLongPress) return; // 長押し済みなら短押しアクションをスキップ
-    // 短押しアクションを実行
-}
-```
 
 ---
 
@@ -110,5 +84,5 @@ onKeyUp(ev) {
 
 - `@elgato/streamdeck` は Stream Deck プロセスへの接続が必要なため、ユニットテストでは `vi.mock` で差し替える
 - `ev.action`（`setTitle`, `setSettings`）は `vi.fn()` でスタブ化して検証する
-- `onKeyDown` / `onKeyUp` を組み合わせるテストでは `vi.useFakeTimers()` と `vi.advanceTimersByTimeAsync()` で時間を制御する
+- `onKeyUp` ハンドラは `_isProcessing` フラグで連打を防止しているため、テストでは非同期処理の完了を `await` してから状態を検証する
 - テストフレームワーク: vitest
