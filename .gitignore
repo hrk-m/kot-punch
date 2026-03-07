@@ -5,6 +5,7 @@ node_modules/
 *.sdPlugin/bin
 *.sdPlugin/logs
 *.sdPlugin/manifest.json
+*.sdPlugin/node_modules/
 
 # Dolt database files (added by bd init)
 .dolt/

@@ -1,7 +1,7 @@
 {
     "scripts": {
         "generate-manifest": "node scripts/generate-manifest.mjs",
-        "build": "bun run generate-manifest && rollup -c",
+        "build": "bun run generate-manifest && rollup -c && mkdir -p com.hrk-m.kot-punch.sdPlugin/node_modules && cp -r node_modules/puppeteer com.hrk-m.kot-punch.sdPlugin/node_modules/",
         "logs": "tail -f \"$HOME/Library/Application Support/com.elgato.StreamDeck/Plugins/com.hrk-m.kot-punch.sdPlugin/logs/com.hrk-m.kot-punch.0.log\"",
         "lint": "oxlint src",
         "test": "vitest run"
