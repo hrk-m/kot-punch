@@ -76,3 +76,31 @@ com.hrk-m.kot-punch.sdPlugin/
 ```bash
 bun run lint && bun run test && bunx tsc --noEmit && bun run build
 ```
+
+## Workflow
+
+### Paths
+
+- Steering: `.claude/commands/steering.md`（`/steering` コマンドで管理）
+- Specs: `docs/spec/`（機能単位の仕様書）
+
+### Steering vs Specification
+
+**Steering** (`.claude/commands/`) — AI に対するプロジェクト全体のルールとコンテキストを定義する。命名規則・アーキテクチャ方針・禁止事項など普遍的なガイドを置く。
+
+**Specs** (`docs/spec/`) — 個別機能の要件・設計・タスクを仕様書として管理する。機能ごとにファイルを分割し、実装の根拠として参照する。
+
+### Active Specifications
+
+- `docs/spec/` 配下の仕様書を確認する
+- `/steering` でプロジェクト知識（steering）を確認・更新する
+
+### Minimal Workflow
+
+- Phase 0（任意）: `/steering`
+- Phase 1（仕様定義）:
+  - `/plan "機能の説明"` — 要件定義・設計ドキュメントを生成
+  - `/task {feature}` — 実装タスク一覧を生成
+- Phase 2（実装）:
+  - `/impl {feature} [task-numbers]` — タスク番号を指定して実装
+- PR 作成: `/create-pr {feature}`

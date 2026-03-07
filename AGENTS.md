@@ -46,3 +46,31 @@ bun run lint && bun run test && bunx tsc --noEmit && bun run build
 ## Security & Configuration Tips
 - Never commit real KOT credentials or tokens.
 - Use Stream Deck global settings for runtime secrets and validate required fields in new actions before invoking Puppeteer flows.
+
+## Workflow
+
+### Paths
+
+- Steering: `.claude/commands/steering.md` (managed via `/steering` command)
+- Specs: `docs/spec/` (per-feature specification files)
+
+### Steering vs Specification
+
+**Steering** (`.claude/commands/`) — Project-wide rules and context for AI agents. Place universal guidelines here: naming conventions, architecture decisions, and constraints.
+
+**Specs** (`docs/spec/`) — Per-feature requirements, design, and tasks. Split by feature file and reference as the source of truth during implementation.
+
+### Active Specifications
+
+- Check `docs/spec/` for active specifications
+- Use `/steering` to review or update project-wide steering knowledge
+
+### Minimal Workflow
+
+- Phase 0 (optional): `/steering`
+- Phase 1 (Specification):
+  - `/plan "feature description"` — Generate requirements and design document
+  - `/task {feature}` — Generate implementation task list
+- Phase 2 (Implementation):
+  - `/impl {feature} [task-numbers]` — Implement tasks by number
+- PR: `/create-pr {feature}`
