@@ -13,9 +13,8 @@ on:
     types: [submitted, edited]
 
 concurrency:
-  # Fallback to run_id only when no issue/PR number is available for this event.
   group: codex-${{ github.event.issue.number || github.event.pull_request.number || github.event.number || github.run_id }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   codex:
@@ -32,110 +31,20 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
       issues: write
+      id-token: write
+      actions: read # Required for Codex to read CI results on PRs
     steps:
-      - name: Check OpenAI API key
-        id: openai_key
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          if [ -z "$OPENAI_API_KEY" ]; then
-            echo "available=false" >> "$GITHUB_OUTPUT"
-            echo "OPENAI_API_KEY is not set. Skip Codex run."
-          else
-            echo "available=true" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Checkout repository
-        if: steps.openai_key.outputs.available == 'true'
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.x.x
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 1
 
-      - name: Build prompt
-        if: steps.openai_key.outputs.available == 'true'
-        env:
-          COMMENT_BODY: ${{ github.event.comment.body || '' }}
-          REVIEW_BODY: ${{ github.event.review.body || '' }}
-          PR_TITLE: ${{ github.event.pull_request.title || '' }}
-          PR_BODY: ${{ github.event.pull_request.body || '' }}
-          ISSUE_TITLE: ${{ github.event.issue.title || '' }}
-          ISSUE_BODY: ${{ github.event.issue.body || '' }}
-        run: |
-          cat <<'EOF' > codex-prompt.md
-          You are Codex, a senior software engineer assistant.
-          Reply in Japanese.
-          Keep the response concise and actionable.
-
-          The user mentioned @codex in GitHub.
-          Generate a response message for that thread.
-
-          Context:
-          - repository: ${{ github.repository }}
-          - event_name: ${{ github.event_name }}
-          - actor: ${{ github.actor }}
-          - ref: ${{ github.ref }}
-          - sha: ${{ github.sha }}
-
-          Mention source text:
-          EOF
-
-          if [ "${{ github.event_name }}" = "issue_comment" ] || [ "${{ github.event_name }}" = "pull_request_review_comment" ]; then
-            printf '%s\n' "$COMMENT_BODY" >> codex-prompt.md
-          elif [ "${{ github.event_name }}" = "pull_request_review" ]; then
-            printf '%s\n' "$REVIEW_BODY" >> codex-prompt.md
-          elif [ "${{ github.event_name }}" = "pull_request" ]; then
-            printf 'title: %s\n' "$PR_TITLE" >> codex-prompt.md
-            printf 'body: %s\n' "$PR_BODY" >> codex-prompt.md
-          else
-            printf 'title: %s\n' "$ISSUE_TITLE" >> codex-prompt.md
-            printf 'body: %s\n' "$ISSUE_BODY" >> codex-prompt.md
-          fi
-
-      - name: Run Codex
-        if: steps.openai_key.outputs.available == 'true'
+      - name: Run Codex Action
         id: codex
         uses: openai/codex-action@086169432f1d2ab2f4057540b1754d550f6a1189 # v1
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          prompt-file: codex-prompt.md
-          output-file: codex-response.md
-          sandbox: read-only
-
-      - name: Post response comment
-        if: steps.openai_key.outputs.available == 'true'
-        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const responsePath = 'codex-response.md';
-            if (!fs.existsSync(responsePath)) {
-              core.info('codex-response.md not found; skip posting.');
-              return;
-            }
-
-            const body = fs.readFileSync(responsePath, 'utf8').trim();
-            if (!body) {
-              core.info('Empty Codex response; skip posting.');
-              return;
-            }
-
-            const issueNumber =
-              context.payload.issue?.number ||
-              context.payload.pull_request?.number ||
-              context.payload.number;
-
-            if (!issueNumber) {
-              core.info('No issue or pull request number found; skip posting.');
-              return;
-            }
-
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: Number(issueNumber),
-              body,
-            });
+          

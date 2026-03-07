@@ -1,4 +1,4 @@
-name: PR Review via Codex (orchestrated by Claude)
+name: Codex pull request review
 
 on:
   pull_request:
@@ -9,27 +9,47 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  review-with-tracking:
+  codex:
     if: ${{ !github.event.pull_request.draft && !github.event.pull_request.head.repo.fork }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
-      contents: read
+      contents: write
       pull-requests: write
+      issues: write
       id-token: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4.x.x
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 1
 
-      - name: PR Review via Claude
-        uses: anthropics/claude-code-action@5754b35b0e8771a979727706b2a366dd5d7cf562 # v1
-        with:
-          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          track_progress: true
-          use_sticky_comment: true
+      - name: Configure Codex MCP for inline PR reviews
+        run: |
+          mkdir -p "${{ runner.temp }}/codex-home"
+          cat > "${{ runner.temp }}/codex-home/config.toml" <<'EOF'
+          [mcp_servers.github_inline_comment]
+          command = "docker"
+          args = ["run", "-i", "--rm", "-e", "GITHUB_PERSONAL_ACCESS_TOKEN", "-e", "GITHUB_TOOLSETS", "ghcr.io/github/github-mcp-server", "stdio"]
+          required = true
+          startup_timeout_sec = 20
+          tool_timeout_sec = 60
+          env_vars = ["GITHUB_PERSONAL_ACCESS_TOKEN", "GITHUB_TOOLSETS"]
+          enabled_tools = ["pull_request_read", "pull_request_review_write", "add_comment_to_pending_review"]
+          EOF
 
+      - name: PR Review with Progress Tracking
+        id: run_codex
+        uses: openai/codex-action@086169432f1d2ab2f4057540b1754d550f6a1189 # v1
+        env:
+          GITHUB_PERSONAL_ACCESS_TOKEN: ${{ github.token }}
+          GITHUB_TOOLSETS: pull_requests
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          codex-home: ${{ runner.temp }}/codex-home
+          output-file: codex-output.json
+          safety-strategy: drop-sudo
+          sandbox: workspace-write
           prompt: |
             /review-pr REPO: ${{ github.repository }} PR_NUMBER: ${{ github.event.pull_request.number }}
 
@@ -54,11 +74,29 @@ jobs:
             コメント運用ルール:
             - すべて日本語
             - インラインコメントは改善点・懸念点・バグ可能性のみ（肯定コメントは禁止）
+            - 指摘がある場合は `mcp__github_inline_comment__pull_request_review_write` で pending review を作成し、`mcp__github_inline_comment__add_comment_to_pending_review` で各指摘をインライン追加して、最後に `mcp__github_inline_comment__pull_request_review_write` で event=COMMENT として submit する
             - 各コメントは先頭を `[MUST]` / `[SHOULD]` / `[NIT]` / `[FYI]` で始める
             - 各コメントは先頭1行で結論を示し、その後に「理由」「修正案」を書く
             - 修正方針が明確な場合は suggestion を使う
             - レビュー提出時の総括コメントは空文字列("")、`REQUEST_CHANGES` は使わない
 
-          claude_args: |
-            --allowedTools "mcp__github_inline_comment__create_inline_comment,mcp__context7__*,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
-            --max-turns 16
+            問題なし時の自動コメント:
+            - レビューで指摘事項が 0 件だった場合は、以下のテンプレートで `gh pr comment` を使ってコメントを投稿する
+            - コマンド例: gh pr comment ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --body "..."
+            - テンプレート（観点ごとの結果を表形式で示し、最後に「指摘事項はありません。」で締める）:
+              ```
+              ## レビュー結果: 問題なし ✅
+
+              | 観点 | 結果 |
+              |------|------|
+              | 保守性・可読性 | ✅ 問題なし |
+              | 設計・アーキテクチャ | ✅ 問題なし |
+              | コード品質 | ✅ 問題なし |
+              | 潜在的なバグ | ✅ 問題なし |
+              | セキュリティ | ✅ 問題なし |
+              | テストの追随 | ✅ 問題なし |
+
+              指摘事項はありません。
+              ```
+            - 各行の「問題なし」は実際の確認内容を 1 行で具体的に書き換える
+            - 指摘事項が 1 件でもある場合はこのコメントを投稿しない
