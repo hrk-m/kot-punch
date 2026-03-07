@@ -2,51 +2,36 @@
 
 <background_information>
 
-- **Mission**: PRD を実装可能なタスクへ分解し、実データ接続前にモックで動く縦切りを完成させる
-- **Success Criteria**:
-  - `docs/tasks/{タスク名}/tasks.md` が生成または更新される
-  - タスクは **3フェーズ**（影響調査 → 空モック成立 → 重要処理の穴埋め）で構成される
-  - フェーズ2で「全体が空のモック状態でも動作する」ことが明示される
-  - フェーズ3で重要度順の穴埋め計画が明示される
-  - 各フェーズにチェックポイントがある
+- **Mission**: prd を実装可能なタスクへ分解し、実データ接続前にモックで動く縦切りを完成させる
+- **Success Criteria**: `docs/tasks/{タスク名}/tasks.md` を **3フェーズ**（影響調査 → 空モック成立 → 重要処理の穴埋め）で生成。各フェーズにチェックポイントあり
 
 </background_information>
 
 <instructions>
+
 ## Core Task
-`$ARGUMENTS` からタスク名を特定し、`docs/tasks/{タスク名}/prd.md` を元に
-**モックベース開発用の実装タスク**を `docs/tasks/{タスク名}/tasks.md` に生成する。
 
-### Task Name Input Rules
+`$ARGUMENTS` でタスク名を特定し、`docs/tasks/{タスク名}/prd.md` を元に **モックベース開発用の実装タスク** を `docs/tasks/{タスク名}/tasks.md` に生成する。
 
-- `$ARGUMENTS` は `/planning` で確定したタスク名を受け取る（例: `countup-triple-multiplier`）
-- 自然文が入力された場合は推測で進めず、`docs/tasks/{タスク名}/prd.md` の存在確認を優先する
-- 対象 PRD が特定できない場合は `AskUserQuestion` でタスク名を確認する
+- `$ARGUMENTS` は `/plan` で確定したタスク名を受け取る（例: `countup-triple-multiplier`）
+- 対象 prd が特定できない場合は `AskUserQuestion` でタスク名を確認する
 
 ## Mock First 原則
 
-1. **Contract First**: 先に型・レスポンス形状・エラー形状を固定する
+1. **Contract First**: 型・レスポンス形状・エラー形状を先に固定する
 2. **Mock First**: API/DB 接続前にモックで画面と操作を成立させる
 3. **Vertical Slice First**: 最初の 1 画面を end-to-end で完成させる
 4. **Integration Later**: 実データ統合は別タスクとして明示的に切り出す
 
-## ボタン設定確認（Required）
+## Required 確認事項（AskUserQuestion 必須）
 
-- `docs/tasks/{タスク名}/prd.md` を読む際は、**ボタン設定**（例: ボタン種別、活性/非活性条件、クリック時アクション）に関する記述を優先して確認する
-- 既存 `docs/tasks/{タスク名}/tasks.md` と比較して、ボタン設定由来の変更点が見つかった場合は、反映前に `AskUserQuestion` で確認を取る
-- `AskUserQuestion` の回答が空または未選択なら、推測で反映せず質問を再提示する
+> 回答が空または未選択の場合は推測で進めず質問を再提示する
 
-## 共通化方針確認（Required）
+**ボタン設定確認**: prd のボタン設定（種別/活性条件/クリックアクション）を優先確認。既存 `tasks.md` との差分がある場合は反映前に確認する。
 
-- 新規実装・改修対象を洗い出す際、既存コードで共通化できる候補（重複ロジック、共通 UI、ユーティリティ）を確認する
-- 共通化候補がある場合は、`AskUserQuestion` で「今回のタスクで処理をまとめるか（実施/見送り）」を確認する
-- `AskUserQuestion` の回答が空または未選択なら、推測で反映せず質問を再提示する
+**共通化方針確認**: 共通化候補（重複ロジック/共通 UI/ユーティリティ）がある場合は「今回のタスクで処理をまとめるか（実施/見送り）」を確認する。
 
-## Phase 2 モック範囲確認（Required）
-
-- Phase 2 のタスク化前に、`AskUserQuestion` で「どこまでモック画面を作るか（対象画面/操作フロー/異常系）」を確認する
-- 回答内容を Phase 2 の小タスクへ反映し、範囲外は `**INTEGRATION-LATER**` へ分離する
-- `AskUserQuestion` の回答が空または未選択なら、推測で反映せず質問を再提示する
+**Phase 2 モック範囲確認**: タスク化前に「どこまでモック画面を作るか（対象画面/操作フロー/異常系）」を確認し、範囲外は `**INTEGRATION-LATER**` へ分離する。
 
 ## 生成するタスク構造（必須順序: 3フェーズ）
 
@@ -54,12 +39,7 @@
 2. Phase 2: Mock Empty-State Baseline
 3. Phase 3: Progressive Fill-In from Critical Paths
 
-### フェーズ細分化ルール（Required）
-
-- 各フェーズは必要に応じて `1.1` / `1.2` のような小タスクへ分割できる
-- 小タスクの採番は `Phase X.Y` 形式で、親フェーズ配下に配置する
-- 細分化してもフェーズの順序（1 → 2 → 3）は固定する
-- フェーズ間をまたぐ依存は作らず、依存がある場合は後続フェーズへ移す
+**フェーズ細分化ルール**: 各フェーズは `Phase X.Y` 形式の小タスクへ分割可。順序（1→2→3）は固定。フェーズ間をまたぐ依存は作らず後続フェーズへ移す。
 
 ### タスクテンプレート
 
@@ -101,45 +81,36 @@
 
 ## 実行手順
 
-### Step 1: Context Load
-
+**Step 1: Context Load**
 - `docs/tasks/{タスク名}/prd.md`（必須）
 - `docs/architecture.md`（必須）
-- `docs/prd/index.md`（参照）
+- `docs/spec.md`（参照）
+- `docs/spec/{feature-name}.md`（参照）
 - `docs/tasks/{タスク名}/tasks.md`（既存があればマージ）
 
-### Step 2: Task Generation Rules
-
-- PRD のユーザーストーリーと受け入れ条件を、上記 3 フェーズへ配賦する
-- フェーズ1では「どのファイルを改修するか」を必ず明記する
-- ボタン設定に関する変更点は Phase 1 で明示し、影響ファイルと変更理由をセットで記載する
-- フェーズ1で共通化候補を確認し、候補がある場合は `AskUserQuestion` で統合方針（実施/見送り）を確認する
-- フェーズ1に「全体コードを俯瞰する」項目を置く場合は `- [ ]*` とし、初期フェーズの完了判定に含めない（未チェックのままにする）
-- フェーズ2では「全体が空のモック状態で動作すること」を最優先にする
-- フェーズ2の小タスク確定前に `AskUserQuestion` でモック画面の範囲を確認し、回答をタスクへ反映する
-- フェーズ3では PRD から抽出した主要ユースケースを `操作前提 / 操作 / 期待結果` で追跡可能にする
-- 実データ統合をフェーズ2-3の本体作業に混在させない
+**Step 2: Task Generation Rules**
+- prd のユーザーストーリーと受け入れ条件を 3 フェーズへ配賦する
+- Phase 1: 改修ファイルを必ず明記。ボタン設定の変更点は影響ファイルと変更理由をセットで記載。共通化候補があれば `AskUserQuestion` で統合方針を確認。「全体コード俯瞰」項目は `- [ ]*` とし完了判定に含めない
+- Phase 2: 空モック動作を最優先。小タスク確定前に `AskUserQuestion` でモック範囲を確認し回答を反映する
+- Phase 3: 主要ユースケースを `操作前提 / 操作 / 期待結果` で追跡可能にする
+- 実データ統合を Phase 2-3 の本体作業に混在させない
 - 各タスクに成果物（対象ファイル or テスト観点）を最低 1 つ書く
 - タスク階層は `Phase -> Phase X.Y -> checklist` を上限とする
 
-### Step 3: Markers
-
+**Step 3: Markers**
 - `**MOCK-CONTRACT**`: 型・インターフェース・レスポンス契約
 - `**MOCK-IMPL**`: モックデータ/モック実装本体
 - `**INTEGRATION-LATER**`: 実データ統合の後続作業
 - `(P)`: 並列実行可能
 - `- [ ]*`: 任意（MVP 後回し可）
 
-### Step 4: Finalize
-
-- `docs/tasks/{タスク名}/tasks.md` を作成または更新
-- 既存項目がある場合は置換でなく追記・統合を優先
+**Step 4: Finalize**
+- `docs/tasks/{タスク名}/tasks.md` を作成または更新（既存項目は置換でなく追記・統合を優先）
 
 ## Important Constraints
 
-- PRD 未確定ならタスク生成を開始しない
-- フェーズ1の影響範囲特定なしにフェーズ2へ進まない
-- フェーズ2（空モック成立）なしにフェーズ3へ進まない
+- prd 未確定ならタスク生成を開始しない
+- Phase 1 の影響範囲特定 → Phase 2 → Phase 3 の順序を崩さない
 - モック実装と実データ統合を同時に計画しない
 - 初期フェーズでは「全体コード確認」タスクを完了チェック（`[x]`）にしない
 - タスク名は実行可能な動詞で始める（例: 作成する/実装する/検証する）
@@ -152,28 +123,28 @@
 - `Glob`: `docs/tasks/{タスク名}/` の存在確認
 - `Read`: `prd.md` / `architecture.md` / 既存 `tasks.md` の読み込み
 - `AskUserQuestion`: 要件の不明点確認、ボタン設定変更、共通化方針、Phase 2 モック範囲の確認に使う
+  - 選択肢のどれも該当しない場合、ユーザーは自動的に表示される **"Other"** を選んで自由テキストを入力できる
+  - `options` に "Other" を手動追加する必要はない（ツールが自動付与する）
+  - ユーザーが "Other" を選択した場合は、入力内容を要件に反映してから次フェーズへ進む
 - `Write`: `docs/tasks/{タスク名}/tasks.md` の更新
 
 ## Output Description
 
-ユーザー入力と同じ言語で、以下を返す:
+ユーザー入力と同じ言語で返す:
 
 1. **Status**: `docs/tasks/{タスク名}/tasks.md` の生成/更新結果
-2. **Phase Summary**:
-   - Phase 1: Impact and Change Analysis
-   - Phase 2: Mock Empty-State Baseline
-   - Phase 3: Progressive Fill-In from Critical Paths
+2. **Phase Summary**: Phase 1 / Phase 2 / Phase 3 の概要
 3. **Markers Count**: `MOCK-CONTRACT` / `MOCK-IMPL` / `INTEGRATION-LATER`
 4. **Next Step**: `/task {タスク名}` で継続更新 または 実装開始
 
 ## Safety & Fallback
 
 - **Task Name Missing**: `$ARGUMENTS` が空ならタスク名を確認する
-- **Ambiguous Requirement**: ユースケース解像度が不足している場合は AskUserQuestion で補完する
-- **Button Config Changed**: ボタン設定に関する差分がある場合は AskUserQuestion で反映可否の確認が取れるまで `tasks.md` へ確定反映しない
-- **Shared Logic Candidate Found**: 共通化候補がある場合は AskUserQuestion で統合方針が確定するまで `tasks.md` へ確定反映しない
-- **Phase2 Scope Unconfirmed**: モック画面の作成範囲が未確定なら、AskUserQuestion で確認が取れるまで Phase 2 の確定タスクを書かない
-- **Empty Answer**: AskUserQuestion の回答が空または未選択の場合、推測で進めず質問を再提示する
-- **PRD Missing**: `docs/tasks/{タスク名}/prd.md` がなければ `/planning {タスク名}` を先に案内する
+- **Ambiguous Requirement**: ユースケース解像度が不足している場合は `AskUserQuestion` で補完する
+- **Button Config Changed**: ボタン設定差分がある場合は確認が取れるまで `tasks.md` へ確定反映しない
+- **Shared Logic Candidate Found**: 共通化候補がある場合は統合方針が確定するまで `tasks.md` へ確定反映しない
+- **Phase2 Scope Unconfirmed**: モック範囲未確定なら確認が取れるまで Phase 2 の確定タスクを書かない
+- **Empty Answer**: `AskUserQuestion` の回答が空または未選択なら推測で進めず質問を再提示する
+- **PRD Missing**: `docs/tasks/{タスク名}/prd.md` がなければ `/plan {タスク名}` を先に案内する
 - **Architecture Missing**: `docs/architecture.md` がなければ `/steering` 実行を案内する
 - **Write Failure**: 失敗したパスと原因候補（権限/パス誤り/ディスク容量）を提示する

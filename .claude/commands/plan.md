@@ -2,113 +2,101 @@
 
 <background_information>
 
-- **Mission**: このフローの主目的は「何を作るか」を先に決め切ること
-- **Success Criteria**:
-  - タスク名（対象機能）が確定している
-  - 要件に関する確認結果が `docs/tasks/{タスク名}/prd.md` に整理されている
-  - 最外ボタン（主要導線）の遷移元・遷移先画面・遷移後状態が確定している
-  - 要件確定後にのみ Architecture / 実装タスクへ進んでいる
+**Mission**: 「何を作るか」を先に決め切る。
+
+**Success Criteria**:
+- タスク名が確定している
+- 要件が `docs/tasks/{タスク名}/prd.md` に整理されている
+- 最外ボタンの遷移元・遷移先画面・遷移後状態が確定している
+- 要件確定後にのみ実装フェーズへ進んでいる
 
 </background_information>
 
 <instructions>
+
 ## Core Task
-`$ARGUMENTS` からタスク名を特定し、**`prd` スキルを使って要件を見直し**ながら `docs/tasks/{タスク名}/prd.md` を確定版に更新する。
 
-## Task Name Resolution (Required)
+`$ARGUMENTS` からタスク名を特定し、`prd` スキルで要件を見直しながら `docs/tasks/{タスク名}/prd.md` を確定版に更新する。
 
-- `$ARGUMENTS` が既存のタスク名（kebab-case）なら、そのまま採用する
-- `$ARGUMENTS` が自然文（要望文）なら、要件の意味を保った **英小文字 kebab-case** のタスク名へ正規化する
-- 正規化後のタスク名は `docs/tasks/{タスク名}/` の作成先として固定し、以降の `/task` でも同一名を使う
-- 例: `/plan countupを3倍づつにして` → タスク名 `countup-triple-multiplier`
+---
 
-## Skill Usage (Required)
+## タスク名の決定
 
-- このコマンドでは `prd` スキルを必ず使う
-- 要件ヒアリング・構造化・品質チェックの進め方は `prd` スキルのワークフローに従う
-- `plan.md` では `prd` スキルと重複する手順説明を持たない
+- 既存 kebab-case なら採用。自然文なら英小文字 kebab-case に正規化する
+- 例: `/plan countupを3倍づつにして` → `countup-triple-multiplier`
 
-## ユーザー体験フロー確認（Required）
+---
 
-- ユーザー体験のフロー（操作の流れ・画面遷移・フィードバック）については、必ず `AskUserQuestion` で確認を取る
-- フローが明確に見える場合でも、確認を省略してはならない。必ずユーザーに提示して合意を得る
-- 推測や既存仕様からの類推で確定してはならない
-- 回答が得られるまで次フェーズへ進めない
-
-### 実行手順（この順序で必ず行う）
+## 実行手順（この順序で行う）
 
 1. タスク名を確定する
-2. 既存コード・UI を読んで現状を把握する
-3. **`AskUserQuestion` でフローを提示してユーザーに確認する**（prd.md 作成前に必ず実施）
-   - `preview` フィールドに ASCII モックアップ（画面 / UI / 操作の流れ）を含めること
-   - 「合っている」「フローが違う」の二択を提示し、合意を得る
-   - 合意が取れない場合は質問を再提示する
-4. ユーザーが合意した内容のみ `prd.md` に反映する
+2. 既存コード・UI を Read / Glob で把握する
+3. **`AskUserQuestion` で ASCII モックアップ付きフローを提示してユーザーの合意を得る**（prd.md 作成前に必須）
+   - 「合っている」「フローが違う」の二択を提示し、合意が取れるまで次フェーズに進めない
+4. 合意した内容のみ `docs/tasks/{タスク名}/prd.md` に反映する
+5. 最外ボタンの遷移仕様（遷移元 / 遷移先画面 / 遷移後状態）を確定する
+6. 要件確定後の次アクションとして `/task {タスク名}` を明示する
 
-## ボタン遷移確定（Required）
+---
 
-- 最外ボタン（画面の主要 CTA）について、**どの画面/状態から押されるか**を確定する
-- 遷移先について、**遷移先画面名** と **到達直後の状態**（例: 初期表示、入力済み、loading、empty、error）を確定する
-- 同一ボタンで条件分岐がある場合は、条件ごとに遷移先と状態を分けて記載する
-- 未確定のまま `prd.md` に断定記述しない。判断不能な場合は `AskUserQuestion` で確認する
+## ボタン遷移確定（必須）
+
+- 遷移元・遷移先画面名・到達直後の状態（初期表示 / loading / error 等）を確定する
+- 条件分岐がある場合は条件ごとに記載する
+- 未確定のまま `prd.md` に断定記述しない
+
+---
 
 ## ドキュメント構造
 
 ```text
 docs/
+  spec.md                      # 全体機能要件（参照のみ）
+  spec/{feature-name}.md       # 機能別詳細仕様（参照のみ）
   tasks/
     {タスク名}/
-      prd.md                 # 機能要件（Product Requirements Document）
+      prd.md                   # タスク要件
 ```
 
-## このコマンド固有の進め方
+---
 
-1. タスク名（対象機能）を確定する。曖昧なら対話で先に決める
-2. 既存コード・UI を Read / Glob で把握する
-3. **`AskUserQuestion` でフロー（UI モックアップ付き）をユーザーに提示して合意を得る ← prd.md 作成前に必須**
-4. 合意後、要件の不明点があれば追加で `AskUserQuestion` して確認する
-5. 確定した内容のみ `docs/tasks/{タスク名}/prd.md` に反映する
-6. 最外ボタンの遷移仕様（遷移元/遷移先画面/遷移後状態）を明確に確定してから次フェーズへ進む
-7. 要件確定後にのみ Architecture / 実装タスクへ進む（フェーズ分離）
-8. 要件確定後の次アクションは `/task {タスク名}` を明示する
+## 制約
 
-## Important Constraints
-
-- 要件定義の一次情報は `docs/tasks/{タスク名}/prd.md` とする
+- `prd` スキルを必ず使う
 - 不明点は推測で埋めない
-- 最外ボタンの遷移元・遷移先画面・遷移後状態が未確定のまま `/task` へ進めない
-- 既存 PRD がある場合は上書きより追記・統合を優先する
+- 最外ボタンの遷移が未確定のまま `/task` へ進めない
+- 既存 prd がある場合は上書きより追記・統合を優先する
+- 要件の一次情報は `docs/tasks/{タスク名}/prd.md`。上位参照として `docs/spec.md` / `docs/spec/{feature-name}.md` を読む
+
+---
+
+## フォールバック
+
+| 状況 | 対応 |
+|------|------|
+| `$ARGUMENTS` が空 | `AskUserQuestion` でタスク名を確認 |
+| 要件・遷移が曖昧 | `AskUserQuestion` で確認が取れるまで確定しない |
+| 回答が空・未選択 | 推測で進めず質問を再提示する |
+| prd.md が未存在 | 新規作成する |
 
 </instructions>
 
-## Tool Guidance
+## ツール案内
 
-- **Glob**: `docs/tasks/{タスク名}/` の存在確認と再開判定に使う
-- **Read**: 既存 `docs/tasks/{タスク名}/prd.md` を読んで更新方針を決める
-- **AskUserQuestion**: 要件の不明点確認、および最外ボタンの遷移仕様確定に使う
-- **Write**: `docs/tasks/{タスク名}/prd.md` の新規作成または更新に使う
+- **Glob / Read**: 既存コード・prd.md の確認
+- **AskUserQuestion**: フロー確認・遷移仕様の合意取得
+  - 選択肢のどれも該当しない場合、ユーザーは自動的に表示される **"Other"** を選んで自由テキストを入力できる
+  - `options` に "Other" を手動追加する必要はない（ツールが自動付与する）
+  - ユーザーが "Other" を選択した場合は、入力内容を要件に反映してから次フェーズへ進む
+- **Write / Edit**: `docs/tasks/{タスク名}/prd.md` の作成・更新
 
-## Output Description
+## 出力形式
 
-ユーザー入力と同じ言語で、以下の構成で出力する:
+チャットサマリーのみ（ファイルは直接更新）。
 
-1. **Task Name**: 確定したタスク名
-2. **Requirements Review**: `prd` スキルに基づく見直し結果（不足・矛盾・確定事項）
-3. **Updated File**: `docs/tasks/{タスク名}/prd.md` の更新結果
-4. **Next Step**: 要件確定後に進むコマンド（`/plan` 継続または `/task {最初のタスク名}`）
-
-**Format Requirements**:
-
-- Markdown 見出し（##, ###）を使う
-- コマンドはコードブロックで示す
-- 出力は簡潔に保つ（目安 300 語以内）
-- 明確でプロフェッショナルな文体にする
-
-## Safety & Fallback
-
-- **Task Name Missing**: `$ARGUMENTS` が空なら AskUserQuestion でタスク名を確認する
-- **Ambiguous Requirement**: 判断不能な要件は AskUserQuestion で確認が取れるまで確定しない
-- **Button Flow Ambiguous**: 最外ボタンの遷移元/遷移先画面/遷移後状態のいずれかが曖昧なら AskUserQuestion で確認が取れるまで確定しない
-- **Empty Answer**: AskUserQuestion の回答が空または未選択の場合、推測で進めてはならない。質問を再提示して回答を求める
-- **PRD Not Found**: `docs/tasks/{タスク名}/prd.md` がなければ新規作成する
-- **Write Failure**: 失敗したパスを示し、権限・ディスク容量・パス誤りを確認するよう案内する
+```
+## Task Name: {タスク名}
+## Requirements Review: 不足・矛盾・確定事項
+## Updated File: docs/tasks/{タスク名}/prd.md
+## Next Step: /task {タスク名}
+```

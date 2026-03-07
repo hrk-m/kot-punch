@@ -1,97 +1,106 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with this repository.
 
 ## Overview
 
-KingOfTime (KOT) 向け Stream Deck プラグイン。Elgato Stream Deck SDK (`@elgato/streamdeck`) を使用した TypeScript プロジェクト。
+KingOfTime (KOT) 向け Stream Deck プラグイン。`@elgato/streamdeck` + TypeScript + Rollup で構成。
 
-- SDK ドキュメント: https://docs.elgato.com/streamdeck/sdk/introduction/getting-started
+- SDK docs: https://docs.elgato.com/streamdeck/sdk/introduction/getting-started
 
 ## Commands
 
 ```bash
 # 依存関係インストール
-bun install
+bun install --frozen-lockfile
 
-# ビルド（本番用）
-bun run build
+# lint / test / typecheck（CI と同じ品質ゲート）
+bun run lint
+bun run test
+bunx tsc --noEmit
 
-# manifest 再生成（labels / template 変更時）
+# manifest 再生成（labels / template 更新時）
 bun run generate-manifest
 
-# 開発用ウォッチモード（変更検知 + Stream Deck プラグイン自動再起動）
+# 本番ビルド（manifest 生成 + Rollup）
+bun run build
+
+# 開発ウォッチ（変更検知 + Stream Deck プラグイン自動再起動）
 bun run watch
 ```
 
 ## Architecture
 
-### ビルドフロー
+### Build Flow
 
 `src/plugin.ts` → Rollup (TypeScript + CommonJS + terser) → `com.hrk-m.kot-punch.sdPlugin/bin/plugin.js`
 
-本番ビルドは minify 済み。ウォッチモードは sourcemap 付きでビルドし、`streamdeck restart com.hrk-m.kot-punch` を自動実行する。
+watch 時は sourcemap を有効化し、`streamdeck restart com.hrk-m.kot-punch` を実行する。
 
-### ディレクトリ構成
+### Directory Responsibilities
 
-```
+```text
 src/
-  plugin.ts          # エントリポイント: アクション登録 + streamDeck.connect()
-  actions/           # アクションクラス群（@elgato/streamdeck の SingletonAction を継承）
+  plugin.ts              # エントリポイント（アクション登録 + connect）
+  actions/               # ClockIn / ClockOut / OpenKot
+  actions/__tests__/     # アクション単体テスト
+  lib/                   # settings / puppeteer / showErrorImage
+  lib/__tests__/         # ライブラリ単体テスト
+  labels/labels.json     # manifest 用ラベル
+
 com.hrk-m.kot-punch.sdPlugin/
-  manifest.json      # 自動生成ファイル（manifest.template.json + labels から生成）
-  imgs/              # アイコン画像（通常 + @2x）
-  ui/                # Property Inspector HTML（sdpi-components を使用: https://sdpi-components.dev/docs/components）
-                     # 設定項目がない場合は空 body で OK
-  bin/               # ビルド成果物（gitignore 対象）
-  logs/              # ランタイムログ（gitignore 対象）
+  manifest.json          # 生成物（手編集しない）
+  ui/                    # Property Inspector HTML
+  imgs/                  # アイコン（通常 + @2x）
+  bin/                   # ビルド成果物
 ```
 
-### アクションの追加パターン
+## Action Behavior (Current)
 
-1. `src/actions/` に `SingletonAction<Settings>` を継承したクラスを作成
-2. `@action({ UUID: "com.hrk-m.kot-punch.<name>" })` デコレータを付与
-3. `src/plugin.ts` で `streamDeck.actions.registerAction()` に登録
-4. `manifest.template.json` の `Actions` 配列に UUID・アイコン・コントローラ等を追記
-5. `bun run generate-manifest` で `com.hrk-m.kot-punch.sdPlugin/manifest.json` を再生成
-6. 必要に応じて `com.hrk-m.kot-punch.sdPlugin/ui/` に Property Inspector HTML を追加
+- `clock-in` / `clock-out`: `onKeyUp` で打刻を実行。State 0→1、State 1 は 0 にリセット。連打防止の `_isProcessing` ガードあり。
+- `open-kot`: 認証済みブラウザを開くだけのアクション。必須設定不足時は `showAlert()`。
+- 共通失敗処理: `showErrorImage()` を fire-and-forget で呼び出す。
 
-### SDK イベントの主なライフサイクル
+## Implementation Notes
 
-- `onWillAppear`: ボタンが画面に表示されたとき（タイトル・状態の初期化に使用）
-- `onKeyDown`: キー押下時に発火。長押し判定タイマーを起動し、メイン処理は `onKeyUp` で行う
-- `onKeyUp`: キーが離されたとき。短押し判定後にメイン処理を実行する
-- `setSettings` / `getSettings`: アクションのパーシスタント設定の読み書き
-- `setTitle`: ボタン上に表示するテキストの更新
+- 新規アクションは `@action({ UUID: "com.hrk-m.kot-punch.<name>" })` を付与し、`src/plugin.ts` で登録する。
+- `manifest.template.json` / `src/labels/labels.json` を更新したら `bun run generate-manifest` を実行する。
+- ローカル import は拡張子を省略する（TypeScript が解決するため）。
 
-> キーイベントはキー（ボタン）専用。ダイアル・タッチスクリーンには `onDialDown` / `onDialUp` を使う。
-> 詳細: https://docs.elgato.com/streamdeck/sdk/guides/keys/#onkeydown
+## Testing Notes
 
-#### Multi-Action での状態制御
+- テストフレームワークは Vitest（`environment: node`、coverage provider は `v8`）。
+- `@elgato/streamdeck` と Puppeteer は `vi.mock` で差し替えてユニットテストする。
+- 変更前の最小確認コマンド:
 
-マルチアクション内では `ev.payload.isInMultiAction` が `true` になり、`ev.payload.userDesiredState` で目的の状態インデックス（0 or 1）を取得できる。
-
-#### 長押し検出パターン
-
-SDK にネイティブの長押しイベントがないため、タイマーで実装する。閾値は 500ms。
-
-```typescript
-private _longPressTimer: ReturnType<typeof setTimeout> | undefined;
-private _isLongPress = false;
-
-onKeyDown(ev) {
-    this._isLongPress = false;
-    this._longPressTimer = setTimeout(() => {
-        this._isLongPress = true;
-        // 長押しアクションを実行
-    }, 500);
-}
-
-onKeyUp(ev) {
-    clearTimeout(this._longPressTimer);
-    if (this._isLongPress) return; // 長押し済みなら短押しアクションをスキップ
-    // 短押しアクションを実行
-}
+```bash
+bun run lint && bun run test && bunx tsc --noEmit && bun run build
 ```
 
-テストでは `vi.useFakeTimers()` と `vi.advanceTimersByTimeAsync()` で時間を制御する。
+## Workflow
+
+### Paths
+
+- Steering: `.claude/commands/steering.md`（`/steering` コマンドで管理）
+- Specs: `docs/spec/`（機能単位の仕様書）
+
+### Steering vs Specification
+
+**Steering** (`.claude/commands/`) — AI に対するプロジェクト全体のルールとコンテキストを定義する。命名規則・アーキテクチャ方針・禁止事項など普遍的なガイドを置く。
+
+**Specs** (`docs/spec/`) — 個別機能の要件・設計・タスクを仕様書として管理する。機能ごとにファイルを分割し、実装の根拠として参照する。
+
+### Active Specifications
+
+- `docs/spec/` 配下の仕様書を確認する
+- `/steering` でプロジェクト知識（steering）を確認・更新する
+
+### Minimal Workflow
+
+- Phase 0（任意）: `/steering`
+- Phase 1（仕様定義）:
+  - `/plan "機能の説明"` — 要件定義・設計ドキュメントを生成
+  - `/task {feature}` — 実装タスク一覧を生成
+- Phase 2（実装）:
+  - `/impl {feature} [task-numbers]` — タスク番号を指定して実装
+- PR 作成: `/create-pr {feature}`

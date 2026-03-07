@@ -1,5 +1,5 @@
 import puppeteer from "puppeteer";
-import type { GlobalSettings } from "./settings.js";
+import type { GlobalSettings } from "./settings";
 
 /**
  * JWT 認証済みの KOT ページを開き、ブラウザとページを返す。
