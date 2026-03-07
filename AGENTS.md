@@ -22,7 +22,7 @@ bun run generate-manifest       # Regenerate manifest only
 ```
 
 ## Coding Style & Naming Conventions
-- Language: TypeScript (ESM). Use explicit `.js` extensions in local imports.
+- Language: TypeScript (ESM). Omit file extensions in local imports (TypeScript resolves them).
 - Prefer double quotes and semicolons, consistent with existing files.
 - File naming: kebab-case for modules (`clock-in.ts`), PascalCase for exported classes (`ClockIn`).
 - Action UUID pattern: `com.hrk-m.kot-punch.<action-name>`.

@@ -44,6 +44,7 @@ jobs:
         env:
           GITHUB_PERSONAL_ACCESS_TOKEN: ${{ github.token }}
           GITHUB_TOOLSETS: pull_requests
+          CODEX_MODEL: gpt-5.4
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           codex-home: ${{ runner.temp }}/codex-home
@@ -66,9 +67,9 @@ jobs:
             - `src/plugin.ts` はアクション登録と `streamDeck.connect()` の責務に留まっているか
             - `src/actions/*.ts` で `SingletonAction<Settings>` / `@action({ UUID })` の実装が適切か
             - `com.hrk-m.kot-punch.sdPlugin/manifest.json` の `Actions` / UUID / UI / アイコン / Tooltip が実装と整合しているか
-            - `onKeyDown` / `onKeyUp` の長押し判定タイマー、`clearTimeout`、短押し/長押し分岐が安全か
+            - `onKeyUp` で `_isProcessing` ガードによる連打防止と State 0/1 の切り替えが正しいか
             - Multi Action (`isInMultiAction`, `userDesiredState`) の状態制御が正しいか
-            - Vitest（fake timers とモック含む）のテストが変更に追随しているか
+            - Vitest（モック含む）のテストが変更に追随しているか
             - 型安全性、可読性、保守性、潜在バグ、セキュリティ上の懸念
 
             コメント運用ルール:
