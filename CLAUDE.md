@@ -65,7 +65,7 @@ com.hrk-m.kot-punch.sdPlugin/
 
 - 新規アクションは `@action({ UUID: "com.hrk-m.kot-punch.<name>" })` を付与し、`src/plugin.ts` で登録する。
 - `manifest.template.json` / `src/labels/labels.json` を更新したら `bun run generate-manifest` を実行する。
-- ローカル import は `.js` 拡張子付きで統一する。
+- ローカル import は拡張子を省略する（TypeScript が解決するため）。
 
 ## Testing Notes
 
