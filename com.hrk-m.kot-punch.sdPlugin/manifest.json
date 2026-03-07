@@ -46,17 +46,23 @@
 			"Name": "退勤",
 			"UUID": "com.hrk-m.kot-punch.clock-out",
 			"Icon": "imgs/actions/leave/icon",
-			"Tooltip": "退勤ボタン。短押しで打刻済みを表示、長押しでリセット。",
+			"Tooltip": "退勤ボタン。短押しで KOT に打刻、打刻済み状態で押すと未打刻に戻す。",
 			"PropertyInspectorPath": "ui/clock-out.html",
 			"Controllers": [
 				"Keypad"
 			],
+			"UserTitleEnabled": false,
 			"States": [
 				{
 					"Image": "imgs/actions/leave/key",
 					"TitleAlignment": "middle"
+				},
+				{
+					"Image": "imgs/actions/leave/key1",
+					"TitleAlignment": "middle"
 				}
-			]
+			],
+			"SupportedInMultiActions": false
 		}
 	],
 	"Category": "KOT Punch",

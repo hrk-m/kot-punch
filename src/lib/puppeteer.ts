@@ -50,9 +50,6 @@ async function setupAuthenticatedPage(settings: GlobalSettings) {
 
 /**
  * 打刻ボタンをクリックし、打刻を行う。
- * @param selector 打刻ボタンのセレクタ
- * @param settings グローバル設定
- * @returns 打刻結果
  */
 export async function punchKot(selector: "#attend" | "#leave", settings: GlobalSettings): Promise<void> {
     const { username = "", password = "", dryRun = false } = settings;
@@ -89,6 +86,9 @@ export async function punchKot(selector: "#attend" | "#leave", settings: GlobalS
     }
 }
 
+/**
+ * KING OF TIME を開く。
+ */
 export async function openKotPage(settings: GlobalSettings): Promise<void> {
     let browser;
     try {

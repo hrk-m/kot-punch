@@ -64,7 +64,7 @@ jobs:
             - コマンド例: gh pr comment ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --body "..."
             - テンプレート（観点ごとの結果を表形式で示し、最後に「指摘事項はありません。」で締める）:
               ```
-              ## レビュー結果: 問題なし ✅
+              ## Claude Code レビュー結果: 問題なし ✅
 
               | 観点 | 結果 |
               |------|------|
@@ -82,4 +82,4 @@ jobs:
 
           claude_args: |
             --allowedTools "mcp__github_inline_comment__create_inline_comment,mcp__context7__*,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
-            --max-turns 16
+            --max-turns 24

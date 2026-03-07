@@ -1,4 +1,5 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { showErrorImage } from "../../lib/showErrorImage.js";
 
 vi.mock("@elgato/streamdeck", () => {
     const action =
@@ -8,128 +9,132 @@ vi.mock("@elgato/streamdeck", () => {
         };
 
     class SingletonAction<_TSettings = unknown> {
-        onWillAppear(_ev: unknown): void | Promise<void> {}
-        onKeyDown(_ev: unknown): void | Promise<void> {}
         onKeyUp(_ev: unknown): void | Promise<void> {}
     }
 
     return { action, SingletonAction };
 });
 
+const mockPunchKot = vi.fn().mockResolvedValue(undefined);
+vi.mock("../../lib/puppeteer.js", () => ({
+    punchKot: mockPunchKot,
+}));
+
+const mockGetGlobalSettings = vi.fn();
+const mockHasRequiredPunchSettings = vi.fn().mockReturnValue(true);
+vi.mock("../../lib/settings.js", () => ({
+    getGlobalSettings: mockGetGlobalSettings,
+    hasRequiredPunchSettings: mockHasRequiredPunchSettings,
+}));
+
+vi.mock("../../lib/showErrorImage.js", () => ({
+    showErrorImage: vi.fn().mockResolvedValue(undefined),
+}));
+
 const { ClockOut } = await import("../clock-out.js");
 
+const fullSettings = {
+    kingOfTimeUrl: "https://kingoftime-recorder.appspot.com/login",
+    tokenKey: "htjwt_xxx",
+    token: "abc123",
+    username: "山田 太郎",
+    password: "pass1234",
+};
+
 function makeSharedAction() {
-    const setTitle = vi.fn().mockResolvedValue(undefined);
-    const setSettings = vi.fn().mockResolvedValue(undefined);
-    return { action: { setTitle, setSettings }, setTitle, setSettings };
+    const setState = vi.fn().mockResolvedValue(undefined);
+    const showOk = vi.fn().mockResolvedValue(undefined);
+    const showAlert = vi.fn().mockResolvedValue(undefined);
+    return { action: { setState, showOk, showAlert }, setState, showOk, showAlert };
 }
 
-function makeKeyDownEvent(action: object, settings: Record<string, unknown>) {
-    return { action, payload: { settings: { ...settings } } };
-}
-
-function makeKeyUpEvent(action: object, settings: Record<string, unknown>) {
-    return { action, payload: { settings: { ...settings } } };
+function makeKeyUpEvent(action: object, state: number) {
+    return { action, payload: { state } };
 }
 
 describe("ClockOut", () => {
     let clockOut: InstanceType<typeof ClockOut>;
 
     beforeEach(() => {
+        vi.clearAllMocks();
         clockOut = new ClockOut();
+        mockGetGlobalSettings.mockResolvedValue(fullSettings);
+        mockHasRequiredPunchSettings.mockReturnValue(true);
+        mockPunchKot.mockResolvedValue(undefined);
     });
 
-    afterEach(() => {
-        vi.useRealTimers();
-    });
+    describe("onKeyUp - State 0 打刻成功フロー", () => {
+        it("punchKot が成功したとき showOk() + setState(1) が呼ばれる", async () => {
+            const { action, showOk, setState } = makeSharedAction();
+            const ev = makeKeyUpEvent(action, 0);
 
-    describe("onWillAppear", () => {
-        it("punched が未設定のとき、タイトルを '退勤' に設定する", async () => {
-            const { action, setTitle } = makeSharedAction();
-            const ev = { action, payload: { settings: {} } };
+            await clockOut.onKeyUp(ev as never);
 
-            await clockOut.onWillAppear(ev as never);
-
-            expect(setTitle).toHaveBeenCalledOnce();
-            expect(setTitle).toHaveBeenCalledWith("退勤");
-        });
-
-        it("punched が true のとき、タイトルを '✅' に設定する", async () => {
-            const { action, setTitle } = makeSharedAction();
-            const ev = { action, payload: { settings: { punched: true } } };
-
-            await clockOut.onWillAppear(ev as never);
-
-            expect(setTitle).toHaveBeenCalledWith("✅");
+            expect(mockPunchKot).toHaveBeenCalledWith("#leave", fullSettings);
+            expect(showOk).toHaveBeenCalledOnce();
+            expect(setState).toHaveBeenCalledWith(1);
         });
     });
 
-    describe("onKeyDown + onKeyUp - 短押し: 打刻", () => {
-        it("punched が未設定のとき、短押しで punched を true にセットし '✅' を表示する", async () => {
-            vi.useFakeTimers();
-            const { action, setSettings, setTitle } = makeSharedAction();
-            const evDown = makeKeyDownEvent(action, {});
-            const evUp = makeKeyUpEvent(action, {});
+    describe("onKeyUp - State 0 打刻失敗フロー", () => {
+        it("punchKot がエラーを throw したとき setState(0) が呼ばれる", async () => {
+            const { action, setState } = makeSharedAction();
+            const ev = makeKeyUpEvent(action, 0);
+            mockPunchKot.mockRejectedValueOnce(new Error("punch failed"));
 
-            clockOut.onKeyDown(evDown as never);
-            await vi.advanceTimersByTimeAsync(100);
-            await clockOut.onKeyUp(evUp as never);
+            await clockOut.onKeyUp(ev as never);
 
-            expect(setSettings).toHaveBeenCalledWith({ punched: true });
-            expect(setTitle).toHaveBeenCalledWith("✅");
-        });
-
-        it("punched が true のとき、短押しで setSettings が punched: true で呼ばれる", async () => {
-            vi.useFakeTimers();
-            const { action, setSettings } = makeSharedAction();
-            const evDown = makeKeyDownEvent(action, { punched: true });
-            const evUp = makeKeyUpEvent(action, { punched: true });
-
-            clockOut.onKeyDown(evDown as never);
-            await vi.advanceTimersByTimeAsync(100);
-            await clockOut.onKeyUp(evUp as never);
-
-            expect(setSettings).toHaveBeenCalledWith({ punched: true });
+            expect(showErrorImage).toHaveBeenCalledOnce();
+            expect(setState).toHaveBeenCalledWith(0);
         });
     });
 
-    describe("長押しリセット", () => {
-        it("onKeyDown 後 500ms 経過したとき、punched が false にリセットされ '退勤' が表示される", async () => {
-            vi.useFakeTimers();
-            const { action, setSettings, setTitle } = makeSharedAction();
-            const evDown = makeKeyDownEvent(action, { punched: true });
+    describe("onKeyUp - State 1 リセットフロー", () => {
+        it("State 1 でボタンを押すと setState(0) が呼ばれ Puppeteer は起動しない", async () => {
+            const { action, setState } = makeSharedAction();
+            const ev = makeKeyUpEvent(action, 1);
 
-            clockOut.onKeyDown(evDown as never);
-            await vi.advanceTimersByTimeAsync(500);
+            await clockOut.onKeyUp(ev as never);
 
-            expect(setSettings).toHaveBeenCalledWith({ punched: false });
-            expect(setTitle).toHaveBeenCalledWith("退勤");
+            expect(setState).toHaveBeenCalledWith(0);
+            expect(mockPunchKot).not.toHaveBeenCalled();
         });
+    });
 
-        it("onKeyDown 後 500ms 以内に onKeyUp が来たとき、リセットされない", async () => {
-            vi.useFakeTimers();
-            const { action, setSettings } = makeSharedAction();
-            const evDown = makeKeyDownEvent(action, { punched: true });
-            const evUp = makeKeyUpEvent(action, { punched: true });
+    describe("onKeyUp - 設定未完了フロー", () => {
+        it("hasRequiredPunchSettings が false のとき showAlert() が呼ばれ Puppeteer は起動しない", async () => {
+            const { action, showAlert } = makeSharedAction();
+            const ev = makeKeyUpEvent(action, 0);
+            mockHasRequiredPunchSettings.mockReturnValue(false);
 
-            clockOut.onKeyDown(evDown as never);
-            await vi.advanceTimersByTimeAsync(499);
-            await clockOut.onKeyUp(evUp as never);
+            await clockOut.onKeyUp(ev as never);
 
-            expect(setSettings).not.toHaveBeenCalledWith({ punched: false });
+            expect(showAlert).toHaveBeenCalledOnce();
+            expect(mockPunchKot).not.toHaveBeenCalled();
         });
+    });
 
-        it("長押しタイマー発火後に onKeyUp が来ても短押しアクションが実行されない", async () => {
-            vi.useFakeTimers();
-            const { action, setSettings } = makeSharedAction();
-            const evDown = makeKeyDownEvent(action, { punched: false });
-            const evUp = makeKeyUpEvent(action, { punched: false });
+    describe("onKeyUp - 処理中ガード", () => {
+        it("_isProcessing=true のとき onKeyUp が即 return する（連打防止）", async () => {
+            const { action } = makeSharedAction();
+            const ev = makeKeyUpEvent(action, 0);
 
-            clockOut.onKeyDown(evDown as never);
-            await vi.advanceTimersByTimeAsync(500);
-            await clockOut.onKeyUp(evUp as never);
+            // 1回目は処理中になる（punchKot を pending 状態にする）
+            let resolvePunch!: () => void;
+            mockPunchKot.mockReturnValueOnce(new Promise<void>((resolve) => { resolvePunch = resolve; }));
 
-            expect(setSettings).not.toHaveBeenCalledWith({ punched: true });
+            const firstCall = clockOut.onKeyUp(ev as never);
+            // 2回目は処理中フラグによりブロックされる
+            await clockOut.onKeyUp(ev as never);
+
+            expect(mockPunchKot).toHaveBeenCalledTimes(1);
+
+            resolvePunch();
+            await firstCall;
+
+            // finally でフラグがリセットされたことを確認（3回目は通る）
+            await clockOut.onKeyUp(ev as never);
+            expect(mockPunchKot).toHaveBeenCalledTimes(2);
         });
     });
 });
