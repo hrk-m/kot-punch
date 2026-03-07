@@ -54,9 +54,9 @@ describe("OpenKot", () => {
         it("設定済みのとき、openKotPage を呼び、タイトルは変更しない", async () => {
             const { action, setTitle } = makeSharedAction();
             mockGetGlobalSettings.mockResolvedValue({
-                kingOfTimeUrl: "https://example.com",
-                tokenKey: "htjwt_xxx",
-                token: "abc",
+                kotPunchUrl: "https://example.com",
+                kotPunchKey: "htjwt_xxx",
+                kotPunchToken: "abc",
             });
             mockHasRequiredSettings.mockReturnValue(true);
             mockOpenKotPage.mockResolvedValue(undefined);
@@ -70,9 +70,9 @@ describe("OpenKot", () => {
         it("成功後に _isProcessing が false に戻り、次回も処理できる", async () => {
             const { action } = makeSharedAction();
             mockGetGlobalSettings.mockResolvedValue({
-                kingOfTimeUrl: "https://example.com",
-                tokenKey: "htjwt_xxx",
-                token: "abc",
+                kotPunchUrl: "https://example.com",
+                kotPunchKey: "htjwt_xxx",
+                kotPunchToken: "abc",
             });
             mockHasRequiredSettings.mockReturnValue(true);
             mockOpenKotPage.mockResolvedValue(undefined);
@@ -87,7 +87,7 @@ describe("OpenKot", () => {
     describe("onKeyUp - 設定未完了", () => {
         it("設定が未完了のとき showAlert を呼び、openKotPage を呼ばない", async () => {
             const { action, showAlert } = makeSharedAction();
-            mockGetGlobalSettings.mockResolvedValue({ kingOfTimeUrl: "", tokenKey: "", token: "" });
+            mockGetGlobalSettings.mockResolvedValue({ kotPunchUrl: "", kotPunchKey: "", kotPunchToken: "" });
             mockHasRequiredSettings.mockReturnValue(false);
 
             await openKot.onKeyUp(makeKeyUpEvent(action) as never);
@@ -98,7 +98,7 @@ describe("OpenKot", () => {
 
         it("設定未完了後に _isProcessing が false に戻り、次回も処理できる", async () => {
             const { action } = makeSharedAction();
-            mockGetGlobalSettings.mockResolvedValue({ kingOfTimeUrl: "", tokenKey: "", token: "" });
+            mockGetGlobalSettings.mockResolvedValue({ kotPunchUrl: "", kotPunchKey: "", kotPunchToken: "" });
             mockHasRequiredSettings.mockReturnValue(false);
 
             await openKot.onKeyUp(makeKeyUpEvent(action) as never);
@@ -115,9 +115,9 @@ describe("OpenKot", () => {
         it("openKotPage が例外を投げたとき showErrorImage を呼ぶ", async () => {
             const { action } = makeSharedAction();
             mockGetGlobalSettings.mockResolvedValue({
-                kingOfTimeUrl: "https://example.com",
-                tokenKey: "htjwt_xxx",
-                token: "abc",
+                kotPunchUrl: "https://example.com",
+                kotPunchKey: "htjwt_xxx",
+                kotPunchToken: "abc",
             });
             mockHasRequiredSettings.mockReturnValue(true);
             mockOpenKotPage.mockRejectedValue(new Error("browser launch failed"));
@@ -131,9 +131,9 @@ describe("OpenKot", () => {
         it("エラー後に _isProcessing が false に戻り、次回も処理できる", async () => {
             const { action } = makeSharedAction();
             mockGetGlobalSettings.mockResolvedValue({
-                kingOfTimeUrl: "https://example.com",
-                tokenKey: "htjwt_xxx",
-                token: "abc",
+                kotPunchUrl: "https://example.com",
+                kotPunchKey: "htjwt_xxx",
+                kotPunchToken: "abc",
             });
             mockHasRequiredSettings.mockReturnValue(true);
             mockOpenKotPage.mockRejectedValueOnce(new Error("browser launch failed"));
@@ -150,9 +150,9 @@ describe("OpenKot", () => {
         it("同時に 2 回 onKeyUp が来ても openKotPage を 1 回しか呼ばない", async () => {
             const { action } = makeSharedAction();
             mockGetGlobalSettings.mockResolvedValue({
-                kingOfTimeUrl: "https://example.com",
-                tokenKey: "htjwt_xxx",
-                token: "abc",
+                kotPunchUrl: "https://example.com",
+                kotPunchKey: "htjwt_xxx",
+                kotPunchToken: "abc",
             });
             mockHasRequiredSettings.mockReturnValue(true);
             mockOpenKotPage.mockResolvedValue(undefined);

@@ -34,11 +34,11 @@ vi.mock("../../lib/showErrorImage.js", () => ({
 const { ClockOut } = await import("../clock-out.js");
 
 const fullSettings = {
-    kingOfTimeUrl: "https://kingoftime-recorder.appspot.com/login",
-    tokenKey: "htjwt_xxx",
-    token: "abc123",
-    username: "山田 太郎",
-    password: "pass1234",
+    kotPunchUrl: "https://kingoftime-recorder.appspot.com/login",
+    kotPunchKey: "htjwt_xxx",
+    kotPunchToken: "abc123",
+    kotPunchUsername: "山田 太郎",
+    kotPunchPassword: "pass1234",
 };
 
 function makeSharedAction() {
