@@ -2,7 +2,7 @@
     "scripts": {
         "generate-manifest": "node scripts/generate-manifest.mjs",
         "build": "bun run generate-manifest && rollup -c",
-        "watch": "bun run generate-manifest && rollup -c -w --watch.onEnd=\"streamdeck restart com.hrk-m.kot-punch\"",
+        "logs": "tail -f \"$HOME/Library/Application Support/com.elgato.StreamDeck/Plugins/com.hrk-m.kot-punch.sdPlugin/logs/com.hrk-m.kot-punch.0.log\"",
         "lint": "oxlint src",
         "test": "vitest run"
     },

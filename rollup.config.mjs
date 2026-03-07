@@ -14,6 +14,7 @@ const sdPlugin = "com.hrk-m.kot-punch.sdPlugin";
  */
 const config = {
 	input: "src/plugin.ts",
+	external: ["puppeteer"],
 	onwarn(warning, warn) {
 		// node_modules 由来の this 書き換え警告と循環依存警告を抑制する
 		if (warning.code === "THIS_IS_UNDEFINED" && warning.id?.includes("node_modules")) return;
