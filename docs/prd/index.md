@@ -24,19 +24,23 @@ KingOfTime (KOT) 向け Elgato Stream Deck プラグイン。Stream Deck のボ�
 
 #### 出勤ボタン（`com.hrk-m.kot-punch.clock-in`）
 
-- 初期表示：ボタンに `出勤` を表示
-- 短押し（500ms 未満）：`✅` に表示を切り替え、打刻済みフラグを Settings に保存
-- 長押し（500ms 以上）：初期ラベル `出勤` にリセット
-- 打刻済み状態（`punched: true`）は永続化され、Stream Deck 再起動後も保持
-- Property Inspector には設定項目なし（UI は空）
+- State 0（未打刻）でボタンを押す：Puppeteer 経由で KOT に出勤打刻（`punchKot("#attend")`）→ 成功で `showOk()` + State 1 へ遷移
+- State 1（打刻済み）でボタンを押す：State 0 にリセット（Puppeteer なし）
+- 処理中（`_isProcessing = true`）はボタン入力を無視（連打防止）
+- 設定未完了（`hasRequiredPunchSettings` が false）：`showAlert()` で Property Inspector へ誘導
+- 打刻失敗：`showErrorImage()` + State 0 に戻す
+- State はセッション内のみ保持（プラグイン再起動でリセット）
+- Property Inspector には設定項目なし（Global Settings を open-kot と共有）
 
 #### 退勤ボタン（`com.hrk-m.kot-punch.clock-out`）
 
-- 初期表示：ボタンに `退勤` を表示
-- 短押し（500ms 未満）：`✅` に表示を切り替え、打刻済みフラグを Settings に保存
-- 長押し（500ms 以上）：初期ラベル `退勤` にリセット
-- 打刻済み状態（`punched: true`）は永続化され、Stream Deck 再起動後も保持
-- Property Inspector には設定項目なし（UI は空）
+- State 0（未打刻）でボタンを押す：Puppeteer 経由で KOT に退勤打刻（`punchKot("#leave")`）→ 成功で `showOk()` + State 1 へ遷移
+- State 1（打刻済み）でボタンを押す：State 0 にリセット（Puppeteer なし）
+- 処理中（`_isProcessing = true`）はボタン入力を無視（連打防止）
+- 設定未完了（`hasRequiredPunchSettings` が false）：`showAlert()` で Property Inspector へ誘導
+- 打刻失敗：`showErrorImage()` + State 0 に戻す
+- State はセッション内のみ保持（プラグイン再起動でリセット）
+- Property Inspector には設定項目なし（Global Settings を open-kot と共有）
 
 ---
 
