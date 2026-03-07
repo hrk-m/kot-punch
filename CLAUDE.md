@@ -25,8 +25,8 @@ bun run generate-manifest
 # 本番ビルド（manifest 生成 + Rollup）
 bun run build
 
-# 開発ウォッチ（変更検知 + Stream Deck プラグイン自動再起動）
-bun run watch
+# ログ監視（Stream Deck プラグインのログをリアルタイム表示）
+bun run logs
 ```
 
 ## Architecture
@@ -35,7 +35,7 @@ bun run watch
 
 `src/plugin.ts` → Rollup (TypeScript + CommonJS + terser) → `com.hrk-m.kot-punch.sdPlugin/bin/plugin.js`
 
-watch 時は sourcemap を有効化し、`streamdeck restart com.hrk-m.kot-punch` を実行する。
+ビルド時は terser で minify し、sourcemap は出力しない。
 
 ### Directory Responsibilities
 
