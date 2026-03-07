@@ -1,13 +1,13 @@
 import puppeteer from "puppeteer";
-import type { GlobalSettings } from "./settings";
+import type { KotPunchSettings, RequestSettings } from "./settings";
 
 /**
  * JWT 認証済みの KOT ページを開き、ブラウザとページを返す。
  * 認証失敗（ダイアログ発生）時はブラウザを閉じてエラーを throw する。
  * 呼び出し元が browser.disconnect() または browser.close() の責任を持つ。
  */
-async function setupAuthenticatedPage(settings: GlobalSettings) {
-    const { kingOfTimeUrl = "", tokenKey = "", token = "" } = settings;
+async function setupAuthenticatedPage(settings: KotPunchSettings) {
+    const { kotPunchUrl = "", kotPunchKey = "", kotPunchToken = "" } = settings;
 
     let browser;
     try {
@@ -21,10 +21,10 @@ async function setupAuthenticatedPage(settings: GlobalSettings) {
         const page = pages[0] ?? (await browser.newPage());
 
         // 1. 勤怠画面へアクセス（domain 確立）
-        await page.goto(kingOfTimeUrl);
+        await page.goto(kotPunchUrl);
 
         // 2. JWT クッキーをセット（domain 指定なし → 現在ページのドメインが自動適用）
-        await page.setCookie({ name: tokenKey, value: token });
+        await page.setCookie({ name: kotPunchKey, value: kotPunchToken });
 
         // 3. 再アクセスして認証適用（ダイアログ = 認証失敗として扱う）
         let hasAuthDialog = false;
@@ -33,7 +33,7 @@ async function setupAuthenticatedPage(settings: GlobalSettings) {
             await dialog.dismiss();
         });
 
-        await page.goto(kingOfTimeUrl);
+        await page.goto(kotPunchUrl);
 
         if (hasAuthDialog) {
             await browser.close();
@@ -51,8 +51,8 @@ async function setupAuthenticatedPage(settings: GlobalSettings) {
 /**
  * 打刻ボタンをクリックし、打刻を行う。
  */
-export async function punchKot(selector: "#attend" | "#leave", settings: GlobalSettings): Promise<void> {
-    const { username = "", password = "", dryRun = false } = settings;
+export async function punchKot(selector: "#attend" | "#leave", settings: KotPunchSettings): Promise<void> {
+    const { kotPunchUsername = "", kotPunchPassword = "", kotPunchDryRun = false } = settings;
 
     let browser;
     try {
@@ -63,13 +63,13 @@ export async function punchKot(selector: "#attend" | "#leave", settings: GlobalS
         await page.click(selector);
 
         // 5. ユーザーを選択（テキスト照合）
-        await page.click(`::-p-text(${username.replace(/\)/g, "\\)")})`);
+        await page.click(`::-p-text(${kotPunchUsername.replace(/\)/g, "\\)")})`);
 
         // 6. パスワード入力
-        await page.type("input[type=password]", password, { delay: dryRun ? 100 : 0 });
+        await page.type("input[type=password]", kotPunchPassword, { delay: kotPunchDryRun ? 100 : 0 });
 
-        // 7. submit（dryRun=false のときのみ）
-        if (dryRun) {
+        // 7. submit（kotPunchDryRun=false のときのみ）
+        if (kotPunchDryRun) {
             // テストモード: パスワード入力まで確認できるようブラウザを開いたまま切断
             await browser.disconnect();
         } else {
@@ -87,9 +87,45 @@ export async function punchKot(selector: "#attend" | "#leave", settings: GlobalS
 }
 
 /**
+ * 申請画面にログインし、ブラウザをユーザーに引き渡す。
+ * ログイン失敗（ナビゲーションタイムアウト等）時はブラウザを閉じてエラーを throw する。
+ * 呼び出し元が browser.disconnect() または browser.close() の責任を持つ。
+ */
+export async function openRequestPage(settings: RequestSettings): Promise<void> {
+    const { requestUrl = "", requestUsername = "", requestPassword = "" } = settings;
+
+    let browser;
+    try {
+        browser = await puppeteer.launch({
+            headless: false,
+            defaultViewport: null,
+            args: ["--start-maximized"],
+        });
+
+        const pages = await browser.pages();
+        const page = pages[0] ?? (await browser.newPage());
+
+        await page.goto(requestUrl);
+        await page.type("#login_id", requestUsername);
+        await page.type("#login_password", requestPassword);
+
+        await Promise.all([
+            page.waitForNavigation({ waitUntil: "networkidle0" }),
+            page.click("#login_button"),
+        ]);
+
+        await browser.disconnect();
+        browser = undefined;
+    } catch (e) {
+        await browser?.close();
+        throw e;
+    }
+}
+
+/**
  * KING OF TIME を開く。
  */
-export async function openKotPage(settings: GlobalSettings): Promise<void> {
+export async function openKotPage(settings: KotPunchSettings): Promise<void> {
     let browser;
     try {
         ({ browser } = await setupAuthenticatedPage(settings));

@@ -9,5 +9,8 @@
     },
     "open-kot": {
         "name": "KING OF TIMEを開く"
+    },
+    "open-request": {
+        "name": "申請画面を開く"
     }
 }

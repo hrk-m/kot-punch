@@ -30,7 +30,7 @@ vi.mock("puppeteer", () => ({
     default: { launch: mockLaunch },
 }));
 
-const { openKotPage, punchKot } = await import("../puppeteer.js");
+const { openKotPage, punchKot, openRequestPage } = await import("../puppeteer.js");
 
 function resetMocks() {
     vi.resetAllMocks();
@@ -50,9 +50,9 @@ function resetMocks() {
 
 describe("openKotPage", () => {
     const settings = {
-        kingOfTimeUrl: "https://kingoftime-recorder.appspot.com/login?section=1000",
-        tokenKey: "htjwt_xxx",
-        token: "abc123",
+        kotPunchUrl: "https://kingoftime-recorder.appspot.com/login?section=1000",
+        kotPunchKey: "htjwt_xxx",
+        kotPunchToken: "abc123",
     };
 
     beforeEach(() => {
@@ -68,11 +68,11 @@ describe("openKotPage", () => {
         });
     });
 
-    it("kingOfTimeUrl へ 2 回 goto する（domain 確立 → 認証適用）", async () => {
+    it("kotPunchUrl へ 2 回 goto する（domain 確立 → 認証適用）", async () => {
         await openKotPage(settings);
         expect(mockGoto).toHaveBeenCalledTimes(2);
-        expect(mockGoto).toHaveBeenNthCalledWith(1, settings.kingOfTimeUrl);
-        expect(mockGoto).toHaveBeenNthCalledWith(2, settings.kingOfTimeUrl);
+        expect(mockGoto).toHaveBeenNthCalledWith(1, settings.kotPunchUrl);
+        expect(mockGoto).toHaveBeenNthCalledWith(2, settings.kotPunchUrl);
     });
 
     it("既存タブを再利用し、不要な newPage を作らない", async () => {
@@ -84,8 +84,8 @@ describe("openKotPage", () => {
     it("JWT cookie を setCookie でセットする（domain 指定なし）", async () => {
         await openKotPage(settings);
         expect(mockSetCookie).toHaveBeenCalledWith({
-            name: settings.tokenKey,
-            value: settings.token,
+            name: settings.kotPunchKey,
+            value: settings.kotPunchToken,
         });
     });
 
@@ -154,38 +154,115 @@ describe("openKotPage", () => {
     });
 });
 
-describe("punchKot", () => {
+describe("openRequestPage", () => {
     const settings = {
-        kingOfTimeUrl: "https://kingoftime-recorder.appspot.com/login?section=1000",
-        tokenKey: "htjwt_xxx",
-        token: "abc123",
-        username: "山田 太郎",
-        password: "pass1234",
+        requestUrl: "https://s3.ta.kingoftime.jp/admin",
+        requestUsername: "admin",
+        requestPassword: "pass1234",
     };
 
     beforeEach(() => {
         resetMocks();
     });
 
-    it("dryRun=false: #attend クリック → ユーザー選択 → パスワード入力 → submit が実行される", async () => {
+    it("ブラウザを可視モードかつ最大化で起動する", async () => {
+        await openRequestPage(settings);
+        expect(mockLaunch).toHaveBeenCalledWith({
+            headless: false,
+            defaultViewport: null,
+            args: ["--start-maximized"],
+        });
+    });
+
+    it("requestUrl が設定されているときその URL へアクセスする", async () => {
+        await openRequestPage({ ...settings, requestUrl: "https://login.ta.kingoftime.jp/admin" });
+        expect(mockGoto).toHaveBeenCalledWith("https://login.ta.kingoftime.jp/admin");
+    });
+
+    it("既存タブを再利用し、不要な newPage を作らない", async () => {
+        await openRequestPage(settings);
+        expect(mockPages).toHaveBeenCalledOnce();
+        expect(mockNewPage).not.toHaveBeenCalled();
+    });
+
+    it("操作順序: goto → type(#login_id) → type(#login_password) → click(submit) → disconnect", async () => {
+        const order: string[] = [];
+        mockGoto.mockImplementation(() => { order.push("goto"); return Promise.resolve(null); });
+        mockType.mockImplementation((selector: string) => { order.push(`type(${selector})`); return Promise.resolve(null); });
+        mockClick.mockImplementation(() => { order.push("click"); return Promise.resolve(null); });
+        mockWaitForNavigation.mockImplementation(() => { order.push("nav"); return Promise.resolve(null); });
+        mockDisconnect.mockImplementation(() => { order.push("disconnect"); return Promise.resolve(null); });
+
+        await openRequestPage(settings);
+
+        // Promise.all の評価順: waitForNavigation(nav) → click(#login_button) → 両完了後 disconnect
+        expect(order).toEqual(["goto", "type(#login_id)", "type(#login_password)", "nav", "click", "disconnect"]);
+    });
+
+    it("#login_id に requestUsername を入力する", async () => {
+        await openRequestPage(settings);
+        expect(mockType).toHaveBeenCalledWith("#login_id", settings.requestUsername);
+    });
+
+    it("#login_password に requestPassword を入力する", async () => {
+        await openRequestPage(settings);
+        expect(mockType).toHaveBeenCalledWith("#login_password", settings.requestPassword);
+    });
+
+    it("#login_button クリックと waitForNavigation を並列実行する", async () => {
+        await openRequestPage(settings);
+        expect(mockClick).toHaveBeenCalledWith("#login_button");
+        expect(mockWaitForNavigation).toHaveBeenCalledWith({ waitUntil: "networkidle0" });
+    });
+
+    it("browser.disconnect() を呼び、ウィンドウを残す（close ではない）", async () => {
+        await openRequestPage(settings);
+        expect(mockDisconnect).toHaveBeenCalledOnce();
+        expect(mockClose).not.toHaveBeenCalled();
+    });
+
+    it("例外発生時は browser.close() でクリーンアップし、エラーを rethrow する", async () => {
+        const navError = new Error("navigation timeout");
+        mockWaitForNavigation.mockRejectedValueOnce(navError);
+
+        await expect(openRequestPage(settings)).rejects.toBe(navError);
+        expect(mockClose).toHaveBeenCalledOnce();
+        expect(mockDisconnect).not.toHaveBeenCalled();
+    });
+});
+
+describe("punchKot", () => {
+    const settings = {
+        kotPunchUrl: "https://kingoftime-recorder.appspot.com/login?section=1000",
+        kotPunchKey: "htjwt_xxx",
+        kotPunchToken: "abc123",
+        kotPunchUsername: "山田 太郎",
+        kotPunchPassword: "pass1234",
+    };
+
+    beforeEach(() => {
+        resetMocks();
+    });
+
+    it("kotPunchDryRun=false: #attend クリック → ユーザー選択 → パスワード入力 → submit が実行される", async () => {
         await punchKot("#attend", settings);
 
         const clickArgs = mockClick.mock.calls.map((c) => c[0]);
         expect(clickArgs).toContain("#attend");
-        expect(clickArgs).toContain(`::-p-text(${settings.username})`);
+        expect(clickArgs).toContain(`::-p-text(${settings.kotPunchUsername})`);
         expect(clickArgs).toContain("button[type=submit]");
-        expect(mockType).toHaveBeenCalledWith("input[type=password]", settings.password, { delay: 0 });
+        expect(mockType).toHaveBeenCalledWith("input[type=password]", settings.kotPunchPassword, { delay: 0 });
         expect(mockWaitForNavigation).toHaveBeenCalledWith({ waitUntil: "networkidle0" });
         expect(mockClose).toHaveBeenCalledOnce();
         expect(mockDisconnect).not.toHaveBeenCalled();
     });
 
-    it("dryRun=false: 操作順序が #attend → ユーザー選択 → パスワード入力 → submit になる", async () => {
+    it("kotPunchDryRun=false: 操作順序が #attend → ユーザー選択 → パスワード入力 → submit になる", async () => {
         const order: string[] = [];
         mockClick.mockImplementation((selector: string) => {
             if (selector === "#attend") {
                 order.push("attend");
-            } else if (selector === `::-p-text(${settings.username})`) {
+            } else if (selector === `::-p-text(${settings.kotPunchUsername})`) {
                 order.push("selectUser");
             } else if (selector === "button[type=submit]") {
                 order.push("submit");
@@ -202,25 +279,25 @@ describe("punchKot", () => {
         expect(order).toEqual(["attend", "selectUser", "typePassword", "submit"]);
     });
 
-    it("dryRun=true: submit クリックがスキップされる", async () => {
-        await punchKot("#attend", { ...settings, dryRun: true });
+    it("kotPunchDryRun=true: submit クリックがスキップされる", async () => {
+        await punchKot("#attend", { ...settings, kotPunchDryRun: true });
 
         const clickArgs = mockClick.mock.calls.map((c) => c[0]);
         expect(clickArgs).not.toContain("button[type=submit]");
-        expect(mockType).toHaveBeenCalledWith("input[type=password]", settings.password, { delay: 100 });
+        expect(mockType).toHaveBeenCalledWith("input[type=password]", settings.kotPunchPassword, { delay: 100 });
         expect(mockDisconnect).toHaveBeenCalledOnce();
         expect(mockClose).not.toHaveBeenCalled();
     });
 
     it("ユーザー名に ) が含まれても ::-p-text セレクタをエスケープしてクリックできる", async () => {
-        await punchKot("#attend", { ...settings, username: "山田(太郎)", dryRun: true });
+        await punchKot("#attend", { ...settings, kotPunchUsername: "山田(太郎)", kotPunchDryRun: true });
 
         const clickArgs = mockClick.mock.calls.map((c) => c[0]);
         expect(clickArgs).toContain("::-p-text(山田(太郎\\))");
     });
 
     it("#leave 指定時に #leave ボタンをクリックする", async () => {
-        await punchKot("#leave", { ...settings, dryRun: true });
+        await punchKot("#leave", { ...settings, kotPunchDryRun: true });
 
         const clickArgs = mockClick.mock.calls.map((c) => c[0]);
         expect(clickArgs).toContain("#leave");
