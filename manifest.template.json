@@ -4,6 +4,24 @@
 	"Author": "hrk-m",
 	"Actions": [
 		{
+			"Name": "{{open-request.name}}",
+			"UUID": "com.hrk-m.kot-punch.open-request",
+			"Icon": "imgs/actions/open-request/icon",
+			"Tooltip": "申請画面にログインして Chrome を引き渡す",
+			"PropertyInspectorPath": "ui/open-request.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/open-request/key",
+					"Title": "申請画面",
+					"TitleAlignment": "bottom",
+					"TitleColor": "#4EA84E"
+				}
+			]
+		},
+		{
 			"Name": "{{open-kot.name}}",
 			"UUID": "com.hrk-m.kot-punch.open-kot",
 			"Icon": "imgs/actions/open-kot/icon",

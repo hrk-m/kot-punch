@@ -8,7 +8,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 
 ## 前提条件
 
-- グローバル設定に `kingOfTimeUrl` / `tokenKey` / `token` / `username` / `password` が設定済みであること
+- グローバル設定に `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` が設定済みであること
 - Stream Deck プラグインが起動していること
 
 ---
@@ -18,7 +18,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 | 項目 | 型 | 説明 |
 |------|----|------|
 | 入力: `onKeyUp` イベント | `KeyUpEvent` | Stream Deck のキー離し操作 |
-| 入力: グローバル設定 | `GlobalSettings` | `kingOfTimeUrl` / `tokenKey` / `token` / `username` / `password` / `dryRun` |
+| 入力: グローバル設定 | `KotPunchSettings` | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` / `kotPunchDryRun` |
 | 出力 | `void` | 副作用として打刻を実行し、UI 状態を更新する |
 
 ---
@@ -37,7 +37,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
        ├─ JWT クッキーをセット
        ├─ 打刻ページに遷移
        ├─ ユーザー選択・パスワード入力
-       ├─ dryRun でなければ submit
+       ├─ kotPunchDryRun でなければ submit
        └─ 成功: showOk() + setState(1)
 ```
 
@@ -65,7 +65,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 ## 制約・非機能要件
 
 - 連打防止: `_isProcessing` フラグで処理中の重複実行を防ぐ
-- dryRun モード: `dryRun=true` の場合は submit をスキップし、パスワード入力まで確認できる状態でブラウザを切断する
+- dryRun モード: `kotPunchDryRun=true` の場合は submit をスキップし、パスワード入力まで確認できる状態でブラウザを切断する
 - State はセッション内のみ保持（プラグイン再起動でリセット）、当日限りの打刻管理として意図的に非永続化
 
 ---
@@ -76,7 +76,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 |--------|------|
 | State 1 でボタンを押した場合 | `setState(0)` にリセットして処理を抜ける（再打刻なし） |
 | 処理中に再度ボタンを押した場合 | `_isProcessing` フラグにより即 `return` |
-| `dryRun=true` で実行した場合 | submit をスキップし、ブラウザを `disconnect()` のみで終了 |
+| `kotPunchDryRun=true` で実行した場合 | submit をスキップし、ブラウザを `disconnect()` のみで終了 |
 
 ---
 

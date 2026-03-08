@@ -26,8 +26,8 @@ src/plugin.ts
 | `plugin.ts` | エントリポイント。アクション登録と `streamDeck.connect()` のみ記述 |
 | `actions/` | `SingletonAction<Settings>` を継承したアクションクラス群 |
 | `actions/__tests__/` | アクションのユニットテスト（vitest） |
-| `lib/settings.ts` | Global Settings 読み書きヘルパー。`GlobalSettings` 型定義（`kingOfTimeUrl` / `tokenKey` / `token` / `username` / `password` / `dryRun`）・`getGlobalSettings()` / `hasRequiredSettings()`（open-kot 用）/ `hasRequiredPunchSettings()`（clock-in/clock-out 用）を提供 |
-| `lib/puppeteer.ts` | `punchKot(selector, settings)` / `openKotPage(settings)` 関数。Puppeteer で Chrome を起動し JWT クッキーをセット。`punchKot` は打刻ボタンクリック・ユーザー選択・パスワード入力・submit まで実行（`dryRun` 時は submit スキップ）。`openKotPage` は認証後に `disconnect()` のみ |
+| `lib/settings.ts` | Global Settings 読み書きヘルパー。`KotPunchSettings` 型定義（`kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` / `kotPunchDryRun`）および `RequestSettings` 型定義（`requestUrl` / `requestUsername` / `requestPassword`）・`getGlobalSettings()` / `getRequestSettings()` / `hasRequiredSettings()` / `hasRequiredPunchSettings()` / `hasRequiredRequestSettings()` を提供 |
+| `lib/puppeteer.ts` | `punchKot(selector, settings)` / `openKotPage(settings)` / `openRequestPage(settings)` 関数。Puppeteer で Chrome を起動し必要な認証情報を適用。`punchKot` は打刻ボタンクリック・ユーザー選択・パスワード入力・submit まで実行（`kotPunchDryRun` 時は submit スキップ）。`openKotPage` / `openRequestPage` は認証後に `disconnect()` でユーザーへ引き渡す |
 | `lib/showErrorImage.ts` | 共通エラー表示ユーティリティ。エラー画像を 3 秒表示し元の画像に戻す。フォールバックで `showAlert()` |
 | `lib/__tests__/` | ライブラリのユニットテスト（vitest） |
 

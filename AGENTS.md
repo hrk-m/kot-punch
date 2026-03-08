@@ -17,7 +17,7 @@ bun run lint                    # Lint TypeScript in src/ with oxlint
 bun run test                    # Run Vitest suite
 bunx tsc --noEmit               # Type-check only (CI gate)
 bun run build                   # Generate manifest + Rollup production bundle
-bun run watch                   # Watch build + restart Stream Deck plugin
+bun run logs                    # Tail Stream Deck plugin log file
 bun run generate-manifest       # Regenerate manifest only
 ```
 

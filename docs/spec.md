@@ -14,16 +14,20 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 
 | 設定項目 | 型 | 用途 |
 |----------|----|------|
-| `kingOfTimeUrl` | string | KOT の URL |
-| `tokenKey` | string | JWT クッキーのキー名 |
-| `token` | string | JWT トークン値 |
-| `username` | string | 打刻ユーザー名 |
-| `password` | string | 打刻パスワード |
-| `dryRun` | boolean | true の場合、submit をスキップして動作確認のみ行う |
+| `kotPunchUrl` | string | KOT の URL |
+| `kotPunchKey` | string | JWT クッキーのキー名 |
+| `kotPunchToken` | string | JWT トークン値 |
+| `kotPunchUsername` | string | 打刻ユーザー名 |
+| `kotPunchPassword` | string | 打刻パスワード |
+| `kotPunchDryRun` | boolean | true の場合、submit をスキップして動作確認のみ行う |
+| `requestUrl` | string | 申請画面ログイン URL |
+| `requestUsername` | string | 申請画面ログインユーザー名 |
+| `requestPassword` | string | 申請画面ログインパスワード |
 
 **必須項目の区分**:
-- Open KOT: `kingOfTimeUrl`, `tokenKey`, `token`
-- 打刻（Clock In / Clock Out）: 上記 3 項目 + `username`, `password`
+- Open KOT: `kotPunchUrl`, `kotPunchKey`, `kotPunchToken`
+- 打刻（Clock In / Clock Out）: 上記 3 項目 + `kotPunchUsername`, `kotPunchPassword`
+- Open Request: `requestUrl`, `requestUsername`, `requestPassword`
 
 ---
 
@@ -38,7 +42,8 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 
 | アクション | 何をするか | 必須設定 |
 |---|---|---|
-| **Clock In**（出勤打刻） | ボタン押下で KOT 出勤打刻を自動実行。成功でアイコンがチェックマークに変わる | `kingOfTimeUrl` / `tokenKey` / `token` / `username` / `password` |
+| **Clock In**（出勤打刻） | ボタン押下で KOT 出勤打刻を自動実行。成功でアイコンがチェックマークに変わる | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` |
 | **Clock Out**（退勤打刻） | ボタン押下で KOT 退勤打刻を自動実行。成功でアイコンがチェックマークに変わる | 同上 |
-| **Open KOT** | JWT 認証済みの Chrome で KOT 管理画面を開く。ブラウザはそのまま操作できる状態で引き渡される | `kingOfTimeUrl` / `tokenKey` / `token` |
+| **Open KOT** | JWT 認証済みの Chrome で KOT 管理画面を開く。ブラウザはそのまま操作できる状態で引き渡される | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` |
+| **Open Request**（申請画面を開く） | 申請画面にログイン済みの Chrome を開く | `requestUrl` / `requestUsername` / `requestPassword` |
 

@@ -8,7 +8,7 @@ JWT 認証済みの Chrome ウィンドウで KING OF TIME 管理画面を開く
 
 ## 前提条件
 
-- グローバル設定に `kingOfTimeUrl` / `tokenKey` / `token` が設定済みであること
+- グローバル設定に `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` が設定済みであること
 - Stream Deck プラグインが起動していること
 
 ---
@@ -18,7 +18,7 @@ JWT 認証済みの Chrome ウィンドウで KING OF TIME 管理画面を開く
 | 項目 | 型 | 説明 |
 |------|----|------|
 | 入力: `onKeyUp` イベント | `KeyUpEvent` | Stream Deck のキー離し操作 |
-| 入力: グローバル設定 | `GlobalSettings` | `kingOfTimeUrl` / `tokenKey` / `token` |
+| 入力: グローバル設定 | `KotPunchSettings` | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` |
 | 出力 | `void` | 副作用として JWT 認証済み Chrome ウィンドウを開く |
 
 ---
