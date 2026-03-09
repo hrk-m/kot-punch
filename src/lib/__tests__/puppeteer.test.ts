@@ -261,12 +261,13 @@ describe("punchKot", () => {
 
         const clickArgs = mockClick.mock.calls.map((c) => c[0]);
         expect(clickArgs).toContain("#attend");
-        expect(clickArgs).toContain(`[title*='${settings.kotPunchUsername}']`);
+        expect(clickArgs).toContain(`[title*="${settings.kotPunchUsername}"]`);
         expect(mockWaitForSelector).toHaveBeenCalledWith("#attend");
-        expect(mockWaitForSelector).toHaveBeenCalledWith(`[value*='${settings.kotPunchUsername}']`);
+        expect(mockWaitForSelector).toHaveBeenCalledWith(`[value*="${settings.kotPunchUsername}"]`);
         expect(mockWaitForSelector).toHaveBeenCalledWith("#password_dialog");
         expect(mockType).toHaveBeenCalledWith(".input_password", settings.kotPunchPassword, { delay: 100 });
         expect(mockEvaluate).toHaveBeenCalledOnce();
+        expect(mockWaitForNavigation).toHaveBeenCalledWith({ waitUntil: "networkidle0" });
         expect(mockClose).toHaveBeenCalledOnce();
         expect(mockDisconnect).not.toHaveBeenCalled();
     });
@@ -274,31 +275,33 @@ describe("punchKot", () => {
     it("kotPunchDryRun=false: 固定遅延には sleep を使う", async () => {
         await punchKot("#attend", settings);
 
+        expect(mockSleep).toHaveBeenCalledTimes(3);
         expect(mockSleep).toHaveBeenNthCalledWith(1, 500);
         expect(mockSleep).toHaveBeenNthCalledWith(2, 500);
         expect(mockSleep).toHaveBeenNthCalledWith(3, 500);
-        expect(mockSleep).toHaveBeenNthCalledWith(4, 1000);
+        expect(mockWaitForNavigation).toHaveBeenCalledWith({ waitUntil: "networkidle0" });
     });
 
     it("kotPunchDryRun=false: 操作順序が #attend → ユーザー選択 → パスワード入力 → submit になる", async () => {
         const order: string[] = [];
         mockWaitForSelector.mockImplementation((selector: string) => {
             if (selector === "#attend") order.push("waitAttend");
-            else if (selector === `[value*='${settings.kotPunchUsername}']`) order.push("waitUser");
+            else if (selector === `[value*="${settings.kotPunchUsername}"]`) order.push("waitUser");
             else if (selector === "#password_dialog") order.push("waitDialog");
             return Promise.resolve(null);
         });
         mockClick.mockImplementation((selector: string) => {
             if (selector === "#attend") order.push("attend");
-            else if (selector === `[title*='${settings.kotPunchUsername}']`) order.push("selectUser");
+            else if (selector === `[title*="${settings.kotPunchUsername}"]`) order.push("selectUser");
             return Promise.resolve(null);
         });
         mockType.mockImplementation(() => { order.push("typePassword"); return Promise.resolve(null); });
+        mockWaitForNavigation.mockImplementation(() => { order.push("waitNav"); return Promise.resolve(null); });
         mockEvaluate.mockImplementation(() => { order.push("submit"); return Promise.resolve(null); });
 
         await punchKot("#attend", settings);
 
-        expect(order).toEqual(["waitAttend", "attend", "waitUser", "selectUser", "waitDialog", "typePassword", "submit"]);
+        expect(order).toEqual(["waitAttend", "attend", "waitUser", "selectUser", "waitDialog", "typePassword", "waitNav", "submit"]);
     });
 
     it("kotPunchDryRun=true: submit がスキップされる", async () => {
@@ -316,6 +319,20 @@ describe("punchKot", () => {
         const clickArgs = mockClick.mock.calls.map((c) => c[0]);
         expect(clickArgs).toContain("#leave");
         expect(mockDisconnect).toHaveBeenCalledOnce();
+    });
+
+    it('ユーザー名に " を含むとき CSS 属性セレクタ用にエスケープする', async () => {
+        await punchKot("#attend", { ...settings, kotPunchUsername: '山田 "太郎"', kotPunchDryRun: true });
+
+        expect(mockWaitForSelector).toHaveBeenCalledWith('[value*="山田 \\"太郎\\""]');
+        expect(mockClick).toHaveBeenCalledWith('[title*="山田 \\"太郎\\""]');
+    });
+
+    it("ユーザー名に \\ を含むとき CSS 属性セレクタ用にエスケープする", async () => {
+        await punchKot("#attend", { ...settings, kotPunchUsername: "domain\\user", kotPunchDryRun: true });
+
+        expect(mockWaitForSelector).toHaveBeenCalledWith('[value*="domain\\\\user"]');
+        expect(mockClick).toHaveBeenCalledWith('[title*="domain\\\\user"]');
     });
 
     it("認証失敗（dialog イベント）: エラーが throw されブラウザが閉じる", async () => {

@@ -56,11 +56,16 @@ async function setupAuthenticatedPage(settings: KotPunchSettings) {
     }
 }
 
+function escapeAttrValue(value: string) {
+    return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
 /**
  * 打刻ボタンをクリックし、打刻を行う。
  */
 export async function punchKot(selector: "#attend" | "#leave", settings: KotPunchSettings): Promise<void> {
     const { kotPunchUsername = "", kotPunchPassword = "", kotPunchDryRun = false } = settings;
+    const escapedUsername = escapeAttrValue(kotPunchUsername);
 
     let browser;
     try {
@@ -74,9 +79,9 @@ export async function punchKot(selector: "#attend" | "#leave", settings: KotPunc
 
         // ユーザーを選択（value 属性で出現を待機 → 500ms 後に title 属性でクリック）
         logger.puppeteer.debug("selecting user");
-        await page.waitForSelector(`[value*='${kotPunchUsername}']`);
+        await page.waitForSelector(`[value*="${escapedUsername}"]`);
         await sleep(500);
-        await page.click(`[title*='${kotPunchUsername}']`);
+        await page.click(`[title*="${escapedUsername}"]`);
 
         // パスワード入力（ダイアログ出現を待機 → 500ms 後に入力）
         logger.puppeteer.debug("typing password");
@@ -93,8 +98,10 @@ export async function punchKot(selector: "#attend" | "#leave", settings: KotPunc
             logger.puppeteer.info("submitting punch");
             await sleep(500);
             // page.click() では "not clickable" になるため JS から直接クリック
-            await page.evaluate('document.querySelector("[type=submit]")?.click()');
-            await sleep(1000);
+            await Promise.all([
+                page.waitForNavigation({ waitUntil: "networkidle0" }),
+                page.evaluate('document.querySelector("[type=submit]")?.click()'),
+            ]);
             await browser.close();
         }
         logger.puppeteer.info("punch completed");
