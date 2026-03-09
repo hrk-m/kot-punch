@@ -1,3 +1,4 @@
+import { setTimeout as sleep } from "node:timers/promises";
 import puppeteer from "puppeteer";
 import type { KotPunchSettings, RequestSettings } from "./settings";
 import { logger } from "./logger";
@@ -55,11 +56,16 @@ async function setupAuthenticatedPage(settings: KotPunchSettings) {
     }
 }
 
+function escapeAttrValue(value: string) {
+    return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
 /**
  * 打刻ボタンをクリックし、打刻を行う。
  */
 export async function punchKot(selector: "#attend" | "#leave", settings: KotPunchSettings): Promise<void> {
     const { kotPunchUsername = "", kotPunchPassword = "", kotPunchDryRun = false } = settings;
+    const escapedUsername = escapeAttrValue(kotPunchUsername);
 
     let browser;
     try {
@@ -68,15 +74,20 @@ export async function punchKot(selector: "#attend" | "#leave", settings: KotPunc
 
         // 打刻ボタンをクリック
         logger.puppeteer.info(`clicking punch button: ${selector}`);
+        await page.waitForSelector(selector);
         await page.click(selector);
 
-        // ユーザーを選択（テキスト照合）
+        // ユーザーを選択（value 属性で出現を待機 → 500ms 後に title 属性でクリック）
         logger.puppeteer.debug("selecting user");
-        await page.click(`::-p-text(${kotPunchUsername.replace(/\)/g, "\\)")})`);
+        await page.waitForSelector(`[value*="${escapedUsername}"]`);
+        await sleep(500);
+        await page.click(`[title*="${escapedUsername}"]`);
 
-        // パスワード入力
+        // パスワード入力（ダイアログ出現を待機 → 500ms 後に入力）
         logger.puppeteer.debug("typing password");
-        await page.type("input[type=password]", kotPunchPassword, { delay: kotPunchDryRun ? 100 : 0 });
+        await page.waitForSelector("#password_dialog");
+        await sleep(500);
+        await page.type(".input_password", kotPunchPassword, { delay: 100 });
 
         // submit（kotPunchDryRun=false のときのみ）
         if (kotPunchDryRun) {
@@ -85,9 +96,12 @@ export async function punchKot(selector: "#attend" | "#leave", settings: KotPunc
             await browser.disconnect();
         } else {
             logger.puppeteer.info("submitting punch");
+            await sleep(500);
+            // page.click() では "not clickable" になるため JS から直接クリック
+            await page.waitForSelector("[type=submit]");
             await Promise.all([
                 page.waitForNavigation({ waitUntil: "networkidle0" }),
-                page.click("button[type=submit]"),
+                page.evaluate('document.querySelector("[type=submit]").click()'),
             ]);
             await browser.close();
         }
