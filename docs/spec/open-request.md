@@ -37,7 +37,8 @@
        ├─ #login_id にユーザー名を入力
        ├─ #login_password にパスワードを入力
        ├─ #login_button クリック + 遷移待ち（networkidle0）
-       └─ disconnect()（ブラウザはそのまま引き渡す）
+       ├─ disconnect()（ブラウザはそのまま引き渡す）
+       └─ notify("申請画面を開きました")
 ```
 
 ---
@@ -76,4 +77,5 @@
 | `lib/puppeteer.ts` | `openRequestPage(settings)` — Puppeteer 起動・ログイン・disconnect |
 | `lib/settings.ts` | `getRequestSettings()` / `hasRequiredRequestSettings()` — 設定取得・バリデーション |
 | `lib/showErrorImage.ts` | `showErrorImage(action)` — エラー画像表示ユーティリティ |
+| `lib/notify.ts` | `notify(message)` — 成功時の macOS 通知（fire-and-forget） |
 | 申請画面（外部） | ログイン対象のウェブサービス |
