@@ -35,7 +35,8 @@ jobs:
           use_sticky_comment: true
 
           prompt: |
-            /review-pr REPO: ${{ github.repository }} PR_NUMBER: ${{ github.event.pull_request.number }}
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
 
             このリポジトリは Stream Deck プラグイン（TypeScript + Rollup + Vitest）です。
             レビュー時は `CLAUDE.md` と `docs/architecture.md` を参照し、以下の方針で確認してください。
