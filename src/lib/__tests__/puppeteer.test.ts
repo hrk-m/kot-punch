@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+const mockSleep = vi.fn().mockResolvedValue(undefined);
 const mockGoto = vi.fn().mockResolvedValue(null);
 const mockSetCookie = vi.fn().mockResolvedValue(null);
 const mockDisconnect = vi.fn().mockResolvedValue(null);
@@ -9,6 +10,8 @@ const mockOnce = vi.fn();
 const mockClick = vi.fn().mockResolvedValue(null);
 const mockType = vi.fn().mockResolvedValue(null);
 const mockWaitForNavigation = vi.fn().mockResolvedValue(null);
+const mockWaitForSelector = vi.fn().mockResolvedValue(null);
+const mockEvaluate = vi.fn().mockResolvedValue(null);
 
 function makePage() {
     return {
@@ -19,6 +22,8 @@ function makePage() {
         click: mockClick,
         type: mockType,
         waitForNavigation: mockWaitForNavigation,
+        waitForSelector: mockWaitForSelector,
+        evaluate: mockEvaluate,
     };
 }
 
@@ -30,10 +35,15 @@ vi.mock("puppeteer", () => ({
     default: { launch: mockLaunch },
 }));
 
+vi.mock("node:timers/promises", () => ({
+    setTimeout: mockSleep,
+}));
+
 const { openKotPage, punchKot, openRequestPage } = await import("../puppeteer.js");
 
 function resetMocks() {
     vi.resetAllMocks();
+    mockSleep.mockResolvedValue(undefined);
     mockGoto.mockResolvedValue(null);
     mockSetCookie.mockResolvedValue(null);
     mockDisconnect.mockResolvedValue(null);
@@ -43,6 +53,8 @@ function resetMocks() {
     mockClick.mockResolvedValue(null);
     mockType.mockResolvedValue(null);
     mockWaitForNavigation.mockResolvedValue(null);
+    mockWaitForSelector.mockResolvedValue(null);
+    mockEvaluate.mockResolvedValue(null);
     mockPages.mockResolvedValue([makePage()]);
     mockNewPage.mockResolvedValue(makePage());
     mockLaunch.mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect, close: mockClose });
@@ -249,51 +261,53 @@ describe("punchKot", () => {
 
         const clickArgs = mockClick.mock.calls.map((c) => c[0]);
         expect(clickArgs).toContain("#attend");
-        expect(clickArgs).toContain(`::-p-text(${settings.kotPunchUsername})`);
-        expect(clickArgs).toContain("button[type=submit]");
-        expect(mockType).toHaveBeenCalledWith("input[type=password]", settings.kotPunchPassword, { delay: 0 });
-        expect(mockWaitForNavigation).toHaveBeenCalledWith({ waitUntil: "networkidle0" });
+        expect(clickArgs).toContain(`[title*='${settings.kotPunchUsername}']`);
+        expect(mockWaitForSelector).toHaveBeenCalledWith("#attend");
+        expect(mockWaitForSelector).toHaveBeenCalledWith(`[value*='${settings.kotPunchUsername}']`);
+        expect(mockWaitForSelector).toHaveBeenCalledWith("#password_dialog");
+        expect(mockType).toHaveBeenCalledWith(".input_password", settings.kotPunchPassword, { delay: 100 });
+        expect(mockEvaluate).toHaveBeenCalledOnce();
         expect(mockClose).toHaveBeenCalledOnce();
         expect(mockDisconnect).not.toHaveBeenCalled();
     });
 
+    it("kotPunchDryRun=false: 固定遅延には sleep を使う", async () => {
+        await punchKot("#attend", settings);
+
+        expect(mockSleep).toHaveBeenNthCalledWith(1, 500);
+        expect(mockSleep).toHaveBeenNthCalledWith(2, 500);
+        expect(mockSleep).toHaveBeenNthCalledWith(3, 500);
+        expect(mockSleep).toHaveBeenNthCalledWith(4, 1000);
+    });
+
     it("kotPunchDryRun=false: 操作順序が #attend → ユーザー選択 → パスワード入力 → submit になる", async () => {
         const order: string[] = [];
+        mockWaitForSelector.mockImplementation((selector: string) => {
+            if (selector === "#attend") order.push("waitAttend");
+            else if (selector === `[value*='${settings.kotPunchUsername}']`) order.push("waitUser");
+            else if (selector === "#password_dialog") order.push("waitDialog");
+            return Promise.resolve(null);
+        });
         mockClick.mockImplementation((selector: string) => {
-            if (selector === "#attend") {
-                order.push("attend");
-            } else if (selector === `::-p-text(${settings.kotPunchUsername})`) {
-                order.push("selectUser");
-            } else if (selector === "button[type=submit]") {
-                order.push("submit");
-            }
+            if (selector === "#attend") order.push("attend");
+            else if (selector === `[title*='${settings.kotPunchUsername}']`) order.push("selectUser");
             return Promise.resolve(null);
         });
-        mockType.mockImplementation(() => {
-            order.push("typePassword");
-            return Promise.resolve(null);
-        });
+        mockType.mockImplementation(() => { order.push("typePassword"); return Promise.resolve(null); });
+        mockEvaluate.mockImplementation(() => { order.push("submit"); return Promise.resolve(null); });
 
         await punchKot("#attend", settings);
 
-        expect(order).toEqual(["attend", "selectUser", "typePassword", "submit"]);
+        expect(order).toEqual(["waitAttend", "attend", "waitUser", "selectUser", "waitDialog", "typePassword", "submit"]);
     });
 
-    it("kotPunchDryRun=true: submit クリックがスキップされる", async () => {
+    it("kotPunchDryRun=true: submit がスキップされる", async () => {
         await punchKot("#attend", { ...settings, kotPunchDryRun: true });
 
-        const clickArgs = mockClick.mock.calls.map((c) => c[0]);
-        expect(clickArgs).not.toContain("button[type=submit]");
-        expect(mockType).toHaveBeenCalledWith("input[type=password]", settings.kotPunchPassword, { delay: 100 });
+        expect(mockEvaluate).not.toHaveBeenCalled();
+        expect(mockType).toHaveBeenCalledWith(".input_password", settings.kotPunchPassword, { delay: 100 });
         expect(mockDisconnect).toHaveBeenCalledOnce();
         expect(mockClose).not.toHaveBeenCalled();
-    });
-
-    it("ユーザー名に ) が含まれても ::-p-text セレクタをエスケープしてクリックできる", async () => {
-        await punchKot("#attend", { ...settings, kotPunchUsername: "山田(太郎)", kotPunchDryRun: true });
-
-        const clickArgs = mockClick.mock.calls.map((c) => c[0]);
-        expect(clickArgs).toContain("::-p-text(山田(太郎\\))");
     });
 
     it("#leave 指定時に #leave ボタンをクリックする", async () => {
