@@ -32,6 +32,11 @@ vi.mock("../../lib/showErrorImage.js", () => ({
     showErrorImage: mockShowErrorImage,
 }));
 
+const mockNotify = vi.fn();
+vi.mock("../../lib/notify.js", () => ({
+    notify: mockNotify,
+}));
+
 const { OpenRequest } = await import("../open-request.js");
 
 function makeSharedAction() {
@@ -66,6 +71,8 @@ describe("OpenRequest", () => {
             await openRequest.onKeyUp(makeKeyUpEvent(action) as never);
 
             expect(mockOpenRequestPage).toHaveBeenCalledOnce();
+            expect(mockNotify).toHaveBeenCalledOnce();
+            expect(mockNotify).toHaveBeenCalledWith("申請画面を開きました");
         });
 
         it("openRequestPage には request 用の設定のみを渡す", async () => {
@@ -86,6 +93,8 @@ describe("OpenRequest", () => {
                 requestUsername: "admin",
                 requestPassword: "pass1234",
             });
+            expect(mockNotify).toHaveBeenCalledOnce();
+            expect(mockNotify).toHaveBeenCalledWith("申請画面を開きました");
         });
 
         it("成功後に _isProcessing が false に戻り、次回も処理できる", async () => {
@@ -102,6 +111,9 @@ describe("OpenRequest", () => {
             await openRequest.onKeyUp(makeKeyUpEvent(action) as never);
 
             expect(mockOpenRequestPage).toHaveBeenCalledTimes(2);
+            expect(mockNotify).toHaveBeenCalledTimes(2);
+            expect(mockNotify).toHaveBeenNthCalledWith(1, "申請画面を開きました");
+            expect(mockNotify).toHaveBeenNthCalledWith(2, "申請画面を開きました");
         });
     });
 
@@ -115,6 +127,7 @@ describe("OpenRequest", () => {
 
             expect(showAlert).toHaveBeenCalledOnce();
             expect(mockOpenRequestPage).not.toHaveBeenCalled();
+            expect(mockNotify).not.toHaveBeenCalled();
         });
 
         it("設定未完了後に _isProcessing が false に戻り、次回も処理できる", async () => {
@@ -129,6 +142,8 @@ describe("OpenRequest", () => {
             await openRequest.onKeyUp(makeKeyUpEvent(action) as never);
 
             expect(mockOpenRequestPage).toHaveBeenCalledOnce();
+            expect(mockNotify).toHaveBeenCalledTimes(1);
+            expect(mockNotify).toHaveBeenCalledWith("申請画面を開きました");
         });
     });
 
@@ -147,6 +162,7 @@ describe("OpenRequest", () => {
 
             expect(mockShowErrorImage).toHaveBeenCalledOnce();
             expect(mockShowErrorImage).toHaveBeenCalledWith(action);
+            expect(mockNotify).not.toHaveBeenCalled();
         });
 
         it("エラー後に _isProcessing が false に戻り、次回も処理できる", async () => {
@@ -164,6 +180,8 @@ describe("OpenRequest", () => {
             await openRequest.onKeyUp(makeKeyUpEvent(action) as never);
 
             expect(mockOpenRequestPage).toHaveBeenCalledTimes(2);
+            expect(mockNotify).toHaveBeenCalledTimes(1);
+            expect(mockNotify).toHaveBeenCalledWith("申請画面を開きました");
         });
     });
 
@@ -184,6 +202,8 @@ describe("OpenRequest", () => {
             ]);
 
             expect(mockOpenRequestPage).toHaveBeenCalledTimes(1);
+            expect(mockNotify).toHaveBeenCalledTimes(1);
+            expect(mockNotify).toHaveBeenCalledWith("申請画面を開きました");
         });
     });
 });
