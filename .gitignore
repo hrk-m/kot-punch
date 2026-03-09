@@ -2,6 +2,7 @@
 node_modules/
 
 # Stream Deck files
+logs/
 *.sdPlugin/bin
 *.sdPlugin/logs
 *.sdPlugin/manifest.json

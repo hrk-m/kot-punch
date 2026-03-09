@@ -1,6 +1,23 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-const { mockNotifierNotify } = vi.hoisted(() => ({ mockNotifierNotify: vi.fn() }));
+const { mockCreateScope, mockLoggerDebug, mockLoggerError, mockLoggerWarn, mockNotifierNotify } = vi.hoisted(() => ({
+    mockCreateScope: vi.fn(),
+    mockLoggerDebug: vi.fn(),
+    mockLoggerError: vi.fn(),
+    mockLoggerWarn: vi.fn(),
+    mockNotifierNotify: vi.fn(),
+}));
+vi.mock("@elgato/streamdeck", () => ({
+    default: {
+        logger: {
+            createScope: mockCreateScope.mockReturnValue({
+                debug: mockLoggerDebug,
+                error: mockLoggerError,
+                warn: mockLoggerWarn,
+            }),
+        },
+    },
+}));
 vi.mock("node-notifier", () => ({
     default: { notify: mockNotifierNotify },
 }));
@@ -29,25 +46,23 @@ describe("notify", () => {
     });
 
     it("notify callback が error を返しても呼び出し元に伝播せず warning を残す", () => {
-        const emitWarning = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
         mockNotifierNotify.mockImplementation((_: unknown, callback?: (error?: Error | null) => void) => {
             callback?.(new Error("notification callback failed"));
         });
 
         expect(() => notify("テスト")).not.toThrow();
-        expect(emitWarning).toHaveBeenCalledWith(
+        expect(mockLoggerWarn).toHaveBeenCalledWith(
             "Failed to send desktop notification: notification callback failed"
         );
     });
 
-    it("notifier.notify が同期例外を投げても呼び出し元に伝播せず warning を残す", () => {
-        const emitWarning = vi.spyOn(process, "emitWarning").mockImplementation(() => {});
+    it("notifier.notify が同期例外を投げても呼び出し元に伝播せず error を残す", () => {
         mockNotifierNotify.mockImplementation(() => {
             throw new Error("notification failed");
         });
 
         expect(() => notify("テスト")).not.toThrow();
-        expect(emitWarning).toHaveBeenCalledWith(
+        expect(mockLoggerError).toHaveBeenCalledWith(
             "Failed to send desktop notification: notification failed"
         );
     });
