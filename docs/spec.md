@@ -31,10 +31,30 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 
 ---
 
+## 共通動作
+
+### macOS システム通知
+
+全 4 アクション（Clock In / Clock Out / Open KOT / Open Request）は、処理成功時に macOS 通知センターへポップアップ通知を送る（`lib/notify.ts` が担当）。
+
+| アクション | 通知メッセージ |
+|---|---|
+| Clock In | `出勤打刻が完了しました` |
+| Clock Out | `退勤打刻が完了しました` |
+| Open KOT | `KING OF TIME を開きました` |
+| Open Request | `申請画面を開きました` |
+
+- 通知の title は `"KOT Punch"` 固定
+- エラー時は通知しない（既存の `showErrorImage()` のみ動作）
+- 通知送信は fire-and-forget（失敗してもメイン処理に影響しない）
+
+---
+
 ## 機能詳細
 
 - [打刻ボタン（Clock In / Clock Out）](./spec/punch.md)
 - [Open KOT（KOT を開く）](./spec/open-kot.md)
+- [Open Request（申請画面を開く）](./spec/open-request.md)
 
 ---
 

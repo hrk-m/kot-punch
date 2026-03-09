@@ -4,14 +4,14 @@
 
 ### Phase 1.1: 関連実装を調査する
 
-- [ ] 既存アクション 4 ファイル（`src/actions/clock-in.ts` / `clock-out.ts` / `open-kot.ts` / `open-request.ts`）の成功パスを読み、通知を挿入する位置を確認する
-- [ ] `src/lib/` 配下のユーティリティ実装パターン（`showErrorImage.ts`）を読み、`notify.ts` の設計に反映する
-- [ ] `package.json` を確認し、`node-notifier` / `@types/node-notifier` が未追加であることを確認する
-- [ ]\* `bun run test` を実行して現状のテスト全パスを確認する（初期フェーズでは完了チェック不要）
+- [x] 既存アクション 4 ファイル（`src/actions/clock-in.ts` / `clock-out.ts` / `open-kot.ts` / `open-request.ts`）の成功パスを読み、通知を挿入する位置を確認する
+- [x] `src/lib/` 配下のユーティリティ実装パターン（`showErrorImage.ts`）を読み、`notify.ts` の設計に反映する
+- [x] `package.json` を確認し、`node-notifier` / `@types/node-notifier` が未追加であることを確認する
+- [x]\* `bun run test` を実行して現状のテスト全パスを確認する（初期フェーズでは完了チェック不要）
 
 ### Phase 1.2: 変更候補を特定する
 
-- [ ] 以下の変更候補ファイルを列挙し、変更理由を確認する
+- [x] 以下の変更候補ファイルを列挙し、変更理由を確認する
 
 | ファイル | 変更種別 | 変更理由 |
 |---|---|---|
@@ -23,7 +23,7 @@
 | `src/actions/open-request.ts` | 変更 | 成功後に `void notify("申請画面を開きました")` を追加 |
 | `package.json` | 変更 | `node-notifier` と `@types/node-notifier` を追加 |
 
-- [ ] **CHECKPOINT**: 変更対象ファイルと影響範囲が明確
+- [x] **CHECKPOINT**: 変更対象ファイルと影響範囲が明確
 
 ---
 
@@ -31,7 +31,7 @@
 
 ### Phase 2.1: モック契約を固定する
 
-- [ ] **MOCK-CONTRACT** `lib/notify.ts` のインターフェースを定義する
+- [x] **MOCK-CONTRACT** `lib/notify.ts` のインターフェースを定義する
 
 ```typescript
 // 公開 API
@@ -46,7 +46,7 @@ notifier.notify({ title: "KOT Punch", message: string });
 
 ### Phase 2.2: 空モックでテストが成立することを確認する
 
-- [ ] **MOCK-IMPL** `src/lib/__tests__/notify.test.ts` を新規作成し、`node-notifier` をモック化してテストが通ることを確認する
+- [x] **MOCK-IMPL** `src/lib/__tests__/notify.test.ts` を新規作成し、`node-notifier` をモック化してテストが通ることを確認する
 
 ```typescript
 // vi.mock('node-notifier') で node-notifier 全体をモック
@@ -54,8 +54,8 @@ notifier.notify({ title: "KOT Punch", message: string });
 //        notifier.notify が { title: 'KOT Punch', message: '出勤打刻が完了しました' } で呼ばれる
 ```
 
-- [ ] `bun run test` を実行してテストが通ることを確認する
-- [ ] **CHECKPOINT**: 実データなし（モック）でテスト end-to-end 実行可能
+- [x] `bun run test` を実行してテストが通ることを確認する
+- [x] **CHECKPOINT**: 実データなし（モック）でテスト end-to-end 実行可能
 
 ---
 
@@ -63,18 +63,18 @@ notifier.notify({ title: "KOT Punch", message: string });
 
 ### Phase 3.1: 依存パッケージを追加する
 
-- [ ] `node-notifier` と型定義を追加する
+- [x] `node-notifier` と型定義を追加する
 
 ```bash
 bun add node-notifier
 bun add -d @types/node-notifier
 ```
 
-- [ ] `bun run build` でバンドルエラーが発生しないことを確認する
+- [x] `bun run build` でバンドルエラーが発生しないことを確認する
 
 ### Phase 3.2: `lib/notify.ts` を実装する
 
-- [ ] `src/lib/notify.ts` を新規作成する
+- [x] `src/lib/notify.ts` を新規作成する
 
 ```typescript
 import notifier from "node-notifier";
@@ -86,11 +86,11 @@ export function notify(message: string): void {
 }
 ```
 
-- [ ] `bun run test` ですべてのテストが通ることを確認する
+- [x] `bun run test` ですべてのテストが通ることを確認する
 
 ### Phase 3.3: 各アクションへ通知を追加する
 
-- [ ] `src/actions/clock-in.ts` — `setState(1)` の直後に `void notify("出勤打刻が完了しました")` を追加する
+- [x] `src/actions/clock-in.ts` — `setState(1)` の直後に `void notify("出勤打刻が完了しました")` を追加する
 
   ```
   操作前提: Clock In が成功（punchKot 完了）
@@ -98,7 +98,7 @@ export function notify(message: string): void {
   期待結果: macOS 通知センターに「出勤打刻が完了しました」が表示される
   ```
 
-- [ ] `src/actions/clock-out.ts` — `setState(1)` の直後に `void notify("退勤打刻が完了しました")` を追加する
+- [x] `src/actions/clock-out.ts` — `setState(1)` の直後に `void notify("退勤打刻が完了しました")` を追加する
 
   ```
   操作前提: Clock Out が成功（punchKot 完了）
@@ -106,7 +106,7 @@ export function notify(message: string): void {
   期待結果: macOS 通知センターに「退勤打刻が完了しました」が表示される
   ```
 
-- [ ] `src/actions/open-kot.ts` — `openKotPage()` の直後に `void notify("KING OF TIME を開きました")` を追加する
+- [x] `src/actions/open-kot.ts` — `openKotPage()` の直後に `void notify("KING OF TIME を開きました")` を追加する
 
   ```
   操作前提: openKotPage 完了（disconnect 済み）
@@ -114,7 +114,7 @@ export function notify(message: string): void {
   期待結果: macOS 通知センターに「KING OF TIME を開きました」が表示される
   ```
 
-- [ ] `src/actions/open-request.ts` — `openRequestPage()` の直後に `void notify("申請画面を開きました")` を追加する
+- [x] `src/actions/open-request.ts` — `openRequestPage()` の直後に `void notify("申請画面を開きました")` を追加する
 
   ```
   操作前提: openRequestPage 完了（disconnect 済み）
@@ -124,9 +124,9 @@ export function notify(message: string): void {
 
 ### Phase 3.4: 最終確認
 
-- [ ] `bun run lint && bun run test && bunx tsc --noEmit && bun run build` を実行してすべてパスすることを確認する
-- [ ] Stream Deck で実際に打刻・画面を開き、macOS 通知が表示されることを手動確認する（2026-03-09 通知表示確認。初回は macOS の通知許可ダイアログが表示される場合がある）
-- [ ] **CHECKPOINT**: 主要ユースケース 4 件がすべて通知付きで動作する（アクション単体テストで成功時 notify 呼び出し/失敗時非呼び出しを確認）
+- [x] `bun run lint && bun run test && bunx tsc --noEmit && bun run build` を実行してすべてパスすることを確認する
+- [x] Stream Deck で実際に打刻・画面を開き、macOS 通知が表示されることを手動確認する（2026-03-09 通知表示確認。初回は macOS の通知許可ダイアログが表示される場合がある）
+- [x] **CHECKPOINT**: 主要ユースケース 4 件がすべて通知付きで動作する（アクション単体テストで成功時 notify 呼び出し/失敗時非呼び出しを確認）
 
 ---
 
