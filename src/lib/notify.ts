@@ -1,7 +1,9 @@
+import streamDeck from "@elgato/streamdeck";
 import notifier from "node-notifier";
 
 const TITLE = "KOT Punch";
 const SENDER = "com.elgato.StreamDeck";
+const logger = streamDeck.logger.createScope("notify");
 
 export function notify(message: string): void {
     try {
@@ -13,12 +15,15 @@ export function notify(message: string): void {
         notifier.notify(
             notification,
             (error: Error | null | undefined) => {
-                if (!error) return;
-                process.emitWarning(`Failed to send desktop notification: ${error.message}`);
+                if (!error) {
+                    logger.debug(`notify succeeded: ${message}`);
+                    return;
+                }
+                logger.warn(`Failed to send desktop notification: ${error.message}`);
             }
         );
     } catch (error) {
         const reason = error instanceof Error ? error.message : String(error);
-        process.emitWarning(`Failed to send desktop notification: ${reason}`);
+        logger.error(`Failed to send desktop notification: ${reason}`);
     }
 }
