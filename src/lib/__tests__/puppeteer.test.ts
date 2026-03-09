@@ -304,6 +304,21 @@ describe("punchKot", () => {
         expect(order).toEqual(["waitAttend", "attend", "waitUser", "selectUser", "waitDialog", "typePassword", "waitNav", "submit"]);
     });
 
+    it("kotPunchDryRun=false: submit ボタンが見つからないときは即時失敗し submit を試みない", async () => {
+        const submitError = new Error("submit button not found");
+        mockWaitForSelector.mockImplementation((selector: string) => {
+            if (selector === "[type=submit]") {
+                return Promise.reject(submitError);
+            }
+            return Promise.resolve(null);
+        });
+
+        await expect(punchKot("#attend", settings)).rejects.toBe(submitError);
+        expect(mockEvaluate).not.toHaveBeenCalled();
+        expect(mockWaitForNavigation).not.toHaveBeenCalled();
+        expect(mockClose).toHaveBeenCalledOnce();
+    });
+
     it("kotPunchDryRun=true: submit がスキップされる", async () => {
         await punchKot("#attend", { ...settings, kotPunchDryRun: true });
 

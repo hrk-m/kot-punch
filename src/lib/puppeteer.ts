@@ -98,9 +98,10 @@ export async function punchKot(selector: "#attend" | "#leave", settings: KotPunc
             logger.puppeteer.info("submitting punch");
             await sleep(500);
             // page.click() では "not clickable" になるため JS から直接クリック
+            await page.waitForSelector("[type=submit]");
             await Promise.all([
                 page.waitForNavigation({ waitUntil: "networkidle0" }),
-                page.evaluate('document.querySelector("[type=submit]")?.click()'),
+                page.evaluate('document.querySelector("[type=submit]").click()'),
             ]);
             await browser.close();
         }
