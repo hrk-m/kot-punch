@@ -12,7 +12,7 @@ argument-hint: (no-args)
 - **Success Criteria**:
   - Changes are grouped by concern and feature boundaries
   - Each commit is independently reversible and logically complete
-  - Commit messages follow Conventional Commits format and can include rationale comments
+  - Commit messages follow Conventional Commits format, and the subject/body are written in Japanese
   - Commits are created without a confirmation prompt
 
 </background_information>
@@ -50,7 +50,8 @@ For rollback-friendly granularity, apply these rules:
 - If a commit exceeds the guideline, split it before committing
 
 ### 3. Commit Message Generation
-For each group, generate a Conventional Commits message with optional comment body:
+For each group, generate a Conventional Commits message with an optional comment body.
+Use `type` and `scope` as stable identifiers, and write the subject/body in Japanese:
 
 ```
 <type>(<scope>): <subject>
@@ -71,17 +72,18 @@ For each group, generate a Conventional Commits message with optional comment bo
 **Scope (required):** Specific area affected (e.g., `ui`, `auth`, `db`, `api`, `user-profile`)
 
 **Subject (required):**
-- Imperative mood ("add", not "added" or "adds")
-- Lowercase first letter
+- Write in Japanese
+- Use concise, direct phrasing
 - No period at the end
-- Maximum 50 characters
+- Aim for about 50 characters or fewer
 - Clear and specific
-- Include the reason whenever possible (Qiita-style)
-- Recommended pattern: `<reason>, <change>`
-  - Example: `fix(api): prevent timeout on slow downstream`
+- Include the reason whenever possible
+- Recommended pattern: `<reason>のため、<change>`
+  - Example: `fix(api): 遅い下流応答でもタイムアウトしないようにする`
 
 **Body comment (recommended):**
 - Use bullet points with `-` for multiple changes
+- Write in Japanese
 - Explain WHAT changed and WHY (not HOW)
 - Reference issue numbers if applicable
 - Separate from subject with a blank line
@@ -90,9 +92,9 @@ For each group, generate a Conventional Commits message with optional comment bo
 Body comment template:
 
 ```
-- why: <why this change is needed>
-- what: <what was changed>
-- impact: <risk/scope/compatibility>
+- 理由: <なぜこの変更が必要か>
+- 変更: <何を変更したか>
+- 影響: <影響範囲・リスク・互換性>
 ```
 
 ### 4. Execution Proposal
@@ -130,6 +132,7 @@ Present the commit plan in this exact format:
    - With comment body:
      - `git commit -m "<type>(<scope>): <subject>" -m "<body comment>"`
    - Multi-line body is allowed; preserve readability
+   - Subject/body comment must be written in Japanese
 3. Report success with commit hashes
 
 ## Important Constraints
@@ -146,7 +149,8 @@ Present the commit plan in this exact format:
 - Use **Read** only when inspecting file contents for grouping context
 
 ## Output Description
-All analysis and proposals must be in Japanese, but commit messages must be in English (Conventional Commits).
+All analysis and proposals must be in Japanese, and commit messages must also be written in Japanese.
+Keep the Conventional Commits structure, but write the human-readable subject/body in Japanese.
 
 Always provide:
 1. Rationale for each grouping decision

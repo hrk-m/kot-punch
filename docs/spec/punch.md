@@ -38,7 +38,8 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
        ├─ 打刻ページに遷移
        ├─ ユーザー選択・パスワード入力
        ├─ kotPunchDryRun でなければ submit
-       └─ 成功: showOk() + setState(1)
+       ├─ 成功: showOk() + setState(1)
+       └─ notify("出勤打刻が完了しました") / notify("退勤打刻が完了しました")
 ```
 
 ---
@@ -87,4 +88,5 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 | `lib/puppeteer.ts` | `punchKot(selector, settings)` — Puppeteer 起動・打刻操作 |
 | `lib/settings.ts` | `getGlobalSettings()` / `hasRequiredPunchSettings()` — 設定取得・バリデーション |
 | `lib/showErrorImage.ts` | `showErrorImage(action)` — エラー画像表示ユーティリティ |
+| `lib/notify.ts` | `notify(message)` — 成功時の macOS 通知（fire-and-forget） |
 | KING OF TIME（外部） | 打刻対象のウェブサービス |

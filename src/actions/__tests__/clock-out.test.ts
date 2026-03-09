@@ -31,6 +31,11 @@ vi.mock("../../lib/showErrorImage.js", () => ({
     showErrorImage: vi.fn().mockResolvedValue(undefined),
 }));
 
+const mockNotify = vi.fn();
+vi.mock("../../lib/notify.js", () => ({
+    notify: mockNotify,
+}));
+
 const { ClockOut } = await import("../clock-out.js");
 
 const fullSettings = {
@@ -73,6 +78,8 @@ describe("ClockOut", () => {
             expect(mockPunchKot).toHaveBeenCalledWith("#leave", fullSettings);
             expect(showOk).toHaveBeenCalledOnce();
             expect(setState).toHaveBeenCalledWith(1);
+            expect(mockNotify).toHaveBeenCalledOnce();
+            expect(mockNotify).toHaveBeenCalledWith("退勤打刻が完了しました");
         });
     });
 
@@ -86,6 +93,7 @@ describe("ClockOut", () => {
 
             expect(showErrorImage).toHaveBeenCalledOnce();
             expect(setState).toHaveBeenCalledWith(0);
+            expect(mockNotify).not.toHaveBeenCalled();
         });
     });
 
@@ -98,6 +106,7 @@ describe("ClockOut", () => {
 
             expect(setState).toHaveBeenCalledWith(0);
             expect(mockPunchKot).not.toHaveBeenCalled();
+            expect(mockNotify).not.toHaveBeenCalled();
         });
     });
 
@@ -111,6 +120,7 @@ describe("ClockOut", () => {
 
             expect(showAlert).toHaveBeenCalledOnce();
             expect(mockPunchKot).not.toHaveBeenCalled();
+            expect(mockNotify).not.toHaveBeenCalled();
         });
     });
 
@@ -128,13 +138,16 @@ describe("ClockOut", () => {
             await clockOut.onKeyUp(ev as never);
 
             expect(mockPunchKot).toHaveBeenCalledTimes(1);
+            expect(mockNotify).not.toHaveBeenCalled();
 
             resolvePunch();
             await firstCall;
+            expect(mockNotify).toHaveBeenCalledTimes(1);
 
             // finally でフラグがリセットされたことを確認（3回目は通る）
             await clockOut.onKeyUp(ev as never);
             expect(mockPunchKot).toHaveBeenCalledTimes(2);
+            expect(mockNotify).toHaveBeenCalledTimes(2);
         });
     });
 });

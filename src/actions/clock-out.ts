@@ -3,6 +3,7 @@ import type { KeyUpEvent } from "@elgato/streamdeck";
 import { getGlobalSettings, hasRequiredPunchSettings } from "../lib/settings.js";
 import { punchKot } from "../lib/puppeteer.js";
 import { showErrorImage } from "../lib/showErrorImage.js";
+import { notify } from "../lib/notify.js";
 
 /**
  * An action class for clocking out.
@@ -42,6 +43,7 @@ export class ClockOut extends SingletonAction {
 			await punchKot("#leave", settings);
 			await ev.action.showOk();
 			await ev.action.setState(1);
+			void notify("退勤打刻が完了しました");
 		} catch {
 			// エラー画像を表示
 			void showErrorImage(ev.action);

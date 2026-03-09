@@ -3,6 +3,7 @@ import type { KeyUpEvent } from "@elgato/streamdeck";
 import { getRequestSettings, hasRequiredRequestSettings } from "../lib/settings.js";
 import { openRequestPage } from "../lib/puppeteer.js";
 import { showErrorImage } from "../lib/showErrorImage.js";
+import { notify } from "../lib/notify.js";
 
 @action({ UUID: "com.hrk-m.kot-punch.open-request" })
 export class OpenRequest extends SingletonAction {
@@ -24,6 +25,7 @@ export class OpenRequest extends SingletonAction {
             } else {
                 // 申請画面を開く
                 await openRequestPage(settings);
+                void notify("申請画面を開きました");
             }
         } catch {
             // エラー画像を表示

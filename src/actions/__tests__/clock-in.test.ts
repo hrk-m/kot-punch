@@ -32,6 +32,11 @@ vi.mock("../../lib/showErrorImage.js", () => ({
     showErrorImage: vi.fn().mockResolvedValue(undefined),
 }));
 
+const mockNotify = vi.fn();
+vi.mock("../../lib/notify.js", () => ({
+    notify: mockNotify,
+}));
+
 const { ClockIn } = await import("../clock-in.js");
 
 const fullSettings = {
@@ -74,6 +79,8 @@ describe("ClockIn", () => {
             expect(mockPunchKot).toHaveBeenCalledWith("#attend", fullSettings);
             expect(showOk).toHaveBeenCalledOnce();
             expect(setState).toHaveBeenCalledWith(1);
+            expect(mockNotify).toHaveBeenCalledOnce();
+            expect(mockNotify).toHaveBeenCalledWith("出勤打刻が完了しました");
         });
     });
 
@@ -87,6 +94,7 @@ describe("ClockIn", () => {
 
             expect(showErrorImage).toHaveBeenCalledOnce();
             expect(setState).toHaveBeenCalledWith(0);
+            expect(mockNotify).not.toHaveBeenCalled();
         });
     });
 
@@ -99,6 +107,7 @@ describe("ClockIn", () => {
 
             expect(setState).toHaveBeenCalledWith(0);
             expect(mockPunchKot).not.toHaveBeenCalled();
+            expect(mockNotify).not.toHaveBeenCalled();
         });
     });
 
@@ -112,6 +121,7 @@ describe("ClockIn", () => {
 
             expect(showAlert).toHaveBeenCalledOnce();
             expect(mockPunchKot).not.toHaveBeenCalled();
+            expect(mockNotify).not.toHaveBeenCalled();
         });
     });
 
@@ -129,9 +139,12 @@ describe("ClockIn", () => {
             await clockIn.onKeyUp(ev as never);
 
             expect(mockPunchKot).toHaveBeenCalledTimes(1);
+            expect(mockNotify).not.toHaveBeenCalled();
 
             resolvePunch();
             await firstCall;
+            expect(mockNotify).toHaveBeenCalledTimes(1);
+            expect(mockNotify).toHaveBeenCalledWith("出勤打刻が完了しました");
         });
     });
 });

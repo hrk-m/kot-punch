@@ -36,7 +36,8 @@ JWT 認証済みの Chrome ウィンドウで KING OF TIME 管理画面を開く
        ├─ KOT ページへアクセス（domain 確立）
        ├─ JWT クッキーをセット
        ├─ 再アクセスして認証適用
-       └─ disconnect()（ブラウザは閉じない）
+       ├─ disconnect()（ブラウザは閉じない）
+       └─ notify("KING OF TIME を開きました")
 ```
 
 ---
@@ -74,4 +75,5 @@ JWT 認証済みの Chrome ウィンドウで KING OF TIME 管理画面を開く
 | `lib/puppeteer.ts` | `openKotPage(settings)` — Puppeteer 起動・JWT 認証・disconnect |
 | `lib/settings.ts` | `getGlobalSettings()` / `hasRequiredSettings()` — 設定取得・バリデーション |
 | `lib/showErrorImage.ts` | `showErrorImage(action)` — エラー画像表示ユーティリティ |
+| `lib/notify.ts` | `notify(message)` — 成功時の macOS 通知（fire-and-forget） |
 | KING OF TIME（外部） | 表示対象のウェブサービス |

@@ -30,6 +30,11 @@ vi.mock("../../lib/showErrorImage.js", () => ({
     showErrorImage: mockShowErrorImage,
 }));
 
+const mockNotify = vi.fn();
+vi.mock("../../lib/notify.js", () => ({
+    notify: mockNotify,
+}));
+
 const { OpenKot } = await import("../open-kot.js");
 
 function makeSharedAction() {
@@ -65,6 +70,8 @@ describe("OpenKot", () => {
 
             expect(mockOpenKotPage).toHaveBeenCalledOnce();
             expect(setTitle).not.toHaveBeenCalled();
+            expect(mockNotify).toHaveBeenCalledOnce();
+            expect(mockNotify).toHaveBeenCalledWith("KING OF TIME を開きました");
         });
 
         it("成功後に _isProcessing が false に戻り、次回も処理できる", async () => {
@@ -81,6 +88,9 @@ describe("OpenKot", () => {
             await openKot.onKeyUp(makeKeyUpEvent(action) as never);
 
             expect(mockOpenKotPage).toHaveBeenCalledTimes(2);
+            expect(mockNotify).toHaveBeenCalledTimes(2);
+            expect(mockNotify).toHaveBeenNthCalledWith(1, "KING OF TIME を開きました");
+            expect(mockNotify).toHaveBeenNthCalledWith(2, "KING OF TIME を開きました");
         });
     });
 
@@ -94,6 +104,7 @@ describe("OpenKot", () => {
 
             expect(showAlert).toHaveBeenCalledOnce();
             expect(mockOpenKotPage).not.toHaveBeenCalled();
+            expect(mockNotify).not.toHaveBeenCalled();
         });
 
         it("設定未完了後に _isProcessing が false に戻り、次回も処理できる", async () => {
@@ -108,6 +119,8 @@ describe("OpenKot", () => {
             await openKot.onKeyUp(makeKeyUpEvent(action) as never);
 
             expect(mockOpenKotPage).toHaveBeenCalledOnce();
+            expect(mockNotify).toHaveBeenCalledTimes(1);
+            expect(mockNotify).toHaveBeenCalledWith("KING OF TIME を開きました");
         });
     });
 
@@ -126,6 +139,7 @@ describe("OpenKot", () => {
 
             expect(mockShowErrorImage).toHaveBeenCalledOnce();
             expect(mockShowErrorImage).toHaveBeenCalledWith(action);
+            expect(mockNotify).not.toHaveBeenCalled();
         });
 
         it("エラー後に _isProcessing が false に戻り、次回も処理できる", async () => {
@@ -143,6 +157,8 @@ describe("OpenKot", () => {
             await openKot.onKeyUp(makeKeyUpEvent(action) as never);
 
             expect(mockOpenKotPage).toHaveBeenCalledTimes(2);
+            expect(mockNotify).toHaveBeenCalledTimes(1);
+            expect(mockNotify).toHaveBeenCalledWith("KING OF TIME を開きました");
         });
     });
 
@@ -163,6 +179,8 @@ describe("OpenKot", () => {
             ]);
 
             expect(mockOpenKotPage).toHaveBeenCalledTimes(1);
+            expect(mockNotify).toHaveBeenCalledTimes(1);
+            expect(mockNotify).toHaveBeenCalledWith("KING OF TIME を開きました");
         });
 
     });

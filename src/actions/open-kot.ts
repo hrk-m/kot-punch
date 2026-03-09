@@ -3,6 +3,7 @@ import type { KeyUpEvent } from "@elgato/streamdeck";
 import { getGlobalSettings, hasRequiredSettings } from "../lib/settings.js";
 import { openKotPage } from "../lib/puppeteer.js";
 import { showErrorImage } from "../lib/showErrorImage.js";
+import { notify } from "../lib/notify.js";
 
 @action({ UUID: "com.hrk-m.kot-punch.open-kot" })
 export class OpenKot extends SingletonAction {
@@ -21,6 +22,7 @@ export class OpenKot extends SingletonAction {
             } else {
                 // KING OF TIME を開く
                 await openKotPage(settings);
+                void notify("KING OF TIME を開きました");
             }
         } catch {
             // showErrorImage は内部で失敗を処理するため fire-and-forget で呼ぶ。
