@@ -1,5 +1,6 @@
 {
     "dependencies": {
+        "node-notifier": "^10.0.1",
         "puppeteer": "^24.38.0"
     }
 }
