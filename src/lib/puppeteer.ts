@@ -1,5 +1,6 @@
 import puppeteer from "puppeteer";
 import type { KotPunchSettings, RequestSettings } from "./settings";
+import { logger } from "./logger";
 
 /**
  * JWT 認証済みの KOT ページを開き、ブラウザとページを返す。
@@ -11,6 +12,7 @@ async function setupAuthenticatedPage(settings: KotPunchSettings) {
 
     let browser;
     try {
+        logger.puppeteer.debug("launching browser");
         browser = await puppeteer.launch({
             headless: false,
             defaultViewport: null,
@@ -20,13 +22,16 @@ async function setupAuthenticatedPage(settings: KotPunchSettings) {
         const pages = await browser.pages();
         const page = pages[0] ?? (await browser.newPage());
 
-        // 1. 勤怠画面へアクセス（domain 確立）
+        // 勤怠画面へアクセス（domain 確立）
+        logger.puppeteer.debug(`navigating to ${kotPunchUrl}`);
         await page.goto(kotPunchUrl);
 
-        // 2. JWT クッキーをセット（domain 指定なし → 現在ページのドメインが自動適用）
+        // JWT クッキーをセット（domain 指定なし → 現在ページのドメインが自動適用）
+        logger.puppeteer.debug(`setting cookie: ${kotPunchKey}`);
         await page.setCookie({ name: kotPunchKey, value: kotPunchToken });
 
-        // 3. 再アクセスして認証適用（ダイアログ = 認証失敗として扱う）
+        // 再アクセスして認証適用（ダイアログ = 認証失敗として扱う）
+        logger.puppeteer.debug("re-navigating for auth");
         let hasAuthDialog = false;
         page.once("dialog", async (dialog) => {
             hasAuthDialog = true;
@@ -36,11 +41,13 @@ async function setupAuthenticatedPage(settings: KotPunchSettings) {
         await page.goto(kotPunchUrl);
 
         if (hasAuthDialog) {
+            logger.puppeteer.error("auth failed: dialog detected");
             await browser.close();
             browser = undefined; // catch ブロックでの二重 close を防ぐ
             throw new Error("Authentication failed: dialog appeared while opening KING OF TIME.");
         }
 
+        logger.puppeteer.debug("auth succeeded");
         return { browser, page };
     } catch (e) {
         await browser?.close();
@@ -59,26 +66,32 @@ export async function punchKot(selector: "#attend" | "#leave", settings: KotPunc
         let page;
         ({ browser, page } = await setupAuthenticatedPage(settings));
 
-        // 4. 打刻ボタンをクリック
+        // 打刻ボタンをクリック
+        logger.puppeteer.info(`clicking punch button: ${selector}`);
         await page.click(selector);
 
-        // 5. ユーザーを選択（テキスト照合）
+        // ユーザーを選択（テキスト照合）
+        logger.puppeteer.debug("selecting user");
         await page.click(`::-p-text(${kotPunchUsername.replace(/\)/g, "\\)")})`);
 
-        // 6. パスワード入力
+        // パスワード入力
+        logger.puppeteer.debug("typing password");
         await page.type("input[type=password]", kotPunchPassword, { delay: kotPunchDryRun ? 100 : 0 });
 
-        // 7. submit（kotPunchDryRun=false のときのみ）
+        // submit（kotPunchDryRun=false のときのみ）
         if (kotPunchDryRun) {
+            logger.puppeteer.info("dry-run mode, skipping submit");
             // テストモード: パスワード入力まで確認できるようブラウザを開いたまま切断
             await browser.disconnect();
         } else {
+            logger.puppeteer.info("submitting punch");
             await Promise.all([
                 page.waitForNavigation({ waitUntil: "networkidle0" }),
                 page.click("button[type=submit]"),
             ]);
             await browser.close();
         }
+        logger.puppeteer.info("punch completed");
         browser = undefined; // catch ブロックでの二重 close を防ぐ
     } catch (e) {
         await browser?.close();
@@ -105,6 +118,7 @@ export async function openRequestPage(settings: RequestSettings): Promise<void> 
         const pages = await browser.pages();
         const page = pages[0] ?? (await browser.newPage());
 
+        logger.puppeteer.debug("opening request page");
         await page.goto(requestUrl);
         await page.type("#login_id", requestUsername);
         await page.type("#login_password", requestPassword);
@@ -115,6 +129,7 @@ export async function openRequestPage(settings: RequestSettings): Promise<void> 
         ]);
 
         await browser.disconnect();
+        logger.puppeteer.info("request page opened");
         browser = undefined;
     } catch (e) {
         await browser?.close();
@@ -130,6 +145,7 @@ export async function openKotPage(settings: KotPunchSettings): Promise<void> {
     try {
         ({ browser } = await setupAuthenticatedPage(settings));
         await browser.disconnect();
+        logger.puppeteer.info("kot page opened");
     } catch (e) {
         await browser?.close();
         throw e;
