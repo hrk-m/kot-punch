@@ -4,6 +4,7 @@ import { getGlobalSettings, hasRequiredPunchSettings } from "../lib/settings.js"
 import { punchKot } from "../lib/puppeteer.js";
 import { showErrorImage } from "../lib/showErrorImage.js";
 import { notify } from "../lib/notify.js";
+import { logger } from "../lib/logger.js";
 
 /**
  * An action class for clocking in.
@@ -17,11 +18,17 @@ export class ClockIn extends SingletonAction {
 	private _isProcessing = false;
 
 	override async onKeyUp(ev: KeyUpEvent): Promise<void> {
+		logger.clockIn.info("onKeyUp triggered");
+
 		// 処理中フラグが立っていれば即 return
-		if (this._isProcessing) return;
+		if (this._isProcessing) {
+			logger.clockIn.debug("already processing, skipped");
+			return;
+		}
 
 		// State 1 の場合はリセット
 		if (ev.payload.state === 1) {
+			logger.clockIn.debug("state reset to 0");
 			await ev.action.setState(0);
 			return;
 		}
@@ -31,20 +38,25 @@ export class ClockIn extends SingletonAction {
 
 		try {
 			// グローバル設定を取得
+			logger.clockIn.debug("fetching settings");
 			const settings = await getGlobalSettings();
 
 			// 必須項目が未入力の場合はアラートを表示
 			if (!hasRequiredPunchSettings(settings)) {
+				logger.clockIn.warn("required settings missing");
 				await ev.action.showAlert();
 				return;
 			}
 
 			// 出勤打刻を行う
+			logger.clockIn.info("starting punch");
 			await punchKot("#attend", settings);
+			logger.clockIn.info("punch succeeded");
 			await ev.action.showOk();
 			await ev.action.setState(1);
 			void notify("出勤打刻が完了しました");
-		} catch {
+		} catch (e) {
+			logger.clockIn.error(`punch failed: ${e instanceof Error ? e.message : String(e)}`);
 			// エラー画像を表示
 			void showErrorImage(ev.action);
 			await ev.action.setState(0);

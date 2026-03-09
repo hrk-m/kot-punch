@@ -4,6 +4,7 @@ import { getGlobalSettings, hasRequiredPunchSettings } from "../lib/settings.js"
 import { punchKot } from "../lib/puppeteer.js";
 import { showErrorImage } from "../lib/showErrorImage.js";
 import { notify } from "../lib/notify.js";
+import { logger } from "../lib/logger.js";
 
 /**
  * An action class for clocking out.
@@ -17,11 +18,17 @@ export class ClockOut extends SingletonAction {
 	private _isProcessing = false;
 
 	override async onKeyUp(ev: KeyUpEvent): Promise<void> {
+		logger.clockOut.info("onKeyUp triggered");
+
 		// 処理中フラグが立っていれば即 return
-		if (this._isProcessing) return;
+		if (this._isProcessing) {
+			logger.clockOut.debug("already processing, skipped");
+			return;
+		}
 
 		// State 1 の場合はリセット
 		if (ev.payload.state === 1) {
+			logger.clockOut.debug("state reset to 0");
 			await ev.action.setState(0);
 			return;
 		}
@@ -31,20 +38,25 @@ export class ClockOut extends SingletonAction {
 
 		try {
 			// グローバル設定を取得
+			logger.clockOut.debug("fetching settings");
 			const settings = await getGlobalSettings();
 
 			// 必須項目が未入力の場合はアラートを表示
 			if (!hasRequiredPunchSettings(settings)) {
+				logger.clockOut.warn("required settings missing");
 				await ev.action.showAlert();
 				return;
 			}
 
 			// 退勤打刻を行う
+			logger.clockOut.info("starting punch");
 			await punchKot("#leave", settings);
+			logger.clockOut.info("punch succeeded");
 			await ev.action.showOk();
 			await ev.action.setState(1);
 			void notify("退勤打刻が完了しました");
-		} catch {
+		} catch (e) {
+			logger.clockOut.error(`punch failed: ${e instanceof Error ? e.message : String(e)}`);
 			// エラー画像を表示
 			void showErrorImage(ev.action);
 			await ev.action.setState(0);
