@@ -1,5 +1,36 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { showErrorImage } from "../../lib/showErrorImage.js";
+
+const {
+    mockCreatePressTracker,
+    mockTrackerBegin,
+    mockTrackerEnd,
+    resetTrackerState,
+} = vi.hoisted(() => {
+    const startedAt = new Map<string, number>();
+    const begin = vi.fn((context: string, now?: number) => {
+        startedAt.set(context, now ?? Date.now());
+    });
+    const end = vi.fn((context: string, now?: number) => {
+        const start = startedAt.get(context);
+        startedAt.delete(context);
+        return start === undefined ? undefined : (now ?? Date.now()) - start;
+    });
+    const clear = vi.fn((context: string) => {
+        startedAt.delete(context);
+    });
+
+    return {
+        mockCreatePressTracker: vi.fn(() => ({
+            begin,
+            end,
+            clear,
+        })),
+        mockTrackerBegin: begin,
+        mockTrackerEnd: end,
+        resetTrackerState: () => startedAt.clear(),
+    };
+});
 
 vi.mock("@elgato/streamdeck", () => {
     const action =
@@ -9,6 +40,7 @@ vi.mock("@elgato/streamdeck", () => {
         };
 
     class SingletonAction<_TSettings = unknown> {
+        onKeyDown(_ev: unknown): void | Promise<void> {}
         onKeyUp(_ev: unknown): void | Promise<void> {}
     }
 
@@ -36,6 +68,12 @@ vi.mock("../../lib/notify.js", () => ({
     notify: mockNotify,
 }));
 
+vi.mock("../../lib/long-press.js", () => ({
+    LONG_PRESS_THRESHOLD_MS: 2000,
+    createPressTracker: mockCreatePressTracker,
+    isLongPress: (durationMs: number, thresholdMs = 2000) => durationMs >= thresholdMs,
+}));
+
 const { ClockOut } = await import("../clock-out.js");
 
 const fullSettings = {
@@ -50,10 +88,10 @@ function makeSharedAction() {
     const setState = vi.fn().mockResolvedValue(undefined);
     const showOk = vi.fn().mockResolvedValue(undefined);
     const showAlert = vi.fn().mockResolvedValue(undefined);
-    return { action: { setState, showOk, showAlert }, setState, showOk, showAlert };
+    return { action: { id: "clock-out-action", setState, showOk, showAlert }, setState, showOk, showAlert };
 }
 
-function makeKeyUpEvent(action: object, state: number) {
+function makeKeyEvent(action: object, state: 0 | 1) {
     return { action, payload: { state } };
 }
 
@@ -62,16 +100,23 @@ describe("ClockOut", () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        resetTrackerState();
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date("2026-03-10T09:00:00Z"));
         clockOut = new ClockOut();
         mockGetGlobalSettings.mockResolvedValue(fullSettings);
         mockHasRequiredPunchSettings.mockReturnValue(true);
         mockPunchKot.mockResolvedValue(undefined);
     });
 
+    afterEach(() => {
+        vi.useRealTimers();
+    });
+
     describe("onKeyUp - State 0 打刻成功フロー", () => {
         it("punchKot が成功したとき showOk() + setState(1) が呼ばれる", async () => {
             const { action, showOk, setState } = makeSharedAction();
-            const ev = makeKeyUpEvent(action, 0);
+            const ev = makeKeyEvent(action, 0);
 
             await clockOut.onKeyUp(ev as never);
 
@@ -86,7 +131,7 @@ describe("ClockOut", () => {
     describe("onKeyUp - State 0 打刻失敗フロー", () => {
         it("punchKot がエラーを throw したとき setState(0) が呼ばれる", async () => {
             const { action, setState } = makeSharedAction();
-            const ev = makeKeyUpEvent(action, 0);
+            const ev = makeKeyEvent(action, 0);
             mockPunchKot.mockRejectedValueOnce(new Error("punch failed"));
 
             await clockOut.onKeyUp(ev as never);
@@ -97,15 +142,53 @@ describe("ClockOut", () => {
         });
     });
 
-    describe("onKeyUp - State 1 リセットフロー", () => {
-        it("State 1 でボタンを押すと setState(0) が呼ばれ Puppeteer は起動しない", async () => {
-            const { action, setState } = makeSharedAction();
-            const ev = makeKeyUpEvent(action, 1);
+    describe("onKeyDown/onKeyUp - 長押し state 更新フロー", () => {
+        it("State 0 で 2 秒長押しすると setState(1) のみ呼ばれる", async () => {
+            const { action, setState, showOk } = makeSharedAction();
+            action.id = "clock-out-long-press-state-0";
+            const down = makeKeyEvent(action, 0);
+            const up = makeKeyEvent(action, 0);
 
-            await clockOut.onKeyUp(ev as never);
+            await clockOut.onKeyDown(down as never);
+            vi.advanceTimersByTime(2000);
+            await clockOut.onKeyUp(up as never);
+
+            expect(mockTrackerBegin).toHaveBeenCalledWith("clock-out-long-press-state-0");
+            expect(mockTrackerEnd).toHaveBeenCalledWith("clock-out-long-press-state-0");
+            expect(setState).toHaveBeenCalledWith(1);
+            expect(mockPunchKot).not.toHaveBeenCalled();
+            expect(showOk).not.toHaveBeenCalled();
+            expect(mockNotify).not.toHaveBeenCalled();
+        });
+
+        it("State 1 の短押しは no-op になり state を変えない", async () => {
+            const { action, setState } = makeSharedAction();
+            action.id = "clock-out-short-press-state-1";
+            const down = makeKeyEvent(action, 1);
+            const up = makeKeyEvent(action, 1);
+
+            await clockOut.onKeyDown(down as never);
+            vi.advanceTimersByTime(1999);
+            await clockOut.onKeyUp(up as never);
+
+            expect(setState).not.toHaveBeenCalled();
+            expect(mockPunchKot).not.toHaveBeenCalled();
+            expect(mockNotify).not.toHaveBeenCalled();
+        });
+
+        it("State 1 で 2 秒長押しすると setState(0) のみ呼ばれる", async () => {
+            const { action, setState, showOk } = makeSharedAction();
+            action.id = "clock-out-long-press-state-1";
+            const down = makeKeyEvent(action, 1);
+            const up = makeKeyEvent(action, 1);
+
+            await clockOut.onKeyDown(down as never);
+            vi.advanceTimersByTime(2000);
+            await clockOut.onKeyUp(up as never);
 
             expect(setState).toHaveBeenCalledWith(0);
             expect(mockPunchKot).not.toHaveBeenCalled();
+            expect(showOk).not.toHaveBeenCalled();
             expect(mockNotify).not.toHaveBeenCalled();
         });
     });
@@ -113,7 +196,7 @@ describe("ClockOut", () => {
     describe("onKeyUp - 設定未完了フロー", () => {
         it("hasRequiredPunchSettings が false のとき showAlert() が呼ばれ Puppeteer は起動しない", async () => {
             const { action, showAlert } = makeSharedAction();
-            const ev = makeKeyUpEvent(action, 0);
+            const ev = makeKeyEvent(action, 0);
             mockHasRequiredPunchSettings.mockReturnValue(false);
 
             await clockOut.onKeyUp(ev as never);
@@ -127,7 +210,7 @@ describe("ClockOut", () => {
     describe("onKeyUp - 処理中ガード", () => {
         it("_isProcessing=true のとき onKeyUp が即 return する（連打防止）", async () => {
             const { action } = makeSharedAction();
-            const ev = makeKeyUpEvent(action, 0);
+            const ev = makeKeyEvent(action, 0);
 
             // 1回目は処理中になる（punchKot を pending 状態にする）
             let resolvePunch!: () => void;

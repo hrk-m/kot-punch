@@ -5,6 +5,8 @@ import { punchKot } from "../lib/puppeteer.js";
 import { showErrorImage } from "../lib/showErrorImage.js";
 import { notify } from "../lib/notify.js";
 import { logger } from "../lib/logger.js";
+import { createPressTracker, isLongPress } from "../lib/long-press.js";
+import type { KeyDownEvent } from "@elgato/streamdeck";
 
 /**
  * An action class for clocking out.
@@ -16,6 +18,16 @@ import { logger } from "../lib/logger.js";
 export class ClockOut extends SingletonAction {
 	// 処理中フラグ
 	private _isProcessing = false;
+	private readonly pressTracker = createPressTracker();
+
+	override onKeyDown(ev: KeyDownEvent): void {
+		if (this._isProcessing) {
+			logger.clockOut.debug("already processing on key down, skipped");
+			return;
+		}
+
+		this.pressTracker.begin(ev.action.id);
+	}
 
 	override async onKeyUp(ev: KeyUpEvent): Promise<void> {
 		logger.clockOut.info("onKeyUp triggered");
@@ -23,13 +35,21 @@ export class ClockOut extends SingletonAction {
 		// 処理中フラグが立っていれば即 return
 		if (this._isProcessing) {
 			logger.clockOut.debug("already processing, skipped");
+			this.pressTracker.clear(ev.action.id);
 			return;
 		}
 
-		// State 1 の場合はリセット
+		const duration = this.pressTracker.end(ev.action.id);
+		if (duration !== undefined && isLongPress(duration)) {
+			const nextState = ev.payload.state === 1 ? 0 : 1;
+			logger.clockOut.debug(`manual state update via long press: ${ev.payload.state} -> ${nextState}`);
+			await ev.action.setState(nextState);
+			return;
+		}
+
+		// State 1 の短押しは no-op
 		if (ev.payload.state === 1) {
-			logger.clockOut.debug("state reset to 0");
-			await ev.action.setState(0);
+			logger.clockOut.debug("short press on state 1 skipped");
 			return;
 		}
 
