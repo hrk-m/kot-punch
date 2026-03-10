@@ -67,8 +67,8 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 
 | アクション | 何をするか | 必須設定 |
 |---|---|---|
-| **Clock In**（出勤打刻） | 短押しで KOT 出勤打刻を自動実行。成功でアイコンがチェックマークに変わり、2 秒長押しで state を手動更新できる | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` |
-| **Clock Out**（退勤打刻） | 短押しで KOT 退勤打刻を自動実行。成功でアイコンがチェックマークに変わり、2 秒長押しで state を手動更新できる | 同上 |
+| **Clock In**（出勤打刻） | 短押しで KOT 出勤打刻を自動実行。成功でアイコンがチェックマークに変わり、2 秒到達まで長押しすると state を即時手動更新できる | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` |
+| **Clock Out**（退勤打刻） | 短押しで KOT 退勤打刻を自動実行。成功でアイコンがチェックマークに変わり、2 秒到達まで長押しすると state を即時手動更新できる | 同上 |
 | **Open KOT** | JWT 認証済みの Chrome で KOT 勤怠画面を開く。ブラウザはそのまま操作できる状態で引き渡される | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` |
 | **Open Request**（申請画面を開く） | 申請画面にログイン済みの Chrome を開く | `requestUrl` / `requestUsername` / `requestPassword` |
 

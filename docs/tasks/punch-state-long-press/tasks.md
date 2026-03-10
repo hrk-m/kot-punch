@@ -28,7 +28,7 @@
 |---|---|---|
 | `src/actions/clock-in.ts` | 変更 | `onKeyDown` 追加、短押し/長押し分岐、`State 1` 短押し no-op 化 |
 | `src/actions/clock-out.ts` | 変更 | `ClockIn` と同じ長押し仕様を適用 |
-| `src/lib/long-press.ts` | 新規作成 | 押下開始記録と 2000ms 判定を共通 helper 化する |
+| `src/lib/long-press.ts` | 新規作成 | 2 秒タイマー開始・解除・成立済み状態を共通 helper 化する |
 | `src/lib/__tests__/long-press.test.ts` | 新規作成 | 長押し判定 helper の境界値と後始末を固定する |
 | `src/actions/__tests__/clock-in.test.ts` | 変更 | 短押し/長押し/処理中ガードの回帰テストを追加する |
 | `src/actions/__tests__/clock-out.test.ts` | 変更 | `ClockIn` と同等の回帰テストを追加する |
@@ -37,9 +37,9 @@
 | `docs/architecture.md` | 変更 | `lib/long-press.ts` と `onKeyDown` 利用パターンを architecture に反映する |
 
 - [x] 再利用候補を整理する
-  - `ClockIn` / `ClockOut` の押下開始時刻管理
-  - `2000ms` 境界判定
-  - `onKeyUp` での「長押しかどうか」の判定 API
+  - `ClockIn` / `ClockOut` の 2 秒タイマー管理
+  - `2000ms` 到達時 callback 発火
+  - `onKeyUp` での「長押し成立済みかどうか」の判定 API
 - [x] 共通化方針として `src/lib/long-press.ts` に helper を作成し、両 action から使う前提を task 全体に反映する
 - [x] **CHECKPOINT**: 変更対象ファイル、イベント利用方針、helper 共通化方針が明確
 
@@ -55,13 +55,13 @@
 
 ```typescript
 export type PressTracker = {
-    begin(context: string, now?: number): void;
-    end(context: string, now?: number): number | undefined;
+    begin(context: string, onLongPress: () => Promise<void> | void): void;
+    end(context: string): boolean;
     clear(context: string): void;
+    hasTriggered(context: string): boolean;
 };
 
 export function createPressTracker(): PressTracker;
-export function isLongPress(durationMs: number, thresholdMs?: number): boolean;
 export const LONG_PRESS_THRESHOLD_MS = 2000;
 ```
 
@@ -86,7 +86,7 @@ type MockKeyEvent = {
 
 ### Phase 2.2: 空モックで長押し判定を成立させる
 
-- [x] **MOCK-IMPL** `src/lib/__tests__/long-press.test.ts` を追加し、実時間に依存せず `now` 注入または fake timer で helper の契約を成立させる
+- [x] **MOCK-IMPL** `src/lib/__tests__/long-press.test.ts` を追加し、fake timer で helper の契約を成立させる
 - [x] `clock-in.test.ts` と `clock-out.test.ts` の Stream Deck モックに `onKeyDown` を追加し、`action.id` 付きイベントを組み立てられるようにする
 - [x] `vi.useFakeTimers()` を使って `1999ms` と `2000ms` の押下継続時間を再現し、短押し/長押しの分岐だけを先にテストで表現する
 - [x] 長押し state 更新では `punchKot()` / `showOk()` / `notify()` / `showErrorImage()` が呼ばれない空モック状態を確認する
@@ -112,34 +112,33 @@ type MockKeyEvent = {
 
 ### Phase 3.2: 共通 helper を実装する
 
-- [x] `src/lib/long-press.ts` を新規作成し、action instance ごとに押下開始時刻を保持・解放できる helper を実装する
+- [x] `src/lib/long-press.ts` を新規作成し、action instance ごとに 2 秒タイマー・成立済みフラグ・解除処理を扱える helper を実装する
 - [x] `src/lib/__tests__/long-press.test.ts` に以下の回帰テストを追加する
-  - `begin()` 後に `end()` すると経過時間を返す
-  - `begin()` されていない `context` の `end()` は `undefined` を返す
-  - `2000ms` ちょうどで `isLongPress()` が `true` を返す
-  - `1999ms` では `false` を返す
-  - `clear()` 後は以前の押下状態を再利用しない
+  - `2000ms` 到達時に callback が一度だけ呼ばれる
+  - `begin()` されていない `context` の `end()` は `false` を返す
+  - `clear()` 後は callback が発火しない
+  - 長押し成立後の `end()` は `true` を返して後始末する
 - [x] helper が action の `showOk()` や `punchKot()` に依存しない純粋ロジックであることを確認する
 
 ### Phase 3.3: Clock In / Clock Out に短押し・長押し分岐を実装する
 
-- [x] `src/actions/clock-in.ts` に `onKeyDown` を追加し、押下開始時刻を helper に記録する
+- [x] `src/actions/clock-in.ts` に `onKeyDown` を追加し、2 秒タイマーと long-press callback を helper に登録する
   - 操作前提: `ClockIn` ボタンが表示中で `_isProcessing=false`
   - 操作: キーを押し込む
-  - 期待結果: まだ state は変えず、押下開始だけを記録する
+  - 期待結果: まだ state は変えず、2 秒到達時点で反転用 callback が動ける状態になる
 - [x] `src/actions/clock-in.ts` の `onKeyUp` を更新し、短押し/長押しで以下のように分岐させる
   - 操作前提: `State 0` + 短押し
   - 操作: キーを離す
   - 期待結果: `punchKot("#attend", settings)` を呼び、成功時だけ `showOk()` + `setState(1)` + `notify()`
   - 操作前提: `State 0` + 2 秒長押し
-  - 操作: キーを離す
-  - 期待結果: `setState(1)` のみ実行し、打刻処理と通知は呼ばない
+  - 操作: 2 秒到達まで押し続けてからキーを離す
+  - 期待結果: 2 秒到達時点で `setState(1)` のみ実行し、離したときは打刻処理と通知を呼ばない
   - 操作前提: `State 1` + 短押し
   - 操作: キーを離す
   - 期待結果: no-op で終了する
   - 操作前提: `State 1` + 2 秒長押し
-  - 操作: キーを離す
-  - 期待結果: `setState(0)` のみ実行する
+  - 操作: 2 秒到達まで押し続けてからキーを離す
+  - 期待結果: 2 秒到達時点で `setState(0)` のみ実行し、離したときは no-op になる
 - [x] `src/actions/clock-out.ts` にも同じ分岐を適用し、打刻セレクタだけ `#leave` に差し替える
 - [x] `_isProcessing=true` の間は `onKeyDown` / `onKeyUp` の両方で早期 return し、押下開始状態も残さないよう後始末を入れる
 
@@ -147,9 +146,9 @@ type MockKeyEvent = {
 
 - [x] `src/actions/__tests__/clock-in.test.ts` に以下の回帰テストを追加・更新する
   - `State 0` 短押しで `punchKot("#attend", fullSettings)` が呼ばれる
-  - `State 0` 長押しで `setState(1)` のみ呼ばれる
+  - `State 0` で 2 秒到達時に `setState(1)` のみ呼ばれ、長押し成立後の `onKeyUp` は no-op になる
   - `State 1` 短押しで no-op になる
-  - `State 1` 長押しで `setState(0)` のみ呼ばれる
+  - `State 1` で 2 秒到達時に `setState(0)` のみ呼ばれ、長押し成立後の `onKeyUp` は no-op になる
   - `_isProcessing=true` 中は `onKeyDown` / `onKeyUp` の追加入力が無視される
 - [x] `src/actions/__tests__/clock-out.test.ts` に同等の回帰テストを追加し、`#leave` セレクタのまま動作することを確認する
 - [x] `docs/spec.md` と `docs/architecture.md` を更新し、長押し state 更新と `lib/long-press.ts` の責務を反映する
@@ -165,3 +164,53 @@ type MockKeyEvent = {
 - `State` の永続化仕様変更
 - `Open KOT` / `Open Request` への長押し拡張
 - 実機 Stream Deck 上での長押し体感差異に応じた閾値調整 UI
+
+---
+
+## Follow-up Tasks: 2秒到達時点の即時アイコン更新
+
+> 追加要件
+>
+> - ボタンを押した時は 2 秒タイマー開始だけを行い、この時点ではアイコンを変えない
+> - 押したまま 2 秒到達した瞬間にアイコンを切り替える
+> - 長押し成立後はその押下を完了扱いとし、release 側では追加処理を行わない
+> - 2 秒未満で離した時だけ短押し処理へ分岐する
+> - 元の `onKeyUp` 確定実装との差分は、この follow-up で解消する
+
+### Follow-up 1: 影響差分を整理する
+
+- [x] `src/actions/clock-in.ts` / `src/actions/clock-out.ts` の現在実装で、state 更新が `onKeyUp` 側にある箇所を特定する
+- [x] `src/lib/long-press.ts` の現在 API が「経過時間返却」前提であることを確認し、タイマー駆動へ置き換える差分を整理する
+- [x] **CHECKPOINT**: 即時反映へ変更するコード箇所と既存テストへの影響が明確
+
+### Follow-up 2: モック契約を更新する
+
+- [x] **MOCK-CONTRACT** `src/lib/long-press.ts` の API を timer-based へ更新する
+
+```typescript
+export type PressTracker = {
+    begin(context: string, onLongPress: () => Promise<void> | void): void;
+    end(context: string): boolean;
+    clear(context: string): void;
+    hasTriggered(context: string): boolean;
+};
+```
+
+- [x] `clock-in.test.ts` / `clock-out.test.ts` の fake timer で「2000ms 到達時点で setState が呼ばれる」モックシナリオを追加する
+- [x] **CHECKPOINT**: 2000ms 到達前後の期待動作がテスト契約として固定される
+
+### Follow-up 3: 即時反映実装へ更新する
+
+- [x] `src/lib/long-press.ts` を更新し、2 秒タイマー開始・成立済みフラグ・解除処理を共通化する
+- [x] `src/actions/clock-in.ts` を更新し、`onKeyDown` の long-press callback で `setState(1|0)` を即時実行する
+- [x] `src/actions/clock-out.ts` を更新し、同じ即時反映フローを `#leave` 側にも適用する
+- [x] `onKeyUp` では long-press 成立済みなら no-op にし、短押し時だけ既存処理へ分岐させる
+- [x] **CHECKPOINT**: アイコンが 2 秒到達時点で変わり、離した瞬間には追加変化しない
+
+### Follow-up 4: 回帰テストと docs を同期する
+
+- [x] `src/lib/__tests__/long-press.test.ts` を更新し、`2000ms` 到達時に callback が呼ばれること、`end()` が成立済み状態を返すことを検証する
+- [x] `src/actions/__tests__/clock-in.test.ts` / `src/actions/__tests__/clock-out.test.ts` を更新し、長押し成立後の `onKeyUp` が no-op であることを検証する
+- [x] 実装完了後に `docs/spec/punch.md` / `docs/spec.md` / `docs/architecture.md` へ反映する
+- [x] `bun run test && bun run lint && bunx tsc --noEmit && bun run build` を実行する
+- [x] **CHECKPOINT**: 追加要件が docs と実装の両方で整合する

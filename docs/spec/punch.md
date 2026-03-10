@@ -30,14 +30,18 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 ボタン押下（onKeyDown）
   │
   ├─ 処理中フラグチェック → 処理中なら即 return
-  └─ 押下開始時刻を記録
+  └─ 2 秒タイマーを開始
+
+2 秒到達
+  │
+  └─ State 0/1 を手動で反転してアイコンを即時更新
 
 ボタンを離す（onKeyUp）
   │
   ├─ 処理中フラグチェック → 処理中なら即 return
-  ├─ 押下時間を算出
-  ├─ 2 秒以上の長押し
-  │    └─ State 0/1 を手動で反転して return
+  ├─ 長押しトラッカーを解放
+  ├─ 長押し成立済み
+  │    └─ no-op で return
   ├─ State 1 の短押し
   │    └─ no-op で return
   ├─ グローバル設定取得
@@ -79,7 +83,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 - 連打防止: `_isProcessing` フラグで処理中の重複実行を防ぐ
 - dryRun モード: `kotPunchDryRun=true` の場合は submit をスキップし、パスワード入力まで確認できる状態でブラウザを切断する
 - State はセッション内のみ保持（プラグイン再起動でリセット）、当日限りの打刻管理として意図的に非永続化
-- 長押しの閾値は 2 秒固定で、押下中のタイトル変更や進捗表示は行わない
+- 長押しの閾値は 2 秒固定で、2 秒到達前のタイトル変更や進捗表示は行わない
 - Multi-Action は未対応: `manifest.template.json` で `SupportedInMultiActions: false` を設定し、状態遷移は単体キー押下だけを前提にする
 
 ---
@@ -88,9 +92,9 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 
 | ケース | 挙動 |
 |--------|------|
-| State 0 で 2 秒長押しした場合 | `setState(1)` のみ実行し、再打刻・通知は行わない |
+| State 0 で 2 秒到達まで押し続けた場合 | 2 秒到達時点で `setState(1)` のみ実行し、離したときは no-op |
 | State 1 を短押しした場合 | no-op で終了し、State は変わらない |
-| State 1 で 2 秒長押しした場合 | `setState(0)` のみ実行し、再打刻・通知は行わない |
+| State 1 で 2 秒到達まで押し続けた場合 | 2 秒到達時点で `setState(0)` のみ実行し、離したときは no-op |
 | 処理中に再度ボタンを押した場合 | `_isProcessing` フラグにより即 `return` |
 | `kotPunchDryRun=true` で実行した場合 | submit をスキップし、ブラウザを `disconnect()` のみで終了 |
 | `kotPunchUsername` に `"` や `\` を含む場合 | CSS 属性セレクタ用にエスケープしてからユーザー候補の待機・クリックを行う |
@@ -103,7 +107,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 |--------|------|
 | `lib/puppeteer.ts` | `punchKot(selector, settings)` — Puppeteer 起動・打刻操作 |
 | `lib/settings.ts` | `getGlobalSettings()` / `hasRequiredPunchSettings()` — 設定取得・バリデーション |
-| `lib/long-press.ts` | `createPressTracker()` / `isLongPress()` — 2 秒長押し判定の共通 helper |
+| `lib/long-press.ts` | `createPressTracker()` / `LONG_PRESS_THRESHOLD_MS` — 2 秒タイマー開始・解除・成立済み状態を管理する共通 helper |
 | `lib/showErrorImage.ts` | `showErrorImage(action)` — エラー画像表示ユーティリティ |
 | `lib/notify.ts` | `notify(message)` — 成功時の macOS 通知（fire-and-forget） |
 | KING OF TIME（外部） | 打刻対象のウェブサービス |
