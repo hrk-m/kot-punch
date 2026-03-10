@@ -68,6 +68,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 - 連打防止: `_isProcessing` フラグで処理中の重複実行を防ぐ
 - dryRun モード: `kotPunchDryRun=true` の場合は submit をスキップし、パスワード入力まで確認できる状態でブラウザを切断する
 - State はセッション内のみ保持（プラグイン再起動でリセット）、当日限りの打刻管理として意図的に非永続化
+- Multi-Action は未対応: `manifest.template.json` で `SupportedInMultiActions: false` を設定し、状態遷移は単体キー押下だけを前提にする
 
 ---
 
