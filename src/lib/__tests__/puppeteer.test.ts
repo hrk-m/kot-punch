@@ -304,18 +304,13 @@ describe("punchKot", () => {
         expect(order).toEqual(["waitAttend", "attend", "waitUser", "selectUser", "waitDialog", "typePassword", "waitNav", "submit"]);
     });
 
-    it("kotPunchDryRun=false: submit ボタン待機失敗は無視して evaluate の submit を継続する", async () => {
-        const submitError = new Error("submit button not found");
-        mockWaitForSelector.mockImplementation((selector: string) => {
-            if (selector === "[type=submit]") {
-                return Promise.reject(submitError);
-            }
-            return Promise.resolve(null);
-        });
+    it("kotPunchDryRun=false: evaluate の optional chaining により submit ボタン未検出でも例外にならない", async () => {
+        mockEvaluate.mockResolvedValue(undefined);
 
         await expect(punchKot("#attend", settings)).resolves.toBeUndefined();
         expect(mockWaitForNavigation).toHaveBeenCalledWith({ waitUntil: "networkidle0" });
         expect(mockEvaluate).toHaveBeenCalledWith('document.querySelector("[type=submit]")?.click()');
+        expect(mockWaitForSelector).not.toHaveBeenCalledWith("[type=submit]");
         expect(mockClose).toHaveBeenCalledOnce();
     });
 
