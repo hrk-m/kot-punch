@@ -12,12 +12,11 @@
 			"Controllers": [
 				"Keypad"
 			],
+			"UserTitleEnabled": false,
 			"States": [
 				{
 					"Image": "imgs/actions/open-request/key",
-					"Title": "申請画面",
-					"TitleAlignment": "bottom",
-					"TitleColor": "#4EA84E"
+					"TitleAlignment": "middle"
 				}
 			]
 		},
