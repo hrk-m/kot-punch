@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+const { mockCreateScope } = vi.hoisted(() => ({
+    mockCreateScope: vi.fn(),
+}));
+
 const mockSleep = vi.fn().mockResolvedValue(undefined);
 const mockGoto = vi.fn().mockResolvedValue(null);
 const mockSetCookie = vi.fn().mockResolvedValue(null);
@@ -33,6 +37,19 @@ const mockLaunch = vi.fn().mockResolvedValue({ pages: mockPages, newPage: mockNe
 
 vi.mock("puppeteer", () => ({
     default: { launch: mockLaunch },
+}));
+
+vi.mock("@elgato/streamdeck", () => ({
+    default: {
+        logger: {
+            createScope: mockCreateScope.mockReturnValue({
+                debug: vi.fn(),
+                info: vi.fn(),
+                warn: vi.fn(),
+                error: vi.fn(),
+            }),
+        },
+    },
 }));
 
 vi.mock("node:timers/promises", () => ({
