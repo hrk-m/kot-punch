@@ -1,25 +1,10 @@
 {
   "version": 1,
   "skills": {
-    "nodejs-backend-patterns": {
-      "source": "wshobson/agents",
-      "sourceType": "github",
-      "computedHash": "4c6bf8fbd9a13d61e326ddeb210af5854fea3b253922a7981bd7718f3b765c08"
-    },
     "prd": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
       "computedHash": "1f3e1f005fc40fda85d250ae906c8ee4f7e8e833e23adfeca6542c19609fd7cd"
-    },
-    "puppeteer-automation": {
-      "source": "mindrally/skills",
-      "sourceType": "github",
-      "computedHash": "d24300d65f0114bed5d9779feb4df06d458adb684ce5bbcdd1907ece7fc9f07e"
-    },
-    "security-best-practices": {
-      "source": "supercent-io/skills-template",
-      "sourceType": "github",
-      "computedHash": "4647247fd17c7a3a48605fa5c935915295dcb9a3dcf5c9ba5209194bffbf6993"
     },
     "systematic-debugging": {
       "source": "obra/superpowers",
@@ -40,11 +25,6 @@
       "source": "obra/superpowers",
       "sourceType": "github",
       "computedHash": "9b446f0c7fe1cfb560b1d34439523b1a76d5f177290007b2c053a1c749a4a8ba"
-    },
-    "webapp-testing": {
-      "source": "anthropics/skills",
-      "sourceType": "github",
-      "computedHash": "cf8e5916d474886bd67b09691247f43f331523008b7d366064bc607ab42d6302"
     }
   }
 }
