@@ -1,22 +1,20 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const root = resolve(__dirname, "..");
+const defaultRoot = resolve(__dirname, "..");
 
-const labels = JSON.parse(readFileSync(resolve(root, "src/labels/labels.json"), "utf8"));
-const template = readFileSync(resolve(root, "manifest.template.json"), "utf8");
+export async function generateManifest(rootDir = defaultRoot) {
+    const templatePath = resolve(rootDir, "manifest.template.json");
+    const outputPath = resolve(rootDir, "com.hrk-m.kot-punch.sdPlugin/manifest.json");
+    const template = await readFile(templatePath, "utf8");
 
-const manifest = template.replace(/\{\{(.+?)\}\}/g, (_, key) => {
-    const [action, field] = key.split(".");
-    return labels[action]?.[field] ?? key;
-});
+    await mkdir(resolve(rootDir, "com.hrk-m.kot-punch.sdPlugin"), { recursive: true });
+    await writeFile(outputPath, template, "utf8");
+}
 
-writeFileSync(
-    resolve(root, "com.hrk-m.kot-punch.sdPlugin/manifest.json"),
-    manifest,
-    "utf8",
-);
-
-console.log("manifest.json generated.");
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+    await generateManifest();
+    console.log("manifest.json generated.");
+}
