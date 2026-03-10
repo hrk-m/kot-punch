@@ -79,6 +79,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 | State 1 でボタンを押した場合 | `setState(0)` にリセットして処理を抜ける（再打刻なし） |
 | 処理中に再度ボタンを押した場合 | `_isProcessing` フラグにより即 `return` |
 | `kotPunchDryRun=true` で実行した場合 | submit をスキップし、ブラウザを `disconnect()` のみで終了 |
+| `kotPunchUsername` に `"` や `\` を含む場合 | CSS 属性セレクタ用にエスケープしてからユーザー候補の待機・クリックを行う |
 
 ---
 

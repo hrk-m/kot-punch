@@ -37,7 +37,7 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 | `actions/` | `SingletonAction<Settings>` を継承したアクションクラス群 |
 | `actions/__tests__/` | アクションのユニットテスト（vitest） |
 | `lib/settings.ts` | Global Settings 読み書きヘルパー。`KotPunchSettings` 型定義（`kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` / `kotPunchDryRun`）および `RequestSettings` 型定義（`requestUrl` / `requestUsername` / `requestPassword`）・`getGlobalSettings()` / `getRequestSettings()` / `hasRequiredSettings()` / `hasRequiredPunchSettings()` / `hasRequiredRequestSettings()` を提供 |
-| `lib/puppeteer.ts` | `punchKot(selector, settings)` / `openKotPage(settings)` / `openRequestPage(settings)` 関数。Puppeteer で Chrome を起動し必要な認証情報を適用。`punchKot` は打刻ボタンクリック・ユーザー選択・パスワード入力・submit まで実行（`kotPunchDryRun` 時は submit スキップ）。`openKotPage` / `openRequestPage` は認証後に `disconnect()` でユーザーへ引き渡す |
+| `lib/puppeteer.ts` | `punchKot(selector, settings)` / `openKotPage(settings)` / `openRequestPage(settings)` 関数。Puppeteer で Chrome を起動し必要な認証情報を適用。`punchKot` は打刻ボタンクリック・ユーザー選択・パスワード入力・submit まで実行し、ユーザー選択用の CSS 属性セレクタでは `"` と `\` をエスケープする（`kotPunchDryRun` 時は submit スキップ）。`openKotPage` / `openRequestPage` は認証後に `disconnect()` でユーザーへ引き渡す |
 | `lib/showErrorImage.ts` | 共通エラー表示ユーティリティ。エラー画像を 3 秒表示し元の画像に戻す。フォールバックで `showAlert()` |
 | `lib/notify.ts` | macOS 通知ユーティリティ。`notify(message)` を呼ぶと `node-notifier` 経由で通知センターに表示。`sender: "com.elgato.StreamDeck"` を設定して Stream Deck アプリからの通知として扱う。`streamDeck.logger.createScope("notify")` でロガーを生成し、エラーは `logger.warn` / `logger.error` に留め、呼び出し元に伝播しない |
 | `lib/logger.ts` | Stream Deck SDK の scoped logger ラッパー。未接続やテスト環境では no-op logger を返し、アクション/ライブラリから同じ API で安全にログ出力できるようにする |
@@ -98,6 +98,13 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 ### Multi-Action の扱い
 
 Stream Deck SDK には `ev.payload.isInMultiAction` / `ev.payload.userDesiredState` があるが、現行の `clock-in` / `clock-out` は `manifest.template.json` で `SupportedInMultiActions: false` を明示しており、状態付き打刻ボタンは単体キー押下のみを前提にしている。
+
+### Property Inspector パターン
+
+- 現行の `ui/*.html` はすべて `global setting` のみを扱い、アクション個別設定は持たない
+- `clock-in.html` / `clock-out.html` は同じ KOT 打刻設定セットを共有し、差分は表示文言のみ
+- `open-kot.html` は KOT 認証に必要な最小 3 項目だけを露出する
+- `open-request.html` は申請画面ログイン専用の URL / ユーザー ID / パスワードだけを扱う
 
 ### ログ出力パターン
 
