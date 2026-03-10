@@ -8,6 +8,7 @@ describe("manifest template", () => {
             Actions: Array<{
                 UUID: string;
                 UserTitleEnabled?: boolean;
+                DisableAutomaticStates?: boolean;
                 States: Array<Record<string, unknown>>;
             }>;
         };
@@ -28,5 +29,31 @@ describe("manifest template", () => {
         });
         expect(action?.States[0]).not.toHaveProperty("Title");
         expect(action?.States[0]).not.toHaveProperty("TitleColor");
+    });
+
+    it("clock-in と clock-out は automatic state toggle を無効化する", async () => {
+        const templatePath = new URL("../../../manifest.template.json", import.meta.url);
+        const manifest = JSON.parse(await readFile(templatePath, "utf8")) as {
+            Actions: Array<{
+                UUID: string;
+                DisableAutomaticStates?: boolean;
+            }>;
+        };
+
+        const clockIn = manifest.Actions.find(
+            (entry) => entry.UUID === "com.hrk-m.kot-punch.clock-in"
+        );
+        const clockOut = manifest.Actions.find(
+            (entry) => entry.UUID === "com.hrk-m.kot-punch.clock-out"
+        );
+
+        expect(clockIn).toMatchObject({
+            UUID: "com.hrk-m.kot-punch.clock-in",
+            DisableAutomaticStates: true,
+        });
+        expect(clockOut).toMatchObject({
+            UUID: "com.hrk-m.kot-punch.clock-out",
+            DisableAutomaticStates: true,
+        });
     });
 });

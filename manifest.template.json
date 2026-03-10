@@ -57,6 +57,7 @@
 					"TitleAlignment": "middle"
 				}
 			],
+			"DisableAutomaticStates": true,
 			"SupportedInMultiActions": false
 		},
 		{
@@ -79,6 +80,7 @@
 					"TitleAlignment": "middle"
 				}
 			],
+			"DisableAutomaticStates": true,
 			"SupportedInMultiActions": false
 		}
 	],
