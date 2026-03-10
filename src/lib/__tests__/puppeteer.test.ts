@@ -304,10 +304,12 @@ describe("punchKot", () => {
         expect(order).toEqual(["waitAttend", "attend", "waitUser", "selectUser", "waitDialog", "typePassword", "waitNav", "submit"]);
     });
 
-    it("kotPunchDryRun=false: evaluate の optional chaining により submit ボタン未検出でも例外にならない", async () => {
+    it("kotPunchDryRun=false: submit ボタン未検出で遷移しない場合は navigation timeout を rethrow する", async () => {
+        const navigationTimeout = new Error("navigation timeout");
         mockEvaluate.mockResolvedValue(undefined);
+        mockWaitForNavigation.mockRejectedValueOnce(navigationTimeout);
 
-        await expect(punchKot("#attend", settings)).resolves.toBeUndefined();
+        await expect(punchKot("#attend", settings)).rejects.toBe(navigationTimeout);
         expect(mockWaitForNavigation).toHaveBeenCalledWith({ waitUntil: "networkidle0" });
         expect(mockEvaluate).toHaveBeenCalledWith('document.querySelector("[type=submit]")?.click()');
         expect(mockWaitForSelector).not.toHaveBeenCalledWith("[type=submit]");
