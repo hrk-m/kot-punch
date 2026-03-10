@@ -1,41 +1,61 @@
-import { describe, expect, it } from "vitest";
-import { createPressTracker, isLongPress, LONG_PRESS_THRESHOLD_MS } from "../long-press.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createPressTracker, LONG_PRESS_THRESHOLD_MS } from "../long-press.js";
 
 describe("createPressTracker", () => {
-    it("begin() 後に end() すると経過時間を返す", () => {
-        const tracker = createPressTracker();
-
-        tracker.begin("clock-in", 1000);
-
-        expect(tracker.end("clock-in", 3000)).toBe(2000);
+    beforeEach(() => {
+        vi.useFakeTimers();
     });
 
-    it("begin() されていない context の end() は undefined を返す", () => {
-        const tracker = createPressTracker();
-
-        expect(tracker.end("missing", 4000)).toBeUndefined();
+    afterEach(() => {
+        vi.useRealTimers();
     });
 
-    it("clear() 後は以前の押下状態を再利用しない", () => {
+    it("2000ms 到達時に callback を一度だけ呼ぶ", async () => {
+        const tracker = createPressTracker();
+        const onLongPress = vi.fn();
+
+        tracker.begin("clock-in", onLongPress);
+
+        await vi.advanceTimersByTimeAsync(1999);
+        expect(onLongPress).not.toHaveBeenCalled();
+
+        await vi.advanceTimersByTimeAsync(1);
+        expect(onLongPress).toHaveBeenCalledOnce();
+        expect(tracker.hasTriggered("clock-in")).toBe(true);
+    });
+
+    it("begin() されていない context の end() は false を返す", () => {
         const tracker = createPressTracker();
 
-        tracker.begin("clock-out", 1000);
+        expect(tracker.end("missing")).toBe(false);
+    });
+
+    it("clear() 後は callback が発火しない", async () => {
+        const tracker = createPressTracker();
+        const onLongPress = vi.fn();
+
+        tracker.begin("clock-out", onLongPress);
         tracker.clear("clock-out");
 
-        expect(tracker.end("clock-out", 4000)).toBeUndefined();
+        await vi.advanceTimersByTimeAsync(2000);
+
+        expect(onLongPress).not.toHaveBeenCalled();
+        expect(tracker.end("clock-out")).toBe(false);
+    });
+
+    it("長押し成立後の end() は true を返して後始末する", async () => {
+        const tracker = createPressTracker();
+
+        tracker.begin("clock-out", vi.fn());
+        await vi.advanceTimersByTimeAsync(2000);
+
+        expect(tracker.end("clock-out")).toBe(true);
+        expect(tracker.hasTriggered("clock-out")).toBe(false);
     });
 });
 
-describe("isLongPress", () => {
+describe("LONG_PRESS_THRESHOLD_MS", () => {
     it("長押し閾値は 2000ms 固定", () => {
         expect(LONG_PRESS_THRESHOLD_MS).toBe(2000);
-    });
-
-    it("2000ms ちょうどで true を返す", () => {
-        expect(isLongPress(2000)).toBe(true);
-    });
-
-    it("1999ms では false を返す", () => {
-        expect(isLongPress(1999)).toBe(false);
     });
 });
