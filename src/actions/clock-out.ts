@@ -5,7 +5,7 @@ import { punchKot } from "../lib/puppeteer.js";
 import { showErrorImage } from "../lib/showErrorImage.js";
 import { notify } from "../lib/notify.js";
 import { logger } from "../lib/logger.js";
-import { createPressTracker, isLongPress } from "../lib/long-press.js";
+import { createPressTracker } from "../lib/long-press.js";
 import type { KeyDownEvent } from "@elgato/streamdeck";
 
 /**
@@ -18,17 +18,29 @@ import type { KeyDownEvent } from "@elgato/streamdeck";
 export class ClockOut extends SingletonAction {
 	// 処理中フラグ
 	private _isProcessing = false;
+	// 長押し判定ロジック
 	private readonly pressTracker = createPressTracker();
 
+	// key down では長押し監視だけを始める。
 	override onKeyDown(ev: KeyDownEvent): void {
 		if (this._isProcessing) {
 			logger.clockOut.debug("already processing on key down, skipped");
 			return;
 		}
 
-		this.pressTracker.begin(ev.action.id);
+		const nextState = ev.payload.state === 1 ? 0 : 1;
+		// 長押し成立時だけ state を反転する。
+		this.pressTracker.begin(ev.action.id, () => {
+			logger.clockOut.debug(`manual state update via long press: ${ev.payload.state} -> ${nextState}`);
+			void ev.action.setState(nextState).catch((error: unknown) => {
+				logger.clockOut.error(
+					`manual state update failed: ${error instanceof Error ? error.message : String(error)}`,
+				);
+			});
+		});
 	}
 
+	// key up では長押し済みかを見て、短押し時だけ打刻する。
 	override async onKeyUp(ev: KeyUpEvent): Promise<void> {
 		logger.clockOut.info("onKeyUp triggered");
 
@@ -39,11 +51,10 @@ export class ClockOut extends SingletonAction {
 			return;
 		}
 
-		const duration = this.pressTracker.end(ev.action.id);
-		if (duration !== undefined && isLongPress(duration)) {
+		// 長押し済みなら key up 側の通常処理は実行しない。
+		if (this.pressTracker.end(ev.action.id)) {
 			const nextState = ev.payload.state === 1 ? 0 : 1;
-			logger.clockOut.debug(`manual state update via long press: ${ev.payload.state} -> ${nextState}`);
-			await ev.action.setState(nextState);
+			logger.clockOut.debug(`key up skipped after long press: ${ev.payload.state} -> ${nextState}`);
 			return;
 		}
 

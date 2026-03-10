@@ -7,29 +7,57 @@ const {
     mockTrackerEnd,
     resetTrackerState,
 } = vi.hoisted(() => {
-    const startedAt = new Map<string, number>();
-    const begin = vi.fn((context: string, now?: number) => {
-        startedAt.set(context, now ?? Date.now());
+    const timers = new Map<string, ReturnType<typeof setTimeout>>();
+    const triggered = new Set<string>();
+
+    const clearTimer = (context: string) => {
+        const timer = timers.get(context);
+        if (timer !== undefined) {
+            clearTimeout(timer);
+            timers.delete(context);
+        }
+    };
+
+    const begin = vi.fn((context: string, onLongPress: () => Promise<void> | void) => {
+        clearTimer(context);
+        triggered.delete(context);
+        const timer = setTimeout(() => {
+            timers.delete(context);
+            triggered.add(context);
+            if (typeof onLongPress === "function") {
+                void onLongPress();
+            }
+        }, 2000);
+        timers.set(context, timer);
     });
-    const end = vi.fn((context: string, now?: number) => {
-        const start = startedAt.get(context);
-        startedAt.delete(context);
-        return start === undefined ? undefined : (now ?? Date.now()) - start;
+    const end = vi.fn((context: string) => {
+        clearTimer(context);
+        const wasTriggered = triggered.has(context);
+        triggered.delete(context);
+        return wasTriggered;
     });
     const clear = vi.fn((context: string) => {
-        startedAt.delete(context);
+        clearTimer(context);
+        triggered.delete(context);
     });
+    const hasTriggered = vi.fn((context: string) => triggered.has(context));
 
     return {
         mockCreatePressTracker: vi.fn(() => ({
             begin,
             end,
             clear,
+            hasTriggered,
         })),
         mockTrackerBegin: begin,
         mockTrackerEnd: end,
-        mockTrackerClear: clear,
-        resetTrackerState: () => startedAt.clear(),
+        resetTrackerState: () => {
+            for (const timer of timers.values()) {
+                clearTimeout(timer);
+            }
+            timers.clear();
+            triggered.clear();
+        },
     };
 });
 
@@ -73,7 +101,7 @@ vi.mock("../../lib/notify.js", () => ({
 vi.mock("../../lib/long-press.js", () => ({
     LONG_PRESS_THRESHOLD_MS: 2000,
     createPressTracker: mockCreatePressTracker,
-    isLongPress: (durationMs: number, thresholdMs = 2000) => durationMs >= thresholdMs,
+    isLongPress: (triggered: unknown) => triggered === true,
 }));
 
 const { ClockIn } = await import("../clock-in.js");
@@ -118,9 +146,12 @@ describe("ClockIn", () => {
     describe("onKeyUp - State 0 打刻成功フロー", () => {
         it("punchKot が成功したとき showOk() + setState(1) が呼ばれる", async () => {
             const { action, showOk, setState } = makeSharedAction();
-            const ev = makeKeyEvent(action, 0);
+            const down = makeKeyEvent(action, 0);
+            const up = makeKeyEvent(action, 0);
 
-            await clockIn.onKeyUp(ev as never);
+            await clockIn.onKeyDown(down as never);
+            await vi.advanceTimersByTimeAsync(1999);
+            await clockIn.onKeyUp(up as never);
 
             expect(mockPunchKot).toHaveBeenCalledWith("#attend", fullSettings);
             expect(showOk).toHaveBeenCalledOnce();
@@ -133,10 +164,13 @@ describe("ClockIn", () => {
     describe("onKeyUp - State 0 打刻失敗フロー", () => {
         it("punchKot がエラーを throw したとき setState(0) が呼ばれる", async () => {
             const { action, setState } = makeSharedAction();
-            const ev = makeKeyEvent(action, 0);
+            const down = makeKeyEvent(action, 0);
+            const up = makeKeyEvent(action, 0);
             mockPunchKot.mockRejectedValueOnce(new Error("punch failed"));
 
-            await clockIn.onKeyUp(ev as never);
+            await clockIn.onKeyDown(down as never);
+            await vi.advanceTimersByTimeAsync(1999);
+            await clockIn.onKeyUp(up as never);
 
             expect(showErrorImage).toHaveBeenCalledOnce();
             expect(setState).toHaveBeenCalledWith(0);
@@ -145,18 +179,25 @@ describe("ClockIn", () => {
     });
 
     describe("onKeyDown/onKeyUp - 長押し state 更新フロー", () => {
-        it("State 0 で 2 秒長押しすると setState(1) のみ呼ばれる", async () => {
+        it("State 0 で 2 秒到達時に setState(1) のみ呼ばれ、onKeyUp は no-op", async () => {
             const { action, setState, showOk } = makeSharedAction();
             action.id = "clock-in-long-press-state-0";
             const down = makeKeyEvent(action, 0);
             const up = makeKeyEvent(action, 0);
 
             await clockIn.onKeyDown(down as never);
-            vi.advanceTimersByTime(2000);
+            await vi.advanceTimersByTimeAsync(1999);
+            expect(setState).not.toHaveBeenCalled();
+
+            await vi.advanceTimersByTimeAsync(1);
+            expect(mockTrackerBegin).toHaveBeenCalledWith(
+                "clock-in-long-press-state-0",
+                expect.any(Function),
+            );
             await clockIn.onKeyUp(up as never);
 
-            expect(mockTrackerBegin).toHaveBeenCalledWith("clock-in-long-press-state-0");
             expect(mockTrackerEnd).toHaveBeenCalledWith("clock-in-long-press-state-0");
+            expect(setState).toHaveBeenCalledTimes(1);
             expect(setState).toHaveBeenCalledWith(1);
             expect(mockPunchKot).not.toHaveBeenCalled();
             expect(showOk).not.toHaveBeenCalled();
@@ -171,7 +212,7 @@ describe("ClockIn", () => {
             const up = makeKeyEvent(action, 1);
 
             await clockIn.onKeyDown(down as never);
-            vi.advanceTimersByTime(1999);
+            await vi.advanceTimersByTimeAsync(1999);
             await clockIn.onKeyUp(up as never);
 
             expect(setState).not.toHaveBeenCalled();
@@ -179,16 +220,17 @@ describe("ClockIn", () => {
             expect(mockNotify).not.toHaveBeenCalled();
         });
 
-        it("State 1 で 2 秒長押しすると setState(0) のみ呼ばれる", async () => {
+        it("State 1 で 2 秒到達時に setState(0) のみ呼ばれ、onKeyUp は no-op", async () => {
             const { action, setState, showOk } = makeSharedAction();
             action.id = "clock-in-long-press-state-1";
             const down = makeKeyEvent(action, 1);
             const up = makeKeyEvent(action, 1);
 
             await clockIn.onKeyDown(down as never);
-            vi.advanceTimersByTime(2000);
+            await vi.advanceTimersByTimeAsync(2000);
             await clockIn.onKeyUp(up as never);
 
+            expect(setState).toHaveBeenCalledTimes(1);
             expect(setState).toHaveBeenCalledWith(0);
             expect(mockPunchKot).not.toHaveBeenCalled();
             expect(showOk).not.toHaveBeenCalled();
@@ -199,10 +241,13 @@ describe("ClockIn", () => {
     describe("onKeyUp - 設定未完了フロー", () => {
         it("hasRequiredPunchSettings が false のとき showAlert() が呼ばれ Puppeteer は起動しない", async () => {
             const { action, showAlert } = makeSharedAction();
-            const ev = makeKeyEvent(action, 0);
+            const down = makeKeyEvent(action, 0);
+            const up = makeKeyEvent(action, 0);
             mockHasRequiredPunchSettings.mockReturnValue(false);
 
-            await clockIn.onKeyUp(ev as never);
+            await clockIn.onKeyDown(down as never);
+            await vi.advanceTimersByTimeAsync(1999);
+            await clockIn.onKeyUp(up as never);
 
             expect(showAlert).toHaveBeenCalledOnce();
             expect(mockPunchKot).not.toHaveBeenCalled();
@@ -213,15 +258,21 @@ describe("ClockIn", () => {
     describe("onKeyUp - 処理中ガード", () => {
         it("_isProcessing=true のとき onKeyUp が即 return する（連打防止）", async () => {
             const { action } = makeSharedAction();
-            const ev = makeKeyEvent(action, 0);
+            const firstDown = makeKeyEvent(action, 0);
+            const firstUp = makeKeyEvent(action, 0);
+            const secondDown = makeKeyEvent(action, 0);
+            const secondUp = makeKeyEvent(action, 0);
 
             // 1回目は処理中になる（punchKot を pending 状態にする）
             let resolvePunch!: () => void;
             mockPunchKot.mockReturnValueOnce(new Promise<void>((resolve) => { resolvePunch = resolve; }));
 
-            const firstCall = clockIn.onKeyUp(ev as never);
+            await clockIn.onKeyDown(firstDown as never);
+            await vi.advanceTimersByTimeAsync(1999);
+            const firstCall = clockIn.onKeyUp(firstUp as never);
             // 2回目は処理中フラグによりブロックされる
-            await clockIn.onKeyUp(ev as never);
+            await clockIn.onKeyDown(secondDown as never);
+            await clockIn.onKeyUp(secondUp as never);
 
             expect(mockPunchKot).toHaveBeenCalledTimes(1);
             expect(mockNotify).not.toHaveBeenCalled();
