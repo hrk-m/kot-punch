@@ -15,7 +15,7 @@ const mockClick = vi.fn().mockResolvedValue(null);
 const mockType = vi.fn().mockResolvedValue(null);
 const mockWaitForNavigation = vi.fn().mockResolvedValue(null);
 const mockWaitForSelector = vi.fn().mockResolvedValue(null);
-const mockEvaluate = vi.fn().mockResolvedValue(null);
+const mockEvaluate = vi.fn().mockResolvedValue(true);
 
 function makePage() {
     return {
@@ -71,7 +71,7 @@ function resetMocks() {
     mockType.mockResolvedValue(null);
     mockWaitForNavigation.mockResolvedValue(null);
     mockWaitForSelector.mockResolvedValue(null);
-    mockEvaluate.mockResolvedValue(null);
+    mockEvaluate.mockResolvedValue(true);
     mockPages.mockResolvedValue([makePage()]);
     mockNewPage.mockResolvedValue(makePage());
     mockLaunch.mockResolvedValue({ pages: mockPages, newPage: mockNewPage, disconnect: mockDisconnect, close: mockClose });
@@ -284,7 +284,7 @@ describe("punchKot", () => {
         expect(mockWaitForSelector).toHaveBeenCalledWith("#password_dialog");
         expect(mockType).toHaveBeenCalledWith(".input_password", settings.kotPunchPassword, { delay: 100 });
         expect(mockEvaluate).toHaveBeenCalledOnce();
-        expect(mockWaitForNavigation).toHaveBeenCalledWith({ waitUntil: "networkidle0" });
+        expect(mockWaitForNavigation).not.toHaveBeenCalled();
         expect(mockClose).toHaveBeenCalledOnce();
         expect(mockDisconnect).not.toHaveBeenCalled();
     });
@@ -292,11 +292,11 @@ describe("punchKot", () => {
     it("kotPunchDryRun=false: 固定遅延には sleep を使う", async () => {
         await punchKot("#attend", settings);
 
-        expect(mockSleep).toHaveBeenCalledTimes(3);
+        expect(mockSleep).toHaveBeenCalledTimes(4);
         expect(mockSleep).toHaveBeenNthCalledWith(1, 500);
         expect(mockSleep).toHaveBeenNthCalledWith(2, 500);
         expect(mockSleep).toHaveBeenNthCalledWith(3, 500);
-        expect(mockWaitForNavigation).toHaveBeenCalledWith({ waitUntil: "networkidle0" });
+        expect(mockSleep).toHaveBeenNthCalledWith(4, 1000);
     });
 
     it("kotPunchDryRun=false: 操作順序が #attend → ユーザー選択 → パスワード入力 → submit になる", async () => {
@@ -313,23 +313,29 @@ describe("punchKot", () => {
             return Promise.resolve(null);
         });
         mockType.mockImplementation(() => { order.push("typePassword"); return Promise.resolve(null); });
-        mockWaitForNavigation.mockImplementation(() => { order.push("waitNav"); return Promise.resolve(null); });
-        mockEvaluate.mockImplementation(() => { order.push("submit"); return Promise.resolve(null); });
+        mockEvaluate.mockImplementation(() => { order.push("submit"); return Promise.resolve(true); });
 
         await punchKot("#attend", settings);
 
-        expect(order).toEqual(["waitAttend", "attend", "waitUser", "selectUser", "waitDialog", "typePassword", "waitNav", "submit"]);
+        expect(order).toEqual(["waitAttend", "attend", "waitUser", "selectUser", "waitDialog", "typePassword", "submit"]);
     });
 
-    it("kotPunchDryRun=false: submit ボタン未検出で遷移しない場合は navigation timeout を rethrow する", async () => {
+    it("kotPunchDryRun=false: submit 後に画面遷移しなくても成功扱いにする", async () => {
         const navigationTimeout = new Error("navigation timeout");
-        mockEvaluate.mockResolvedValue(undefined);
+        mockEvaluate.mockResolvedValue(true);
         mockWaitForNavigation.mockRejectedValueOnce(navigationTimeout);
 
-        await expect(punchKot("#attend", settings)).rejects.toBe(navigationTimeout);
-        expect(mockWaitForNavigation).toHaveBeenCalledWith({ waitUntil: "networkidle0" });
-        expect(mockEvaluate).toHaveBeenCalledWith('document.querySelector("[type=submit]")?.click()');
-        expect(mockWaitForSelector).not.toHaveBeenCalledWith("[type=submit]");
+        await expect(punchKot("#attend", settings)).resolves.toBeUndefined();
+        expect(mockEvaluate).toHaveBeenCalledOnce();
+        expect(mockWaitForNavigation).not.toHaveBeenCalled();
+        expect(mockClose).toHaveBeenCalledOnce();
+    });
+
+    it("kotPunchDryRun=false: submit ボタンが見つからない場合はエラーを rethrow する", async () => {
+        mockEvaluate.mockResolvedValue(false);
+
+        await expect(punchKot("#attend", settings)).rejects.toThrow("Submit button not found.");
+        expect(mockWaitForNavigation).not.toHaveBeenCalled();
         expect(mockClose).toHaveBeenCalledOnce();
     });
 
