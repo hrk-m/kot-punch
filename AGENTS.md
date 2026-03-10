@@ -6,7 +6,7 @@
 - `src/actions/__tests__/` and `src/lib/__tests__/`: Vitest unit tests.
 - `src/lib/*.ts`: shared logic (settings, Puppeteer access, error-image handling).
 - `com.hrk-m.kot-punch.sdPlugin/`: plugin package (`ui/`, `imgs/`, generated `manifest.json`, build output in `bin/`).
-- `manifest.template.json` and `src/labels/labels.json` are the source inputs for manifest generation.
+- `manifest.template.json` is the source input for manifest generation.
 
 ## Build, Test, and Development Commands
 Run from repository root:

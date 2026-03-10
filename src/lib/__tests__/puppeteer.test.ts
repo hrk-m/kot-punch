@@ -304,18 +304,15 @@ describe("punchKot", () => {
         expect(order).toEqual(["waitAttend", "attend", "waitUser", "selectUser", "waitDialog", "typePassword", "waitNav", "submit"]);
     });
 
-    it("kotPunchDryRun=false: submit ボタンが見つからないときは即時失敗し submit を試みない", async () => {
-        const submitError = new Error("submit button not found");
-        mockWaitForSelector.mockImplementation((selector: string) => {
-            if (selector === "[type=submit]") {
-                return Promise.reject(submitError);
-            }
-            return Promise.resolve(null);
-        });
+    it("kotPunchDryRun=false: submit ボタン未検出で遷移しない場合は navigation timeout を rethrow する", async () => {
+        const navigationTimeout = new Error("navigation timeout");
+        mockEvaluate.mockResolvedValue(undefined);
+        mockWaitForNavigation.mockRejectedValueOnce(navigationTimeout);
 
-        await expect(punchKot("#attend", settings)).rejects.toBe(submitError);
-        expect(mockEvaluate).not.toHaveBeenCalled();
-        expect(mockWaitForNavigation).not.toHaveBeenCalled();
+        await expect(punchKot("#attend", settings)).rejects.toBe(navigationTimeout);
+        expect(mockWaitForNavigation).toHaveBeenCalledWith({ waitUntil: "networkidle0" });
+        expect(mockEvaluate).toHaveBeenCalledWith('document.querySelector("[type=submit]")?.click()');
+        expect(mockWaitForSelector).not.toHaveBeenCalledWith("[type=submit]");
         expect(mockClose).toHaveBeenCalledOnce();
     });
 

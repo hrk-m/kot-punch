@@ -53,8 +53,6 @@ src/
     __tests__/
       validation.test.ts
       notification.test.ts
-  labels/
-    labels.json
 ```
 
 ---

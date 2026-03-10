@@ -29,6 +29,11 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 - 打刻（Clock In / Clock Out）: 上記 3 項目 + `kotPunchUsername`, `kotPunchPassword`
 - Open Request: `requestUrl`, `requestUsername`, `requestPassword`
 
+**Property Inspector の設定分担**:
+- `ui/clock-in.html` / `ui/clock-out.html`: 打刻用 KOT 設定一式と `kotPunchDryRun`
+- `ui/open-kot.html`: KOT 認証に必要な 3 項目のみ
+- `ui/open-request.html`: 申請画面用の 3 項目のみ
+
 ---
 
 ## 共通動作

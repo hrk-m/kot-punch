@@ -33,23 +33,24 @@ bun run logs
 
 ### Build Flow
 
-`src/plugin.ts` → Rollup (TypeScript + CommonJS + terser) → `com.hrk-m.kot-punch.sdPlugin/bin/plugin.js`
+`manifest.template.json` → `scripts/generate-manifest.mjs` → `com.hrk-m.kot-punch.sdPlugin/manifest.json`
 
-ビルド時は terser で minify し、sourcemap は出力しない。
+`src/plugin.ts` → Rollup (TypeScript + 単一 ESM bundle + terser) → `com.hrk-m.kot-punch.sdPlugin/bin/plugin.js`
+
+`bun run build` は manifest を再生成してから Rollup を実行し、最後に `bun install --production --cwd com.hrk-m.kot-punch.sdPlugin` で runtime 依存を plugin package 側へ配置する。
 
 ### Directory Responsibilities
 
 ```text
 src/
   plugin.ts              # エントリポイント（アクション登録 + connect）
-  actions/               # ClockIn / ClockOut / OpenKot
+  actions/               # ClockIn / ClockOut / OpenKot / OpenRequest
   actions/__tests__/     # アクション単体テスト
-  lib/                   # settings / puppeteer / showErrorImage
+  lib/                   # settings / puppeteer / showErrorImage / notify / logger
   lib/__tests__/         # ライブラリ単体テスト
-  labels/labels.json     # manifest 用ラベル
-
 com.hrk-m.kot-punch.sdPlugin/
   manifest.json          # 生成物（手編集しない）
+  package.json           # plugin 側 production dependency 定義
   ui/                    # Property Inspector HTML
   imgs/                  # アイコン（通常 + @2x）
   bin/                   # ビルド成果物
@@ -59,12 +60,13 @@ com.hrk-m.kot-punch.sdPlugin/
 
 - `clock-in` / `clock-out`: `onKeyUp` で打刻を実行。State 0→1、State 1 は 0 にリセット。連打防止の `_isProcessing` ガードあり。
 - `open-kot`: 認証済みブラウザを開くだけのアクション。必須設定不足時は `showAlert()`。
+- `open-request`: 申請画面へログイン済みブラウザを開くだけのアクション。必須設定不足時は `showAlert()`。
 - 共通失敗処理: `showErrorImage()` を fire-and-forget で呼び出す。
 
 ## Implementation Notes
 
 - 新規アクションは `@action({ UUID: "com.hrk-m.kot-punch.<name>" })` を付与し、`src/plugin.ts` で登録する。
-- `manifest.template.json` / `src/labels/labels.json` を更新したら `bun run generate-manifest` を実行する。
+- `manifest.template.json` を更新したら `bun run generate-manifest` を実行する。
 - ローカル import は拡張子を省略する（TypeScript が解決するため）。
 
 ## Testing Notes

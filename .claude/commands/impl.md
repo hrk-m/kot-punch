@@ -66,10 +66,6 @@
 | 新機能実装・バグ修正 | `.agents/skills/test-driven-development/SKILL.md` |
 | バグ調査・テスト失敗・予期しない動作 | `.agents/skills/systematic-debugging/SKILL.md` |
 | TypeScript の型設計・型安全性 | `.agents/skills/typescript-advanced-types/SKILL.md` |
-| セキュリティ要件 | `.agents/skills/security-best-practices/SKILL.md` |
-| ブラウザ自動化 | `.agents/skills/puppeteer-automation/SKILL.md` |
-| UI 検証 | `.agents/skills/webapp-testing/SKILL.md` |
-| Node.js API/バックエンド | `.agents/skills/nodejs-backend-patterns/SKILL.md` |
 
 複数該当する場合は全て適用する。
 
