@@ -2,7 +2,7 @@
 
 ## 概要
 
-JWT 認証済みの Chrome ウィンドウで KING OF TIME 管理画面を開くアクション。ブラウザを閉じずに切断するため、そのまま手動操作を続けられる。
+JWT 認証済みの Chrome ウィンドウで KING OF TIME 勤怠画面を開くアクション。`kotPunchUrl` に指定した画面へ遷移し、ブラウザを閉じずに切断するため、そのまま手動操作を続けられる。
 
 ---
 
@@ -33,7 +33,7 @@ JWT 認証済みの Chrome ウィンドウで KING OF TIME 管理画面を開く
   ├─ 必須項目チェック → 未入力なら showAlert()
   │
   └─ Puppeteer 起動
-       ├─ KOT ページへアクセス（domain 確立）
+       ├─ kotPunchUrl へアクセス（domain 確立）
        ├─ JWT クッキーをセット
        ├─ 再アクセスして認証適用
        ├─ disconnect()（ブラウザは閉じない）

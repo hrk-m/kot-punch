@@ -2,7 +2,7 @@
 
 ## 概要
 
-KING OF TIME (KOT) 向け Stream Deck プラグイン。Stream Deck のボタンを押すだけで出勤・退勤打刻と KOT 管理画面の表示を実行できる。
+KING OF TIME (KOT) 向け Stream Deck プラグイン。Stream Deck のボタンを押すだけで出勤・退勤打刻と KOT 勤怠画面の表示を実行できる。
 
 **価値**: 打刻操作をブラウザを開かずにワンボタンで完結させ、打刻漏れと操作ミスを低減する。
 
@@ -14,7 +14,7 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 
 | 設定項目 | 型 | 用途 |
 |----------|----|------|
-| `kotPunchUrl` | string | KOT の URL |
+| `kotPunchUrl` | string | KOT 勤怠/打刻画面の URL |
 | `kotPunchKey` | string | JWT クッキーのキー名 |
 | `kotPunchToken` | string | JWT トークン値 |
 | `kotPunchUsername` | string | 打刻ユーザー名 |
@@ -69,6 +69,6 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 |---|---|---|
 | **Clock In**（出勤打刻） | ボタン押下で KOT 出勤打刻を自動実行。成功でアイコンがチェックマークに変わる | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` |
 | **Clock Out**（退勤打刻） | ボタン押下で KOT 退勤打刻を自動実行。成功でアイコンがチェックマークに変わる | 同上 |
-| **Open KOT** | JWT 認証済みの Chrome で KOT 管理画面を開く。ブラウザはそのまま操作できる状態で引き渡される | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` |
+| **Open KOT** | JWT 認証済みの Chrome で KOT 勤怠画面を開く。ブラウザはそのまま操作できる状態で引き渡される | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` |
 | **Open Request**（申請画面を開く） | 申請画面にログイン済みの Chrome を開く | `requestUrl` / `requestUsername` / `requestPassword` |
 

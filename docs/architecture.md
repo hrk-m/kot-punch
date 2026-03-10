@@ -118,4 +118,5 @@ Stream Deck SDK には `ev.payload.isInMultiAction` / `ev.payload.userDesiredSta
 - `ev.action`（`setTitle`, `setSettings`）は `vi.fn()` でスタブ化して検証する
 - `onKeyUp` ハンドラは `_isProcessing` フラグで連打を防止しているため、テストでは非同期処理の完了を `await` してから状態を検証する
 - manifest 生成は `src/lib/__tests__/manifest.test.ts` で回帰テストする。`manifest.template.json` だけを置いたテンポラリディレクトリに対して `generateManifest(rootDir)` を実行し、`labels.json` なしで成立することを固定する
+- manifest template の action 定義は `src/lib/__tests__/manifest-template.test.ts` で補完する。現行では `open-request` が `UserTitleEnabled: false` の image-only state を維持していることを固定する
 - テストフレームワーク: vitest
