@@ -2,7 +2,7 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { generateManifest } from "../../../scripts/generate-manifest.mjs";
+import { generateManifest } from "../../../scripts/generate-manifest.mts";
 
 const tempDirs: string[] = [];
 
