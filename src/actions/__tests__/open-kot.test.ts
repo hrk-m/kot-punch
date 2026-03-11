@@ -104,7 +104,7 @@ describe("OpenKot", () => {
 
             expect(showAlert).toHaveBeenCalledOnce();
             expect(mockOpenKotPage).not.toHaveBeenCalled();
-            expect(mockNotify).not.toHaveBeenCalled();
+            expect(mockNotify).toHaveBeenCalledWith("全項目必須です。設定を確認してください。");
         });
 
         it("設定未完了後に _isProcessing が false に戻り、次回も処理できる", async () => {
@@ -119,7 +119,7 @@ describe("OpenKot", () => {
             await openKot.onKeyUp(makeKeyUpEvent(action) as never);
 
             expect(mockOpenKotPage).toHaveBeenCalledOnce();
-            expect(mockNotify).toHaveBeenCalledTimes(1);
+            expect(mockNotify).toHaveBeenCalledTimes(2);
             expect(mockNotify).toHaveBeenCalledWith("KING OF TIME を開きました");
         });
     });

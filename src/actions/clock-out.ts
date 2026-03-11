@@ -75,6 +75,7 @@ export class ClockOut extends SingletonAction {
 			// 必須項目が未入力の場合はアラートを表示
 			if (!hasRequiredPunchSettings(settings)) {
 				logger.clockOut.warn("required settings missing");
+				void notify("全項目必須です。設定を確認してください。");
 				await ev.action.showAlert();
 				return;
 			}

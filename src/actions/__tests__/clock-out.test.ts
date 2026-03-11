@@ -248,7 +248,7 @@ describe("ClockOut", () => {
 
             expect(showAlert).toHaveBeenCalledOnce();
             expect(mockPunchKot).not.toHaveBeenCalled();
-            expect(mockNotify).not.toHaveBeenCalled();
+            expect(mockNotify).toHaveBeenCalledWith("全項目必須です。設定を確認してください。");
         });
     });
 

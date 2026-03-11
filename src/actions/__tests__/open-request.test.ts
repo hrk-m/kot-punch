@@ -127,7 +127,7 @@ describe("OpenRequest", () => {
 
             expect(showAlert).toHaveBeenCalledOnce();
             expect(mockOpenRequestPage).not.toHaveBeenCalled();
-            expect(mockNotify).not.toHaveBeenCalled();
+            expect(mockNotify).toHaveBeenCalledWith("全項目必須です。設定を確認してください。");
         });
 
         it("設定未完了後に _isProcessing が false に戻り、次回も処理できる", async () => {
@@ -142,7 +142,7 @@ describe("OpenRequest", () => {
             await openRequest.onKeyUp(makeKeyUpEvent(action) as never);
 
             expect(mockOpenRequestPage).toHaveBeenCalledOnce();
-            expect(mockNotify).toHaveBeenCalledTimes(1);
+            expect(mockNotify).toHaveBeenCalledTimes(2);
             expect(mockNotify).toHaveBeenCalledWith("申請画面を開きました");
         });
     });

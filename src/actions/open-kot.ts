@@ -26,6 +26,7 @@ export class OpenKot extends SingletonAction {
             // 必須項目が未入力の場合はアラートを表示
             if (!hasRequiredSettings(settings)) {
                 logger.openKot.warn("required settings missing");
+                void notify("全項目必須です。設定を確認してください。");
                 await ev.action.showAlert();
             } else {
                 // KING OF TIME を開く
