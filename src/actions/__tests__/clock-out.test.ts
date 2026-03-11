@@ -100,7 +100,6 @@ vi.mock("../../lib/notify.js", () => ({
 vi.mock("../../lib/long-press.js", () => ({
     LONG_PRESS_THRESHOLD_MS: 2000,
     createPressTracker: mockCreatePressTracker,
-    isLongPress: (triggered: unknown) => triggered === true,
 }));
 
 const { ClockOut } = await import("../clock-out.js");
