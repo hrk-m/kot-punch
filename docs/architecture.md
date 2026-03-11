@@ -25,6 +25,8 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 
 `bun run build` は manifest をテンプレートから再生成してから、`src/plugin.ts` を minify 済みの単一 ESM bundle にまとめる。Rollup では `puppeteer` と `node-notifier` を external に残すため、最後に `com.hrk-m.kot-punch.sdPlugin/package.json` へ production dependency をインストールしてランタイム依存を補完する。
 
+開発環境の初期セットアップではルートの `bun install` が `postinstall` を通して `scripts/install-browser.mts` を実行し、Puppeteer が必要とする Chrome for Testing を不足時のみ補充する。
+
 ---
 
 ## ディレクトリ責務
@@ -50,6 +52,7 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 |------|------|
 | `manifest.template.json` | プラグイン manifest のテンプレート兼 source of truth。各アクション定義と表示名をそのまま保持する |
 | `scripts/generate-manifest.mts` | `manifest.template.json` を `com.hrk-m.kot-punch.sdPlugin/manifest.json` へコピーする生成スクリプト。CLI からの実行に加えて `generateManifest(rootDir)` を export し、テンポラリディレクトリを使う unit test からも再利用できる |
+| `scripts/install-browser.mts` | Puppeteer が管理する Chrome for Testing を自動インストールするスクリプト。`ensureChromeInstalled(rootDir)` をエクスポートし、実行ファイルが存在しない場合のみ `bunx puppeteer browsers install chrome` を実行する。`postinstall` フックで `bun install` 時に自動実行される |
 | `rollup.config.mjs` | plugin bundle の出力設定。単一ファイル化、minify、external 依存の維持、`bin/package.json` の emit を担当 |
 
 ### `com.hrk-m.kot-punch.sdPlugin/`
@@ -122,4 +125,6 @@ Stream Deck SDK には `ev.payload.isInMultiAction` / `ev.payload.userDesiredSta
 - `onKeyUp` ハンドラは `_isProcessing` フラグで連打を防止しているため、テストでは非同期処理の完了を `await` してから状態を検証する。長押し分岐は fake timer で「2000ms 到達時点で `setState()` が走ること」と「長押し成立後の `onKeyUp` が no-op であること」を再現する
 - manifest 生成は `src/lib/__tests__/manifest.test.ts` で回帰テストする。`manifest.template.json` だけを置いたテンポラリディレクトリに対して `generateManifest(rootDir)` を実行し、`labels.json` なしで成立することを固定する
 - manifest template の action 定義は `src/lib/__tests__/manifest-template.test.ts` で補完する。現行では `open-request` が `UserTitleEnabled: false` の image-only state を維持していることを固定する
+- `src/lib/__tests__/notify.test.ts` では `node-notifier` をモックし、通知送信の callback error と同期例外が呼び出し元へ伝播しないことを固定する
+- ランタイム依存バージョンは `src/lib/__tests__/runtime-dependencies.test.ts` で固定する。`package.json`（ルート）と `com.hrk-m.kot-punch.sdPlugin/package.json` の `puppeteer` バージョンが完全一致し、かつ `generate-manifest` / `install-browser` / `postinstall` の各スクリプトが正しく定義されていることを検証する
 - テストフレームワーク: vitest

@@ -70,6 +70,17 @@
 
 ---
 
+## ボタン・アイコン一覧
+
+この機能でユーザーが押すボタンと、対応する icon/state を示す。
+
+| ボタン | 状態 | アイコン | パス | 説明 |
+|--------|------|----------|------|------|
+| `申請画面を開く` | 通常（唯一の State） | <img src="../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/open-request/key.png" width="72" height="72" alt="Open Request button"> | `../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/open-request/key.png` | 申請画面へログイン済みの Chrome を開く通常ボタン |
+| `申請画面を開く` | Error（共通） | <img src="../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/common/error.png" width="72" height="72" alt="Common error icon"> | `../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/common/error.png` | ログイン失敗や Puppeteer エラー時に `showErrorImage()` が 3 秒表示する共通 error icon |
+
+---
+
 ## 依存関係
 
 | 依存先 | 用途 |

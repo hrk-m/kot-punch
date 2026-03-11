@@ -101,6 +101,20 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 
 ---
 
+## ボタン・アイコン一覧
+
+この機能でユーザーが押すボタンと、対応する action/state を示す。
+
+| ボタン | 状態 | アイコン | パス | 説明 |
+|--------|------|----------|------|------|
+| `出勤` | `Clock In` / State 0 | <img src="../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/attend/key.png" width="72" height="72" alt="Clock In state 0"> | `../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/attend/key.png` | 未打刻状態の出勤ボタン。短押しで出勤打刻を実行する |
+| `出勤` | `Clock In` / State 1 | <img src="../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/attend/key1.png" width="72" height="72" alt="Clock In state 1"> | `../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/attend/key1.png` | 打刻済み状態の出勤ボタン。短押しは no-op、2 秒長押しで State 0 に戻す |
+| `退勤` | `Clock Out` / State 0 | <img src="../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/leave/key.png" width="72" height="72" alt="Clock Out state 0"> | `../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/leave/key.png` | 未打刻状態の退勤ボタン。短押しで退勤打刻を実行する |
+| `退勤` | `Clock Out` / State 1 | <img src="../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/leave/key1.png" width="72" height="72" alt="Clock Out state 1"> | `../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/leave/key1.png` | 打刻済み状態の退勤ボタン。短押しは no-op、2 秒長押しで State 0 に戻す |
+| `出勤` / `退勤` | Error（共通） | <img src="../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/common/error.png" width="72" height="72" alt="Common error icon"> | `../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/common/error.png` | 打刻失敗時に `showErrorImage()` が 3 秒表示する共通 error icon |
+
+---
+
 ## 依存関係
 
 | 依存先 | 用途 |

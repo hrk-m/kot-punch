@@ -69,6 +69,17 @@ JWT 認証済みの Chrome ウィンドウで KING OF TIME 勤怠画面を開く
 
 ---
 
+## ボタン・アイコン一覧
+
+この機能でユーザーが押すボタンと、対応する icon/state を示す。
+
+| ボタン | 状態 | アイコン | パス | 説明 |
+|--------|------|----------|------|------|
+| `KING OF TIMEを開く` | 通常（唯一の State） | <img src="../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/open-kot/key.png" width="72" height="72" alt="Open KOT button"> | `../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/open-kot/key.png` | JWT 認証済みの KOT 勤怠画面を Chrome で開く通常ボタン |
+| `KING OF TIMEを開く` | Error（共通） | <img src="../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/common/error.png" width="72" height="72" alt="Common error icon"> | `../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/common/error.png` | 認証失敗や Puppeteer エラー時に `showErrorImage()` が 3 秒表示する共通 error icon |
+
+---
+
 ## 依存関係
 
 | 依存先 | 用途 |
