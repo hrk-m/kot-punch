@@ -4,7 +4,7 @@
 
 ```
 manifest.template.json
-  └─ scripts/generate-manifest.mjs
+  └─ scripts/generate-manifest.mts
        │
        ▼
   com.hrk-m.kot-punch.sdPlugin/manifest.json
@@ -25,6 +25,8 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 
 `bun run build` は manifest をテンプレートから再生成してから、`src/plugin.ts` を minify 済みの単一 ESM bundle にまとめる。Rollup では `puppeteer` と `node-notifier` を external に残すため、最後に `com.hrk-m.kot-punch.sdPlugin/package.json` へ production dependency をインストールしてランタイム依存を補完する。
 
+開発環境の初期セットアップではルートの `bun install` が `postinstall` を通して `scripts/install-browser.mts` を実行し、Puppeteer が必要とする Chrome for Testing を不足時のみ補充する。
+
 ---
 
 ## ディレクトリ責務
@@ -38,6 +40,7 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 | `actions/__tests__/` | アクションのユニットテスト（vitest） |
 | `lib/settings.ts` | Global Settings 読み書きヘルパー。`KotPunchSettings` 型定義（`kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` / `kotPunchDryRun`）および `RequestSettings` 型定義（`requestUrl` / `requestUsername` / `requestPassword`）・`getGlobalSettings()` / `getRequestSettings()` / `hasRequiredSettings()` / `hasRequiredPunchSettings()` / `hasRequiredRequestSettings()` を提供 |
 | `lib/puppeteer.ts` | `punchKot(selector, settings)` / `openKotPage(settings)` / `openRequestPage(settings)` 関数。Puppeteer で Chrome を起動し必要な認証情報を適用。`punchKot` は打刻ボタンクリック・ユーザー選択・パスワード入力・submit まで実行し、ユーザー選択用の CSS 属性セレクタでは `"` と `\` をエスケープする（`kotPunchDryRun` 時は submit スキップ）。`openKotPage` / `openRequestPage` は認証後に `disconnect()` でユーザーへ引き渡す |
+| `lib/long-press.ts` | 打刻ボタンの 2 秒長押し判定 helper。action instance ごとの `id` をキーに 2 秒タイマー、成立済みフラグ、解除処理を保持する `createPressTracker()` と `LONG_PRESS_THRESHOLD_MS` を提供 |
 | `lib/showErrorImage.ts` | 共通エラー表示ユーティリティ。エラー画像を 3 秒表示し元の画像に戻す。フォールバックで `showAlert()` |
 | `lib/notify.ts` | macOS 通知ユーティリティ。`notify(message)` を呼ぶと `node-notifier` 経由で通知センターに表示。`sender: "com.elgato.StreamDeck"` を設定して Stream Deck アプリからの通知として扱う。`streamDeck.logger.createScope("notify")` でロガーを生成し、エラーは `logger.warn` / `logger.error` に留め、呼び出し元に伝播しない |
 | `lib/logger.ts` | Stream Deck SDK の scoped logger ラッパー。未接続やテスト環境では no-op logger を返し、アクション/ライブラリから同じ API で安全にログ出力できるようにする |
@@ -48,7 +51,8 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 | パス | 責務 |
 |------|------|
 | `manifest.template.json` | プラグイン manifest のテンプレート兼 source of truth。各アクション定義と表示名をそのまま保持する |
-| `scripts/generate-manifest.mjs` | `manifest.template.json` を `com.hrk-m.kot-punch.sdPlugin/manifest.json` へコピーする生成スクリプト。CLI からの実行に加えて `generateManifest(rootDir)` を export し、テンポラリディレクトリを使う unit test からも再利用できる |
+| `scripts/generate-manifest.mts` | `manifest.template.json` を `com.hrk-m.kot-punch.sdPlugin/manifest.json` へコピーする生成スクリプト。CLI からの実行に加えて `generateManifest(rootDir)` を export し、テンポラリディレクトリを使う unit test からも再利用できる |
+| `scripts/install-browser.mts` | Puppeteer が管理する Chrome for Testing を自動インストールするスクリプト。`ensureChromeInstalled(rootDir)` をエクスポートし、実行ファイルが存在しない場合のみ `bunx puppeteer browsers install chrome` を実行する。`postinstall` フックで `bun install` 時に自動実行される |
 | `rollup.config.mjs` | plugin bundle の出力設定。単一ファイル化、minify、external 依存の維持、`bin/package.json` の emit を担当 |
 
 ### `com.hrk-m.kot-punch.sdPlugin/`
@@ -88,7 +92,8 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 
 | API / イベント | 用途 |
 |----------------|------|
-| `onKeyUp` | 現行 4 アクションのメイン処理入口。`_isProcessing` ガードを入れて二重実行を防ぐ |
+| `onKeyDown` | `clock-in` / `clock-out` のみ使用。2 秒タイマーを開始し、到達時点で `setState()` を即時実行する callback を登録する |
+| `onKeyUp` | 現行 4 アクションのメイン処理入口。`clock-in` / `clock-out` では long-press tracker を解放し、成立済みなら no-op、未成立なら短押し打刻フローへ分岐する |
 | `streamDeck.settings.getGlobalSettings()` | 全アクション共通の Global Settings を取得する。KOT 系と申請画面系で型だけ切り替える |
 | `ev.action.showAlert()` / `ev.action.showOk()` | 設定不足時の警告、打刻成功時の即時フィードバック |
 | `ev.action.setState()` | Clock In / Clock Out のみ使用。State 0/1 を切り替えて当日打刻済みの見た目を表現する |
@@ -97,7 +102,7 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 
 ### Multi-Action の扱い
 
-Stream Deck SDK には `ev.payload.isInMultiAction` / `ev.payload.userDesiredState` があるが、現行の `clock-in` / `clock-out` は `manifest.template.json` で `SupportedInMultiActions: false` を明示しており、状態付き打刻ボタンは単体キー押下のみを前提にしている。
+Stream Deck SDK には `ev.payload.isInMultiAction` / `ev.payload.userDesiredState` があるが、現行の `clock-in` / `clock-out` は `manifest.template.json` で `SupportedInMultiActions: false` を明示しており、状態付き打刻ボタンは単体キー押下のみを前提にしている。また、long-press で plugin 側が `setState()` を制御するため、同じ action 定義で `DisableAutomaticStates: true` も指定し、Stream Deck 側の自動 toggle と競合しないようにしている。
 
 ### Property Inspector パターン
 
@@ -116,6 +121,10 @@ Stream Deck SDK には `ev.payload.isInMultiAction` / `ev.payload.userDesiredSta
 
 - `@elgato/streamdeck` は Stream Deck プロセスへの接続が必要なため、ユニットテストでは `vi.mock` で差し替える
 - `ev.action`（`setTitle`, `setSettings`）は `vi.fn()` でスタブ化して検証する
-- `onKeyUp` ハンドラは `_isProcessing` フラグで連打を防止しているため、テストでは非同期処理の完了を `await` してから状態を検証する
+- `clock-in` / `clock-out` の長押し判定は `src/lib/__tests__/long-press.test.ts` で境界値（1999ms / 2000ms）、callback 発火、後始末を固定する
+- `onKeyUp` ハンドラは `_isProcessing` フラグで連打を防止しているため、テストでは非同期処理の完了を `await` してから状態を検証する。長押し分岐は fake timer で「2000ms 到達時点で `setState()` が走ること」と「長押し成立後の `onKeyUp` が no-op であること」を再現する
 - manifest 生成は `src/lib/__tests__/manifest.test.ts` で回帰テストする。`manifest.template.json` だけを置いたテンポラリディレクトリに対して `generateManifest(rootDir)` を実行し、`labels.json` なしで成立することを固定する
+- manifest template の action 定義は `src/lib/__tests__/manifest-template.test.ts` で補完する。現行では `open-request` が `UserTitleEnabled: false` の image-only state を維持していることを固定する
+- `src/lib/__tests__/notify.test.ts` では `node-notifier` をモックし、通知送信の callback error と同期例外が呼び出し元へ伝播しないことを固定する
+- ランタイム依存バージョンは `src/lib/__tests__/runtime-dependencies.test.ts` で固定する。`package.json`（ルート）と `com.hrk-m.kot-punch.sdPlugin/package.json` の `puppeteer` バージョンが完全一致し、かつ `generate-manifest` / `install-browser` / `postinstall` の各スクリプトが正しく定義されていることを検証する
 - テストフレームワーク: vitest

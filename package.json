@@ -1,9 +1,12 @@
 {
     "scripts": {
-        "generate-manifest": "node scripts/generate-manifest.mjs",
+        "generate-manifest": "bun scripts/generate-manifest.mts",
+        "install-browser": "bun scripts/install-browser.mts",
+        "postinstall": "bun run install-browser",
         "build": "bun run generate-manifest && rollup -c && bun install --production --cwd com.hrk-m.kot-punch.sdPlugin",
         "logs": "tail -F \"$HOME/Library/Application Support/com.elgato.StreamDeck/Plugins/com.hrk-m.kot-punch.sdPlugin/logs/com.hrk-m.kot-punch.0.log\"",
         "lint": "oxlint src",
+        "typecheck": "tsc --noEmit",
         "test": "vitest run"
     },
     "type": "module",
@@ -27,6 +30,6 @@
     "dependencies": {
         "@elgato/streamdeck": "^2.0.0",
         "node-notifier": "^10.0.1",
-        "puppeteer": "^24.38.0"
+        "puppeteer": "24.38.0"
     }
 }

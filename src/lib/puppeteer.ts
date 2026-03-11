@@ -97,11 +97,20 @@ export async function punchKot(selector: "#attend" | "#leave", settings: KotPunc
         } else {
             logger.puppeteer.info("submitting punch");
             await sleep(500);
-            // page.click() では "not clickable" になるため JS から直接クリック
-            await Promise.all([
-                page.waitForNavigation({ waitUntil: "networkidle0" }),
-                page.evaluate('document.querySelector("[type=submit]")?.click()'),
-            ]);
+            // KOT は submit 後に必ず遷移しないため、DOM から直接 click して短く待つ。
+            const submitted = await page.evaluate(`(() => {
+                const submit = document.querySelector("[type=submit]");
+                if (!(submit instanceof HTMLElement)) {
+                    return false;
+                }
+
+                submit.click();
+                return true;
+            })()`);
+            if (!submitted) {
+                throw new Error("Submit button not found.");
+            }
+            await sleep(1000);
             await browser.close();
         }
         logger.puppeteer.info("punch completed");

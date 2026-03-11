@@ -1,6 +1,7 @@
 {
 	"extends": "@tsconfig/node20/tsconfig.json",
 	"compilerOptions": {
+		"allowImportingTsExtensions": true,
 		"customConditions": [
 			"node"
 		],
@@ -10,7 +11,8 @@
 		"resolveJsonModule": true
 	},
 	"include": [
-		"src/**/*.ts"
+		"src/**/*.ts",
+		"scripts/**/*.mts"
 	],
 	"exclude": [
 		"node_modules"

@@ -29,6 +29,7 @@ export class OpenRequest extends SingletonAction {
             // 必須項目が未入力の場合はアラートを表示
             if (!hasRequiredRequestSettings(settings)) {
                 logger.openRequest.warn("required settings missing");
+                void notify("全項目必須です。設定を確認してください。");
                 await ev.action.showAlert();
             } else {
                 // 申請画面を開く

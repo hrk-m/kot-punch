@@ -5,6 +5,8 @@ import { punchKot } from "../lib/puppeteer.js";
 import { showErrorImage } from "../lib/showErrorImage.js";
 import { notify } from "../lib/notify.js";
 import { logger } from "../lib/logger.js";
+import { createPressTracker } from "../lib/long-press.js";
+import type { KeyDownEvent } from "@elgato/streamdeck";
 
 /**
  * An action class for clocking out.
@@ -16,20 +18,49 @@ import { logger } from "../lib/logger.js";
 export class ClockOut extends SingletonAction {
 	// 処理中フラグ
 	private _isProcessing = false;
+	// 長押し判定ロジック
+	private readonly pressTracker = createPressTracker();
 
+	// key down では長押し監視だけを始める。
+	override onKeyDown(ev: KeyDownEvent): void {
+		if (this._isProcessing) {
+			logger.clockOut.debug("already processing on key down, skipped");
+			return;
+		}
+
+		const nextState = ev.payload.state === 1 ? 0 : 1;
+		// 長押し成立時だけ state を反転する。
+		this.pressTracker.begin(ev.action.id, () => {
+			logger.clockOut.debug(`manual state update via long press: ${ev.payload.state} -> ${nextState}`);
+			void ev.action.setState(nextState).catch((error: unknown) => {
+				logger.clockOut.error(
+					`manual state update failed: ${error instanceof Error ? error.message : String(error)}`,
+				);
+			});
+		});
+	}
+
+	// key up では長押し済みかを見て、短押し時だけ打刻する。
 	override async onKeyUp(ev: KeyUpEvent): Promise<void> {
 		logger.clockOut.info("onKeyUp triggered");
 
 		// 処理中フラグが立っていれば即 return
 		if (this._isProcessing) {
 			logger.clockOut.debug("already processing, skipped");
+			this.pressTracker.clear(ev.action.id);
 			return;
 		}
 
-		// State 1 の場合はリセット
+		// 長押し済みなら key up 側の通常処理は実行しない。
+		if (this.pressTracker.end(ev.action.id)) {
+			const nextState = ev.payload.state === 1 ? 0 : 1;
+			logger.clockOut.debug(`key up skipped after long press: ${ev.payload.state} -> ${nextState}`);
+			return;
+		}
+
+		// State 1 の短押しは no-op
 		if (ev.payload.state === 1) {
-			logger.clockOut.debug("state reset to 0");
-			await ev.action.setState(0);
+			logger.clockOut.debug("short press on state 1 skipped");
 			return;
 		}
 
@@ -44,6 +75,7 @@ export class ClockOut extends SingletonAction {
 			// 必須項目が未入力の場合はアラートを表示
 			if (!hasRequiredPunchSettings(settings)) {
 				logger.clockOut.warn("required settings missing");
+				void notify("全項目必須です。設定を確認してください。");
 				await ev.action.showAlert();
 				return;
 			}

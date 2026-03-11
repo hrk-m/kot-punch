@@ -2,7 +2,7 @@
 
 ## 概要
 
-JWT 認証済みの Chrome ウィンドウで KING OF TIME 管理画面を開くアクション。ブラウザを閉じずに切断するため、そのまま手動操作を続けられる。
+JWT 認証済みの Chrome ウィンドウで KING OF TIME 勤怠画面を開くアクション。`kotPunchUrl` に指定した画面へ遷移し、ブラウザを閉じずに切断するため、そのまま手動操作を続けられる。
 
 ---
 
@@ -33,7 +33,7 @@ JWT 認証済みの Chrome ウィンドウで KING OF TIME 管理画面を開く
   ├─ 必須項目チェック → 未入力なら showAlert()
   │
   └─ Puppeteer 起動
-       ├─ KOT ページへアクセス（domain 確立）
+       ├─ kotPunchUrl へアクセス（domain 確立）
        ├─ JWT クッキーをセット
        ├─ 再アクセスして認証適用
        ├─ disconnect()（ブラウザは閉じない）
@@ -66,6 +66,17 @@ JWT 認証済みの Chrome ウィンドウで KING OF TIME 管理画面を開く
 |--------|------|
 | 処理中に再度ボタンを押した場合 | `_isProcessing` フラグにより即 `return` |
 | 認証ダイアログが表示された場合 | ダイアログを dismiss してブラウザを閉じ、エラーを throw |
+
+---
+
+## ボタン・アイコン一覧
+
+この機能でユーザーが押すボタンと、対応する icon/state を示す。
+
+| ボタン | 状態 | アイコン | パス | 説明 |
+|--------|------|----------|------|------|
+| `KING OF TIMEを開く` | 通常（唯一の State） | <img src="../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/open-kot/key.png" width="72" height="72" alt="Open KOT button"> | `../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/open-kot/key.png` | JWT 認証済みの KOT 勤怠画面を Chrome で開く通常ボタン |
+| `KING OF TIMEを開く` | Error（共通） | <img src="../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/common/error.png" width="72" height="72" alt="Common error icon"> | `../../com.hrk-m.kot-punch.sdPlugin/imgs/actions/common/error.png` | 認証失敗や Puppeteer エラー時に `showErrorImage()` が 3 秒表示する共通 error icon |
 
 ---
 

@@ -72,6 +72,18 @@
 
 ---
 
+## ボタン・アイコン一覧
+
+各状態で表示されるアイコン画像と、対応するボタンの役割を示す。
+
+| 状態 | アイコン | パス | 説明 |
+|------|---------|------|------|
+| {例: State 0（通常）} | <img src="{例: ../imgs/clock-in.png}" width="72" height="72" alt="State 0"> | `imgs/{例: clock-in.png}` | {例: 未打刻状態のアイコン} |
+| {例: State 1（完了）} | <img src="{例: ../imgs/clock-in@2x.png}" width="72" height="72" alt="State 1"> | `imgs/{例: clock-in@2x.png}` | {例: 打刻済み状態のアイコン（Retina）} |
+| {例: エラー} | <img src="{例: ../imgs/error.png}" width="72" height="72" alt="Error"> | `imgs/{例: error.png}` | {例: エラー発生時に表示するアイコン} |
+
+---
+
 ## 依存関係
 
 | 依存先 | 用途 |
