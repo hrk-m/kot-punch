@@ -6,7 +6,7 @@
       "dependencies": {
         "@elgato/streamdeck": "^2.0.0",
         "node-notifier": "^10.0.1",
-        "puppeteer": "^24.38.0",
+        "puppeteer": "24.38.0",
       },
       "devDependencies": {
         "@elgato/cli": "^1.7.1",

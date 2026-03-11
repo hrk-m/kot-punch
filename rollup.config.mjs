@@ -23,7 +23,7 @@ const config = {
 		inlineDynamicImports: true,
 	},
 	plugins: [
-		typescript(),
+		typescript({ tsconfig: "./tsconfig.build.json" }),
 		nodeResolve({
 			browser: false,
 			exportConditions: ["node"],
