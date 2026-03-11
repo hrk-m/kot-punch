@@ -4,7 +4,7 @@
 
 ```
 manifest.template.json
-  └─ scripts/generate-manifest.mjs
+  └─ scripts/generate-manifest.mts
        │
        ▼
   com.hrk-m.kot-punch.sdPlugin/manifest.json
@@ -49,7 +49,7 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 | パス | 責務 |
 |------|------|
 | `manifest.template.json` | プラグイン manifest のテンプレート兼 source of truth。各アクション定義と表示名をそのまま保持する |
-| `scripts/generate-manifest.mjs` | `manifest.template.json` を `com.hrk-m.kot-punch.sdPlugin/manifest.json` へコピーする生成スクリプト。CLI からの実行に加えて `generateManifest(rootDir)` を export し、テンポラリディレクトリを使う unit test からも再利用できる |
+| `scripts/generate-manifest.mts` | `manifest.template.json` を `com.hrk-m.kot-punch.sdPlugin/manifest.json` へコピーする生成スクリプト。CLI からの実行に加えて `generateManifest(rootDir)` を export し、テンポラリディレクトリを使う unit test からも再利用できる |
 | `rollup.config.mjs` | plugin bundle の出力設定。単一ファイル化、minify、external 依存の維持、`bin/package.json` の emit を担当 |
 
 ### `com.hrk-m.kot-punch.sdPlugin/`

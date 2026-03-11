@@ -33,7 +33,7 @@ bun run logs
 
 ### Build Flow
 
-`manifest.template.json` → `scripts/generate-manifest.mjs` → `com.hrk-m.kot-punch.sdPlugin/manifest.json`
+`manifest.template.json` → `scripts/generate-manifest.mts` → `com.hrk-m.kot-punch.sdPlugin/manifest.json`
 
 `src/plugin.ts` → Rollup (TypeScript + 単一 ESM bundle + terser) → `com.hrk-m.kot-punch.sdPlugin/bin/plugin.js`
 
