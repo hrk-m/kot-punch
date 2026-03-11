@@ -48,9 +48,11 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 | Clock Out | `退勤打刻が完了しました` |
 | Open KOT | `KING OF TIME を開きました` |
 | Open Request | `申請画面を開きました` |
+| 全アクション（必須設定未入力時） | `全項目必須です。設定を確認してください。` |
 
 - 通知の title は `"KOT Punch"` 固定
-- エラー時は通知しない（既存の `showErrorImage()` のみ動作）
+- 必須設定が未入力の場合は `notify("全項目必須です。設定を確認してください。")` と `showAlert()` を同時に実行する
+- その他のエラー時は通知しない（`showErrorImage()` のみ動作）
 - 通知送信は fire-and-forget（失敗してもメイン処理に影響しない）
 
 ---

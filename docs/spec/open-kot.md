@@ -46,7 +46,7 @@ JWT 認証済みの Chrome ウィンドウで KING OF TIME 勤怠画面を開く
 
 | エラー条件 | 対応 |
 |---|---|
-| 必須設定が未入力 | `showAlert()` を表示して処理を中断 |
+| 必須設定が未入力 | `notify("全項目必須です。設定を確認してください。")` + `showAlert()` を表示して処理を中断 |
 | 認証失敗（ダイアログ検出） | ブラウザを閉じてエラーを throw → `showErrorImage()` でエラー表示 |
 | Puppeteer 起動・操作エラー | `showErrorImage()` でエラー表示 |
 
