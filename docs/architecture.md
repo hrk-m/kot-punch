@@ -101,10 +101,11 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 | API / イベント | 用途 |
 |----------------|------|
 | `onKeyDown` | `clock-in` / `clock-out` のみ使用。`BasePunchAction` が `KeyDownEvent<KotPunchSettings>` を受け、2 秒タイマーを開始し、到達時点で `setState()` を即時実行する callback を登録する |
-| `onKeyUp` | 現行 4 アクションのメイン処理入口。`clock-in` / `clock-out` では `BasePunchAction` が `KeyUpEvent<KotPunchSettings>` を受け、long-press tracker を解放し、成立済みなら no-op、未成立なら短押し打刻フローへ分岐する |
-| `streamDeck.settings.getGlobalSettings()` | 全アクション共通の Global Settings を取得する。KOT 系と申請画面系で型だけ切り替える |
+| `onKeyUp` | 全 5 アクション共通のメイン処理入口。`clock-in` / `clock-out` では `BasePunchAction` が `KeyUpEvent<KotPunchSettings>` を受け、long-press tracker を解放し、成立済みなら no-op、未成立なら短押し打刻フローへ分岐する |
+| `streamDeck.settings.getGlobalSettings()` | 設定を持つ 4 アクションが Global Settings を取得する。KOT 系と申請画面系で型だけ切り替え、`reset-punch-state` は設定を参照しない |
+| `streamDeck.actions` | `reset-punch-state` が `onKeyUp` 内で全登録アクションをイテレートし、`clock-in` / `clock-out` を対象に `setState(0)` を並列実行する |
 | `ev.action.showAlert()` / `ev.action.showOk()` | 設定不足時の警告、打刻成功時の即時フィードバック |
-| `ev.action.setState()` | Clock In / Clock Out のみ使用。State 0/1 を切り替えて当日打刻済みの見た目を表現する |
+| `ev.action.setState()` | Clock In / Clock Out が自アクションの State 0/1 を切り替えて当日打刻済みの見た目を表現する。Reset Punch State は `streamDeck.actions` 経由で他アクションの `setState(0)` を呼ぶ |
 
 > **注意**: 現行実装はすべて Keypad 向けで、ダイアル・タッチスクリーン用イベントは使っていない。
 

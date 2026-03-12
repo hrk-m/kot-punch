@@ -44,7 +44,7 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 
 ### macOS システム通知
 
-全 4 アクション（Clock In / Clock Out / Open KOT / Open Request）は、処理成功時に macOS 通知センターへポップアップ通知を送る（`platform/desktop/notify.ts` が担当）。
+全 5 アクション（Clock In / Clock Out / Open KOT / Open Request / Reset Punch State）は、処理成功時に macOS 通知センターへポップアップ通知を送る（`platform/desktop/notify.ts` が担当）。
 
 | アクション | 通知メッセージ |
 |---|---|
@@ -52,10 +52,11 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 | Clock Out | `退勤打刻が完了しました` |
 | Open KOT | `KING OF TIME を開きました` |
 | Open Request | `申請画面を開きました` |
-| 全アクション（必須設定未入力時） | `全項目必須です。設定を確認してください。` |
+| Reset Punch State | `打刻状態(出勤/退勤)をリセットしました` |
+| 設定入力を要求する 4 アクション（必須設定未入力時） | `全項目必須です。設定を確認してください。` |
 
 - 通知の title は `"KOT Punch"` 固定
-- 必須設定が未入力の場合は `notify("全項目必須です。設定を確認してください。")` と `showAlert()` を同時に実行する
+- Reset Punch State を除く設定必須アクションでは、必須設定が未入力の場合に `notify("全項目必須です。設定を確認してください。")` と `showAlert()` を同時に実行する
 - その他のエラー時は通知しない（`showErrorImage()` のみ動作）
 - 通知送信は fire-and-forget（失敗してもメイン処理に影響しない）
 
@@ -66,6 +67,7 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 - [打刻ボタン（Clock In / Clock Out）](./spec/punch.md)
 - [Open KOT（KOT を開く）](./spec/open-kot.md)
 - [Open Request（申請画面を開く）](./spec/open-request.md)
+- [リセット（Reset Punch State）](./spec/reset-punch-state.md)
 
 ---
 
@@ -77,4 +79,5 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 | **Clock Out**（退勤打刻） | 短押しで KOT 退勤打刻を自動実行。成功でアイコンがチェックマークに変わり、2 秒到達まで長押しすると state を即時手動更新できる | 同上 |
 | **Open KOT** | JWT 認証済みの Chrome で KOT 勤怠画面を開く。ブラウザはそのまま操作できる状態で引き渡される | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` |
 | **Open Request**（申請画面を開く） | 申請画面にログイン済みの Chrome を開く | `requestUrl` / `requestUsername` / `requestPassword` |
+| **Reset Punch State**（リセット） | Clock In / Clock Out の打刻済み State を一括で State 0（未打刻）に戻す。KOT への通信なし | なし |
 
