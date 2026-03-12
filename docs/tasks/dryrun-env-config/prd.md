@@ -9,9 +9,9 @@
 Property Inspector のチェックボックスを廃止し、プロジェクトルートの `.env` ファイルに `KOT_PUNCH_DRY_RUN=true|false` を記述して管理する。Rollup ビルド時に値を inline 展開することで、runtime 依存（dotenv パッケージ等）を追加せず実現する。
 
 **Success Criteria**:
-- `.env` に `KOT_PUNCH_DRY_RUN=true` を設定してビルドすると dryRun が有効になる
-- `.env` に `KOT_PUNCH_DRY_RUN=false` を設定してビルドすると dryRun が無効になる
-- `.env` 未設定（または `KOT_PUNCH_DRY_RUN` 未記載）のビルドはデフォルトで dryRun が有効になる
+- `.env` に `KOT_PUNCH_DRY_RUN=true` を設定してビルドすると dryRun が有効になる（submit スキップ）
+- `.env` に `KOT_PUNCH_DRY_RUN=false` を設定してビルドすると dryRun が無効になる（本番打刻）
+- `.env` 未設定（または `KOT_PUNCH_DRY_RUN` 未記載）のビルドはデフォルトで dryRun が無効になる（本番打刻）
 - Property Inspector のチェックボックスが削除されている
 - `KotPunchSettings` 型から `kotPunchDryRun` が削除されている
 - `bun run lint && bun run test && bunx tsc --noEmit && bun run build` が全て pass する
@@ -31,7 +31,7 @@ Property Inspector のチェックボックスを廃止し、プロジェクト�
 
 ### Acceptance Criteria
 
-- [ ] `.env.example` がプロジェクトルートに存在し `KOT_PUNCH_DRY_RUN=true` が記載されている
+- [ ] `.env.example` がプロジェクトルートに存在し `KOT_PUNCH_DRY_RUN=false` が記載されている
 - [ ] `.gitignore` に `.env` が追加されている
 - [ ] `clock-in.html` / `clock-out.html` から dryRun チェックボックスが削除されている
 - [ ] `KotPunchSettings` 型に `kotPunchDryRun` が存在しない
@@ -68,7 +68,7 @@ com.hrk-m.kot-punch.sdPlugin/bin/plugin.js
 
 | ファイル | 変更種別 | 変更内容 |
 |---|---|---|
-| `.env.example` | 新規作成 | `KOT_PUNCH_DRY_RUN=true` を記載（デフォルト有効） |
+| `.env.example` | 新規作成 | `KOT_PUNCH_DRY_RUN=false` を記載（本番打刻がデフォルト） |
 | `.gitignore` | 編集 | `.env` を追加 |
 | `rollup.config.mjs` | 編集 | `@rollup/plugin-replace` を追加し `process.env.KOT_PUNCH_DRY_RUN` をビルド時に展開 |
 | `src/platform/streamdeck/settings/punch-settings.ts` | 編集 | `KotPunchSettings` 型から `kotPunchDryRun?: boolean` を削除 |
@@ -87,7 +87,7 @@ import replace from "@rollup/plugin-replace";
 replace({
   preventAssignment: true,
   values: {
-    "process.env.KOT_PUNCH_DRY_RUN": JSON.stringify(process.env.KOT_PUNCH_DRY_RUN ?? "true"),
+    "process.env.KOT_PUNCH_DRY_RUN": JSON.stringify(process.env.KOT_PUNCH_DRY_RUN ?? "false"),
   },
 })
 ```
@@ -138,7 +138,7 @@ it("dryRun=true: submit がスキップされる", async () => {
 
 | リスク | 対策 |
 |--------|------|
-| ビルド時に `.env` が存在しない場合、`KOT_PUNCH_DRY_RUN` は `undefined` になる | `?? "true"` でデフォルト有効を保証 |
+| ビルド時に `.env` が存在しない場合、`KOT_PUNCH_DRY_RUN` は `undefined` になる | `?? "false"` でデフォルト本番打刻を保証 |
 | `@rollup/plugin-replace` の `preventAssignment: true` を忘れると警告が出る | PRD に明記して実装時に確認 |
 | `punch.test.ts` で `process.env` をクリーンアップしないとテスト間で状態が汚染される | `try/finally` または `afterEach` で `delete process.env.KOT_PUNCH_DRY_RUN` を徹底 |
 
