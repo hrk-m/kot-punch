@@ -3,6 +3,7 @@ import { SingletonAction } from "@elgato/streamdeck";
 import {
     getGlobalSettings,
     hasRequiredPunchSettings,
+    type KotPunchSettings,
 } from "../../platform/streamdeck/settings/punch-settings";
 import { punchKot, type PunchSelector } from "../../services/kot/punch";
 import { showErrorImage } from "../../platform/streamdeck/show-error-image";
@@ -11,7 +12,7 @@ import { createPressTracker } from "../../shared/long-press";
 import type { LoggerScope } from "../../platform/streamdeck/logger";
 
 // 打刻 action の共通処理をまとめる。
-export abstract class BasePunchAction extends SingletonAction {
+export abstract class BasePunchAction extends SingletonAction<KotPunchSettings> {
     // action ごとのログを使い分ける。
     protected abstract readonly logger: LoggerScope;
     // 押す打刻ボタンを切り替える。
@@ -25,7 +26,7 @@ export abstract class BasePunchAction extends SingletonAction {
     private readonly pressTracker = createPressTracker();
 
     // key down では長押しだけ監視する。
-    override onKeyDown(ev: KeyDownEvent): void {
+    override onKeyDown(ev: KeyDownEvent<KotPunchSettings>): void {
         if (this._isProcessing) {
             this.logger.debug("already processing on key down, skipped");
             return;
@@ -44,7 +45,7 @@ export abstract class BasePunchAction extends SingletonAction {
     }
 
     // key up では短押し時だけ打刻する。
-    override async onKeyUp(ev: KeyUpEvent): Promise<void> {
+    override async onKeyUp(ev: KeyUpEvent<KotPunchSettings>): Promise<void> {
         this.logger.info("onKeyUp triggered");
 
         // 処理中なら何もしない。

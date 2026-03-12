@@ -28,13 +28,17 @@ async function collectTypeScriptFiles(directory: URL): Promise<URL[]> {
     return files.flat();
 }
 
+function findRelativeJsSpecifiersInContent(content: string): string[] {
+    const specifierPattern = /(?:export\s+(?:type\s+)?(?:\*|\{[^}]+\})\s+from\s+|from\s+|import\s*\(|vi\.mock\()\s*["'](\.\.?\/[^"']+)\.js["']/g;
+    return Array.from(content.matchAll(specifierPattern), (match) => `${match[1]}.js`);
+}
+
 async function findRelativeJsSpecifiers(): Promise<string[]> {
     const files = await collectTypeScriptFiles(new URL("../", import.meta.url));
-    const specifierPattern = /(?:from\s+|import\s*\(|vi\.mock\()\s*["'](\.\.?\/[^"']+)\.js["']/g;
     const fileMatches = await Promise.all(
         files.map(async (file) => {
             const content = await readFile(file, "utf8");
-            return Array.from(content.matchAll(specifierPattern), (match) => `${file.pathname}: ${match[1]}.js`);
+            return findRelativeJsSpecifiersInContent(content).map((specifier) => `${file.pathname}: ${specifier}`);
         }),
     );
 
@@ -76,5 +80,14 @@ describe("src architecture", () => {
 
     it("omits .js extensions from relative imports in TypeScript sources", async () => {
         await expect(findRelativeJsSpecifiers()).resolves.toEqual([]);
+    });
+
+    it("detects .js extensions in re-export specifiers", () => {
+        const extension = String.fromCharCode(46, 106, 115);
+        expect(
+            findRelativeJsSpecifiersInContent(
+                `export * from "./foo${extension}";\nexport { bar } from "../bar${extension}";\nexport type { Baz } from "./baz${extension}";`,
+            ),
+        ).toEqual(["./foo.js", "../bar.js", "./baz.js"]);
     });
 });
