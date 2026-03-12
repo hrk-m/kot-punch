@@ -21,6 +21,6 @@ export function hasRequiredSettings(settings: KotPunchSettings): boolean {
 }
 
 // Stream Deck のグローバル設定を読む。
-export async function getGlobalSettings(): Promise<KotPunchSettings> {
+export function getGlobalSettings(): Promise<KotPunchSettings> {
     return streamDeck.settings.getGlobalSettings<KotPunchSettings>();
 }

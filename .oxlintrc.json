@@ -1,6 +1,6 @@
 {
     "$schema": "./node_modules/oxlint/configuration_schema.json",
-    "plugins": ["typescript"],
+    "plugins": ["import", "typescript", "unicorn"],
     "categories": {
         "correctness": "error",
         "suspicious": "warn",
@@ -12,7 +12,17 @@
         "typescript/no-unused-vars": "error",
         "typescript/no-explicit-any": "warn",
         "typescript/no-non-null-assertion": "warn",
-        "typescript/consistent-type-imports": "warn"
+        "typescript/consistent-type-imports": "warn",
+        "import/no-cycle": "error",
+        "import/no-named-as-default": "off",
+        "import/no-named-as-default-member": "off",
+        "eslint/require-await": "error",
+        "eslint/no-param-reassign": "error",
+        "eslint/no-else-return": "error",
+        "typescript/prefer-as-const": "error",
+        "typescript/no-inferrable-types": "error",
+        "typescript/no-unnecessary-template-expression": "error",
+        "unicorn/prefer-number-properties": "error"
     },
     "env": {
         "node": true

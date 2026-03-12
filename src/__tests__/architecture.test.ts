@@ -14,7 +14,7 @@ async function pathExists(path: string): Promise<boolean> {
 async function collectTypeScriptFiles(directory: URL): Promise<URL[]> {
     const entries = await readdir(directory, { withFileTypes: true });
     const files = await Promise.all(
-        entries.map(async (entry) => {
+        entries.map((entry) => {
             const path = new URL(`${entry.name}${entry.isDirectory() ? "/" : ""}`, directory);
 
             if (entry.isDirectory()) {

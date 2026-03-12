@@ -13,6 +13,6 @@ export function hasRequiredRequestSettings(settings: RequestSettings): boolean {
 }
 
 // Stream Deck のグローバル設定を読む。
-export async function getRequestSettings(): Promise<RequestSettings> {
+export function getRequestSettings(): Promise<RequestSettings> {
     return streamDeck.settings.getGlobalSettings<RequestSettings>();
 }
