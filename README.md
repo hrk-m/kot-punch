@@ -99,6 +99,23 @@ bun run logs
 - `puppeteer` は version 固定しているため、Apple Silicon の Mac 同士であれば同じ `Chrome for Testing` revision を使います
 - `bun run install-browser` は現在の `puppeteer` が要求する実行ファイルが見つからないときだけ install を実行します
 
+## ドキュメント
+
+### 機能要件
+
+| ドキュメント | 内容 |
+|---|---|
+| [docs/spec.md](./docs/spec.md) | アプリ全体の機能要件・グローバル設定・アクション一覧 |
+| [docs/spec/punch.md](./docs/spec/punch.md) | 打刻ボタン（Clock In / Clock Out）の詳細仕様 |
+| [docs/spec/open-kot.md](./docs/spec/open-kot.md) | Open KOT（JWT 認証済みブラウザを開く）の詳細仕様 |
+| [docs/spec/open-request.md](./docs/spec/open-request.md) | Open Request（申請画面を開く）の詳細仕様 |
+
+### アーキテクチャ
+
+| ドキュメント | 内容 |
+|---|---|
+| [docs/architecture.md](./docs/architecture.md) | ディレクトリ構成・実装責務・アクション実装パターン・テスト戦略 |
+
 ## 補足
 
 - `Chrome for Testing` を手動で再確認したい場合は `bun run install-browser`
