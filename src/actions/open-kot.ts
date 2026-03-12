@@ -1,15 +1,21 @@
 import { action, SingletonAction } from "@elgato/streamdeck";
 import type { KeyUpEvent } from "@elgato/streamdeck";
-import { getGlobalSettings, hasRequiredSettings } from "../lib/settings.js";
-import { openKotPage } from "../lib/puppeteer.js";
-import { showErrorImage } from "../lib/showErrorImage.js";
-import { notify } from "../lib/notify.js";
-import { logger } from "../lib/logger.js";
+import {
+    getGlobalSettings,
+    hasRequiredSettings,
+} from "../platform/streamdeck/settings/punch-settings";
+import { openKotPage } from "../services/kot/open-kot";
+import { showErrorImage } from "../platform/streamdeck/show-error-image";
+import { notify } from "../platform/desktop/notify";
+import { logger } from "../platform/streamdeck/logger";
 
+// KOT 画面を開く action。
 @action({ UUID: "com.hrk-m.kot-punch.open-kot" })
 export class OpenKot extends SingletonAction {
+    // 連打を防ぐ。
     private _isProcessing = false;
 
+    // 設定を確認して KOT を開く。
     override async onKeyUp(ev: KeyUpEvent): Promise<void> {
         logger.openKot.info("onKeyUp triggered");
 

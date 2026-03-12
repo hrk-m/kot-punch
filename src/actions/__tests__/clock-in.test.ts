@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { showErrorImage } from "../../lib/showErrorImage.js";
+import { showErrorImage } from "../../platform/streamdeck/show-error-image";
 
 const {
     mockCreatePressTracker,
@@ -78,32 +78,32 @@ vi.mock("@elgato/streamdeck", () => {
 });
 
 const mockPunchKot = vi.fn().mockResolvedValue(undefined);
-vi.mock("../../lib/puppeteer.js", () => ({
+vi.mock("../../services/kot/punch", () => ({
     punchKot: mockPunchKot,
 }));
 
 const mockGetGlobalSettings = vi.fn();
 const mockHasRequiredPunchSettings = vi.fn().mockReturnValue(true);
-vi.mock("../../lib/settings.js", () => ({
+vi.mock("../../platform/streamdeck/settings/punch-settings", () => ({
     getGlobalSettings: mockGetGlobalSettings,
     hasRequiredPunchSettings: mockHasRequiredPunchSettings,
 }));
 
-vi.mock("../../lib/showErrorImage.js", () => ({
+vi.mock("../../platform/streamdeck/show-error-image", () => ({
     showErrorImage: vi.fn().mockResolvedValue(undefined),
 }));
 
 const mockNotify = vi.fn();
-vi.mock("../../lib/notify.js", () => ({
+vi.mock("../../platform/desktop/notify", () => ({
     notify: mockNotify,
 }));
 
-vi.mock("../../lib/long-press.js", () => ({
+vi.mock("../../shared/long-press", () => ({
     LONG_PRESS_THRESHOLD_MS: 2000,
     createPressTracker: mockCreatePressTracker,
 }));
 
-const { ClockIn } = await import("../clock-in.js");
+const { ClockIn } = await import("../clock-in");
 
 const fullSettings = {
     kotPunchUrl: "https://kingoftime-recorder.appspot.com/login",
