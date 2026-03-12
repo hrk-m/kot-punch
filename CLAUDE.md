@@ -1,108 +1,65 @@
-# CLAUDE.md
+# AI 駆動開発とスペック駆動開発
 
-This file provides guidance to Claude Code (claude.ai/code) when working with this repository.
+KOT Punch プロジェクトにおける AI 駆動開発（AI-DLC）の実装ガイド。
 
-## Overview
+## プロジェクトメモリ
 
-KingOfTime (KOT) 向け Stream Deck プラグイン。`@elgato/streamdeck` + TypeScript + Rollup で構成。
+要件・アーキテクチャの一次情報。実装前に必ず参照する。
+
+| パス | 内容 |
+|---|---|
+| `docs/spec.md` | 機能要件・グローバル設定・アクション一覧。機能詳細は「機能詳細」セクションのリンクからたどる |
+| `docs/architecture.md` | ディレクトリ構成・実装責務・パターン・テスト戦略 |
+| `.claude/commands/` | プロジェクト全体の steering（`/steering` コマンドで管理） |
+| `docs/tasks/{task-name}/` | `prd.md`（要件）+ `tasks.md`（実装チェックリスト） |
+
+## 開発ガイドライン
 
 - SDK docs: https://docs.elgato.com/streamdeck/sdk/introduction/getting-started
+- プロジェクトファイルはすべて日本語で記述する
 
-## Commands
+### コマンド
 
 ```bash
-# 依存関係インストール
-bun install --frozen-lockfile
-
-# lint / test / typecheck（CI と同じ品質ゲート）
-bun run lint
-bun run test
-bunx tsc --noEmit
-
-# manifest 再生成（labels / template 更新時）
-bun run generate-manifest
-
-# 本番ビルド（manifest 生成 + Rollup）
-bun run build
-
-# ログ監視（Stream Deck プラグインのログをリアルタイム表示）
-bun run logs
+bun install --frozen-lockfile  # 依存関係インストール
+bun run lint                   # lint
+bun run test                   # テスト
+bunx tsc --noEmit              # 型チェック
+bun run generate-manifest      # manifest 再生成
+bun run build                  # 本番ビルド
+bun run logs                   # ログ監視
 ```
 
-## Architecture
-
-### Build Flow
-
-`manifest.template.json` → `scripts/generate-manifest.mts` → `com.hrk-m.kot-punch.sdPlugin/manifest.json`
-
-`src/plugin.ts` → Rollup (TypeScript + 単一 ESM bundle + terser) → `com.hrk-m.kot-punch.sdPlugin/bin/plugin.js`
-
-`bun run build` は manifest を再生成してから Rollup を実行し、最後に `bun install --production --cwd com.hrk-m.kot-punch.sdPlugin` で runtime 依存を plugin package 側へ配置する。
-
-### Directory Responsibilities
-
-```text
-src/
-  plugin.ts              # エントリポイント（アクション登録 + connect）
-  actions/               # ClockIn / ClockOut / OpenKot / OpenRequest
-  actions/__tests__/     # アクション単体テスト
-  lib/                   # settings / puppeteer / showErrorImage / notify / logger
-  lib/__tests__/         # ライブラリ単体テスト
-com.hrk-m.kot-punch.sdPlugin/
-  manifest.json          # 生成物（手編集しない）
-  package.json           # plugin 側 production dependency 定義
-  ui/                    # Property Inspector HTML
-  imgs/                  # アイコン（通常 + @2x）
-  bin/                   # ビルド成果物
-```
-
-## Action Behavior (Current)
-
-- `clock-in` / `clock-out`: `onKeyUp` で打刻を実行。State 0→1、State 1 は 0 にリセット。連打防止の `_isProcessing` ガードあり。
-- `open-kot`: 認証済みブラウザを開くだけのアクション。必須設定不足時は `showAlert()`。
-- `open-request`: 申請画面へログイン済みブラウザを開くだけのアクション。必須設定不足時は `showAlert()`。
-- 共通失敗処理: `showErrorImage()` を fire-and-forget で呼び出す。
-
-## Implementation Notes
-
-- 新規アクションは `@action({ UUID: "com.hrk-m.kot-punch.<name>" })` を付与し、`src/plugin.ts` で登録する。
-- `manifest.template.json` を更新したら `bun run generate-manifest` を実行する。
-- ローカル import は拡張子を省略する（TypeScript が解決するため）。
-
-## Testing Notes
-
-- テストフレームワークは Vitest（`environment: node`、coverage provider は `v8`）。
-- `@elgato/streamdeck` と Puppeteer は `vi.mock` で差し替えてユニットテストする。
-- 変更前の最小確認コマンド:
+変更前の最小確認:
 
 ```bash
 bun run lint && bun run test && bunx tsc --noEmit && bun run build
 ```
 
-## Workflow
+### 実装上の注意
 
-### Paths
+- 新規アクション: `@action({ UUID: "com.hrk-m.kot-punch.<name>" })` を付与し `src/plugin.ts` に登録する
+- 打刻系アクション: `BasePunchAction` を継承し `logger` / `selector` / `successMessage` のみ定義する
+- KOT 操作ロジックは `services/kot/` に置く。`actions/` はイベントハンドリングのみ担当する
+- `manifest.template.json` 更新後は `bun run generate-manifest` を実行する
+- ローカル import は拡張子を省略する
 
-- Steering: `.claude/commands/steering.md`（`/steering` コマンドで管理）
-- Specs: `docs/spec/`（機能単位の仕様書）
+### テスト上の注意
 
-### Steering vs Specification
+- Vitest（`environment: node`、coverage: `v8`）
+- `@elgato/streamdeck` と Puppeteer は `vi.mock` で差し替える
+- 長押し判定は fake timer で 2000ms 境界値を検証する
+- `src/__tests__/architecture.test.ts` でディレクトリ構造を自動検証する（常にグリーンを保つ）
 
-**Steering** (`.claude/commands/`) — AI に対するプロジェクト全体のルールとコンテキストを定義する。命名規則・アーキテクチャ方針・禁止事項など普遍的なガイドを置く。
-
-**Specs** (`docs/spec/`) — 個別機能の要件・設計・タスクを仕様書として管理する。機能ごとにファイルを分割し、実装の根拠として参照する。
-
-### Active Specifications
-
-- `docs/spec/` 配下の仕様書を確認する
-- `/steering` でプロジェクト知識（steering）を確認・更新する
-
-### Minimal Workflow
+## 最小ワークフロー
 
 - Phase 0（任意）: `/steering`
-- Phase 1（仕様定義）:
-  - `/plan "機能の説明"` — 要件定義・設計ドキュメントを生成
-  - `/task {feature}` — 実装タスク一覧を生成
-- Phase 2（実装）:
-  - `/impl {feature} [task-numbers]` — タスク番号を指定して実装
+- Phase 1（仕様定義）: `/plan "機能の説明"` → `/task {feature}`
+- Phase 2（実装）: `/impl {feature} [task-numbers]`
 - PR 作成: `/create-pr {feature}`
+
+## 開発ルール
+
+- 3 フェーズ承認フロー: 仕様定義 → タスク生成 → 実装
+- steering を最新に保ち `/steering` で整合性を確認する
+- 指示に正確に従い自律的に作業を完結させる。質問は情報が本質的に不足している場合のみ行う

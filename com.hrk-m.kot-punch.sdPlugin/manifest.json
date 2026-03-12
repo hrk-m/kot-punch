@@ -38,6 +38,22 @@
 			]
 		},
 		{
+			"Name": "リセット",
+			"UUID": "com.hrk-m.kot-punch.reset-punch-state",
+			"Icon": "imgs/actions/reset-punch-state/icon",
+			"Tooltip": "出勤・退勤の打刻状態を未打刻にリセットする",
+			"Controllers": [
+				"Keypad"
+			],
+			"UserTitleEnabled": false,
+			"States": [
+				{
+					"Image": "imgs/actions/reset-punch-state/key",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
 			"Name": "出勤",
 			"UUID": "com.hrk-m.kot-punch.clock-in",
 			"Icon": "imgs/actions/attend/icon",
