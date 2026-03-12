@@ -13,7 +13,8 @@ function escapeAttrValue(value: string): string {
 
 // 認証済み画面で打刻を完了する。
 export async function punchKot(selector: PunchSelector, settings: KotPunchSettings): Promise<void> {
-    const { kotPunchUsername = "", kotPunchPassword = "", kotPunchDryRun = false } = settings;
+    const { kotPunchUsername = "", kotPunchPassword = "" } = settings;
+    const dryRun = process.env.KOT_PUNCH_DEBUG === "true";
     const escapedUsername = escapeAttrValue(kotPunchUsername);
 
     // 後始末のため browser を握る。
@@ -40,7 +41,7 @@ export async function punchKot(selector: PunchSelector, settings: KotPunchSettin
         await sleep(500);
         await page.type(".input_password", kotPunchPassword, { delay: 100 });
 
-        if (kotPunchDryRun) {
+        if (dryRun) {
             // dry-run では submit せずに画面を残す。
             logger.puppeteer.info("dry-run mode, skipping submit");
             await browser.disconnect();

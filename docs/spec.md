@@ -19,7 +19,6 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 | `kotPunchToken` | string | JWT トークン値 |
 | `kotPunchUsername` | string | 打刻ユーザー名 |
 | `kotPunchPassword` | string | 打刻パスワード |
-| `kotPunchDryRun` | boolean | true の場合、submit をスキップして動作確認のみ行う |
 | `requestUrl` | string | 申請画面ログイン URL |
 | `requestUsername` | string | 申請画面ログインユーザー名 |
 | `requestPassword` | string | 申請画面ログインパスワード |
@@ -30,9 +29,14 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 - Open Request: `requestUrl`, `requestUsername`, `requestPassword`
 
 **Property Inspector の設定分担**:
-- `ui/clock-in.html` / `ui/clock-out.html`: 打刻用 KOT 設定一式と `kotPunchDryRun`
+- `ui/clock-in.html` / `ui/clock-out.html`: 打刻用 KOT 設定一式（URL / Key / Token / Username / Password）
 - `ui/open-kot.html`: KOT 認証に必要な 3 項目のみ
 - `ui/open-request.html`: 申請画面用の 3 項目のみ
+
+**dryRun 設定**:
+- `kotPunchDryRun` は廃止。代わりにプロジェクトルートの `.env` で `KOT_PUNCH_DEBUG=true|false` を設定する
+- ビルド時（`bun run build`）に Rollup が値を inline 展開する。デフォルト（未設定）は `false`（本番打刻有効）
+- 動作確認（submit スキップ）をしたい場合は `.env` に `KOT_PUNCH_DEBUG=true` を設定して再ビルドする
 
 ---
 

@@ -19,7 +19,27 @@ bun install
 
 `postinstall` で `bun run install-browser` が実行され、`Chrome for Testing` が未導入なら自動でインストールされます。
 
-2. プラグインをビルドする
+2. `.env` を作成する
+
+```bash
+cp .env.example .env
+```
+
+`.env` で dryRun モードを制御できる。
+
+| 変数名 | 値 | 説明 |
+|--------|----|------|
+| `KOT_PUNCH_DEBUG` | `true` / `false` | `true` のとき submit をスキップし、パスワード入力後の状態でブラウザを切断する（動作確認用）。デフォルト: `false` |
+
+**動作確認（submit をスキップしたい場合）**は `.env` の値を `true` に変更する。開発用の時に使用してください。
+
+```
+KOT_PUNCH_DEBUG=true
+```
+
+> 値はビルド時に確定する。変更後は再ビルドが必要。
+
+3. プラグインをビルドする
 
 ```bash
 bun run build
@@ -31,7 +51,7 @@ bun run build
 - `src/plugin.ts` を `com.hrk-m.kot-punch.sdPlugin/bin/plugin.js` に bundle
 - `com.hrk-m.kot-punch.sdPlugin/` 配下に production dependency を配置
 
-3. 必要なら検証する
+4. 必要なら検証する
 
 ```bash
 bun run lint

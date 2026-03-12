@@ -19,7 +19,8 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 |------|----|------|
 | 入力: `onKeyDown` イベント | `KeyDownEvent` | Stream Deck のキー押下開始操作。長押し判定の起点 |
 | 入力: `onKeyUp` イベント | `KeyUpEvent` | Stream Deck のキー離し操作 |
-| 入力: グローバル設定 | `KotPunchSettings` | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` / `kotPunchDryRun` |
+| 入力: グローバル設定 | `KotPunchSettings` | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` |
+| 入力: 環境変数 | `process.env.KOT_PUNCH_DEBUG` | `"true"` のとき dryRun 有効（submit スキップ）。ビルド時に inline 展開される（デフォルト `"false"`） |
 | 出力 | `void` | 副作用として打刻を実行し、UI 状態を更新する |
 
 ---
@@ -51,7 +52,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
        ├─ JWT クッキーをセット
        ├─ 打刻ページに遷移
        ├─ ユーザー選択・パスワード入力
-       ├─ kotPunchDryRun でなければ submit
+       ├─ KOT_PUNCH_DEBUG="true" でなければ submit
        ├─ 成功: showOk() + setState(1)
        └─ notify("出勤打刻が完了しました") / notify("退勤打刻が完了しました")
 ```
@@ -81,7 +82,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 ## 制約・非機能要件
 
 - 連打防止: `_isProcessing` フラグで処理中の重複実行を防ぐ
-- dryRun モード: `kotPunchDryRun=true` の場合は submit をスキップし、パスワード入力まで確認できる状態でブラウザを切断する
+- dryRun モード: `.env` の `KOT_PUNCH_DEBUG=true` でビルドした場合は submit をスキップし、パスワード入力まで確認できる状態でブラウザを切断する。デフォルト（未設定）および `.env.example` コピー直後は `false`（本番打刻有効）
 - State はセッション内のみ保持（プラグイン再起動でリセット）、当日限りの打刻管理として意図的に非永続化
 - 長押しの閾値は 2 秒固定で、2 秒到達前のタイトル変更や進捗表示は行わない
 - Multi-Action は未対応: `manifest.template.json` で `SupportedInMultiActions: false` を設定し、状態遷移は単体キー押下だけを前提にする
@@ -96,7 +97,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 | State 1 を短押しした場合 | no-op で終了し、State は変わらない |
 | State 1 で 2 秒到達まで押し続けた場合 | 2 秒到達時点で `setState(0)` のみ実行し、離したときは no-op |
 | 処理中に再度ボタンを押した場合 | `_isProcessing` フラグにより即 `return` |
-| `kotPunchDryRun=true` で実行した場合 | submit をスキップし、ブラウザを `disconnect()` のみで終了 |
+| `KOT_PUNCH_DEBUG=true` を `.env` に設定してビルドした場合 | submit をスキップし、ブラウザを `disconnect()` のみで終了（動作確認用） |
 | `kotPunchUsername` に `"` や `\` を含む場合 | CSS 属性セレクタ用にエスケープしてからユーザー候補の待機・クリックを行う |
 
 ---

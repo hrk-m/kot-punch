@@ -1,6 +1,9 @@
 # Node.js
 node_modules/
 
+# ローカル環境設定
+.env
+
 # Stream Deck files
 logs/
 *.sdPlugin/bin
