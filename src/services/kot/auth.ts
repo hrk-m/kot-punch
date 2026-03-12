@@ -14,7 +14,7 @@ export async function openAuthenticatedKotPage(
         // ブラウザを可視モードで起動する。
         logger.puppeteer.debug("launching browser");
         browser = await puppeteer.launch({
-            headless: false,
+            headless: settings.kotPunchHeadless ?? false,
             defaultViewport: null,
             args: ["--start-maximized"],
         });
