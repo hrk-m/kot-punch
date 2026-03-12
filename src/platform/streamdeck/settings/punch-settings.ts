@@ -7,7 +7,6 @@ export type KotPunchSettings = {
     kotPunchToken?: string;
     kotPunchUsername?: string;
     kotPunchPassword?: string;
-    kotPunchDryRun?: boolean;
 };
 
 // 打刻 action の必須設定を確認する。
