@@ -1,5 +1,7 @@
+// 長押し判定の閾値。
 export const LONG_PRESS_THRESHOLD_MS = 2000;
 
+// action ごとの長押し状態を扱う。
 export type PressTracker = {
     begin(context: string, onLongPress: () => Promise<void> | void): void;
     end(context: string): boolean;
@@ -7,9 +9,9 @@ export type PressTracker = {
     hasTriggered(context: string): boolean;
 };
 
-// 長押し判定ロジックを共通化する
+// 長押し状態を管理する。
 export function createPressTracker(): PressTracker {
-    // action ごとにタイマーと成立状態を持つ。
+    // context ごとにタイマーを持つ。
     const states = new Map<
         string,
         {
@@ -18,7 +20,7 @@ export function createPressTracker(): PressTracker {
         }
     >();
 
-    // 既存タイマーを止めて状態を破棄する。
+    // 指定 context のタイマーを消す。
     const clearContext = (context: string): void => {
         const state = states.get(context);
         if (state?.timer !== undefined) {
@@ -29,9 +31,10 @@ export function createPressTracker(): PressTracker {
 
     return {
         begin(context: string, onLongPress: () => Promise<void> | void): void {
+            // 再押下時は前の状態を消す。
             clearContext(context);
 
-            // 新しい押下を記録し、閾値到達で callback を一度だけ流す。
+            // 閾値到達で callback を一度だけ呼ぶ。
             const state = {
                 triggered: false,
                 timer: setTimeout(() => {
@@ -49,16 +52,17 @@ export function createPressTracker(): PressTracker {
             states.set(context, state);
         },
         end(context: string): boolean {
-            // key up 時に長押し成立済みかだけ返す。
+            // key up 時に成立済みかだけ返す。
             const wasTriggered = states.get(context)?.triggered === true;
             clearContext(context);
             return wasTriggered;
         },
         clear(context: string): void {
+            // 外部から明示的に破棄する。
             clearContext(context);
         },
         hasTriggered(context: string): boolean {
-            // テストから内部状態を確認する。
+            // テスト用に内部状態を覗く。
             return states.get(context)?.triggered === true;
         },
     };

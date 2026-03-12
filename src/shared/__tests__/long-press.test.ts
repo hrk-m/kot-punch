@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createPressTracker, LONG_PRESS_THRESHOLD_MS } from "../long-press.js";
+import { createPressTracker, LONG_PRESS_THRESHOLD_MS } from "../long-press";
 
 describe("createPressTracker", () => {
     beforeEach(() => {
