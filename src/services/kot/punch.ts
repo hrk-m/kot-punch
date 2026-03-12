@@ -14,7 +14,7 @@ function escapeAttrValue(value: string): string {
 // 認証済み画面で打刻を完了する。
 export async function punchKot(selector: PunchSelector, settings: KotPunchSettings): Promise<void> {
     const { kotPunchUsername = "", kotPunchPassword = "" } = settings;
-    const dryRun = process.env.KOT_PUNCH_DRY_RUN === "true";
+    const dryRun = process.env.KOT_PUNCH_DEBUG === "true";
     const escapedUsername = escapeAttrValue(kotPunchUsername);
 
     // 後始末のため browser を握る。

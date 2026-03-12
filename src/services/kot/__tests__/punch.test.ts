@@ -68,10 +68,10 @@ describe("punchKot", () => {
     });
 
     afterEach(() => {
-        delete process.env.KOT_PUNCH_DRY_RUN;
+        delete process.env.KOT_PUNCH_DEBUG;
     });
 
-    it("KOT_PUNCH_DRY_RUN 未設定: #attend クリック → ユーザー選択 → パスワード入力 → submit が実行される", async () => {
+    it("KOT_PUNCH_DEBUG 未設定: #attend クリック → ユーザー選択 → パスワード入力 → submit が実行される", async () => {
         await punchKot("#attend", settings);
 
         const clickArgs = mockClick.mock.calls.map((call) => call[0]);
@@ -86,7 +86,7 @@ describe("punchKot", () => {
         expect(mockDisconnect).not.toHaveBeenCalled();
     });
 
-    it("KOT_PUNCH_DRY_RUN 未設定: 固定遅延には sleep を使う", async () => {
+    it("KOT_PUNCH_DEBUG 未設定: 固定遅延には sleep を使う", async () => {
         await punchKot("#attend", settings);
 
         expect(mockSleep).toHaveBeenCalledTimes(4);
@@ -96,7 +96,7 @@ describe("punchKot", () => {
         expect(mockSleep).toHaveBeenNthCalledWith(4, 1000);
     });
 
-    it("KOT_PUNCH_DRY_RUN 未設定: 操作順序が #attend → ユーザー選択 → パスワード入力 → submit になる", async () => {
+    it("KOT_PUNCH_DEBUG 未設定: 操作順序が #attend → ユーザー選択 → パスワード入力 → submit になる", async () => {
         const order: string[] = [];
         mockWaitForSelector.mockImplementation((selector: string) => {
             if (selector === "#attend") {
@@ -138,21 +138,21 @@ describe("punchKot", () => {
         ]);
     });
 
-    it("KOT_PUNCH_DRY_RUN 未設定: submit 後に画面遷移しなくても成功扱いにする", async () => {
+    it("KOT_PUNCH_DEBUG 未設定: submit 後に画面遷移しなくても成功扱いにする", async () => {
         await expect(punchKot("#attend", settings)).resolves.toBeUndefined();
         expect(mockEvaluate).toHaveBeenCalledOnce();
         expect(mockClose).toHaveBeenCalledOnce();
     });
 
-    it("KOT_PUNCH_DRY_RUN 未設定: submit ボタンが見つからない場合はエラーを rethrow する", async () => {
+    it("KOT_PUNCH_DEBUG 未設定: submit ボタンが見つからない場合はエラーを rethrow する", async () => {
         mockEvaluate.mockResolvedValue(false);
 
         await expect(punchKot("#attend", settings)).rejects.toThrow("Submit button not found.");
         expect(mockClose).toHaveBeenCalledOnce();
     });
 
-    it("KOT_PUNCH_DRY_RUN=true: submit がスキップされる", async () => {
-        process.env.KOT_PUNCH_DRY_RUN = "true";
+    it("KOT_PUNCH_DEBUG=true: submit がスキップされる", async () => {
+        process.env.KOT_PUNCH_DEBUG = "true";
 
         await punchKot("#attend", settings);
 
@@ -162,8 +162,8 @@ describe("punchKot", () => {
         expect(mockClose).not.toHaveBeenCalled();
     });
 
-    it("#leave + KOT_PUNCH_DRY_RUN=true: #leave ボタンをクリックする", async () => {
-        process.env.KOT_PUNCH_DRY_RUN = "true";
+    it("#leave + KOT_PUNCH_DEBUG=true: #leave ボタンをクリックする", async () => {
+        process.env.KOT_PUNCH_DEBUG = "true";
 
         await punchKot("#leave", settings);
 
@@ -172,8 +172,8 @@ describe("punchKot", () => {
         expect(mockDisconnect).toHaveBeenCalledOnce();
     });
 
-    it('KOT_PUNCH_DRY_RUN=true: ユーザー名に " を含むとき CSS 属性セレクタ用にエスケープする', async () => {
-        process.env.KOT_PUNCH_DRY_RUN = "true";
+    it('KOT_PUNCH_DEBUG=true: ユーザー名に " を含むとき CSS 属性セレクタ用にエスケープする', async () => {
+        process.env.KOT_PUNCH_DEBUG = "true";
 
         await punchKot("#attend", { ...settings, kotPunchUsername: '山田 "太郎"' });
 
@@ -181,8 +181,8 @@ describe("punchKot", () => {
         expect(mockClick).toHaveBeenCalledWith('[title*="山田 \\"太郎\\""]');
     });
 
-    it("KOT_PUNCH_DRY_RUN=true: ユーザー名に \\ を含むとき CSS 属性セレクタ用にエスケープする", async () => {
-        process.env.KOT_PUNCH_DRY_RUN = "true";
+    it("KOT_PUNCH_DEBUG=true: ユーザー名に \\ を含むとき CSS 属性セレクタ用にエスケープする", async () => {
+        process.env.KOT_PUNCH_DEBUG = "true";
 
         await punchKot("#attend", { ...settings, kotPunchUsername: "domain\\user" });
 

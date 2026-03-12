@@ -60,8 +60,8 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 | `manifest.template.json` | プラグイン manifest のテンプレート兼 source of truth。各アクション定義と表示名をそのまま保持する |
 | `scripts/generate-manifest.mts` | `manifest.template.json` を `com.hrk-m.kot-punch.sdPlugin/manifest.json` へコピーする生成スクリプト。CLI からの実行に加えて `generateManifest(rootDir)` を export し、テンポラリディレクトリを使う unit test からも再利用できる |
 | `scripts/install-browser.mts` | Puppeteer が管理する Chrome for Testing を自動インストールするスクリプト。`ensureChromeInstalled(rootDir)` をエクスポートし、実行ファイルが存在しない場合のみ `bunx puppeteer browsers install chrome` を実行する。`postinstall` フックで `bun install` 時に自動実行される |
-| `rollup.config.mjs` | plugin bundle の出力設定。単一ファイル化、minify、external 依存の維持、`bin/package.json` の emit を担当。`@rollup/plugin-replace` で `process.env.KOT_PUNCH_DRY_RUN` をビルド時に inline 展開する（`.env` の値を使用、デフォルト `"false"`） |
-| `.env` | ローカル環境設定（gitignore 対象）。`KOT_PUNCH_DRY_RUN=true\|false` で dryRun モードを制御する。デフォルト・`.env.example` コピー直後は `false`（本番打刻有効）。動作確認時のみ `true` に変更して再ビルドする。`.env.example` がサンプルとしてコミット済み |
+| `rollup.config.mjs` | plugin bundle の出力設定。単一ファイル化、minify、external 依存の維持、`bin/package.json` の emit を担当。`@rollup/plugin-replace` で `process.env.KOT_PUNCH_DEBUG` をビルド時に inline 展開する（`.env` の値を使用、デフォルト `"false"`） |
+| `.env` | ローカル環境設定（gitignore 対象）。`KOT_PUNCH_DEBUG=true\|false` で dryRun モードを制御する。デフォルト・`.env.example` コピー直後は `false`（本番打刻有効）。動作確認時のみ `true` に変更して再ビルドする。`.env.example` がサンプルとしてコミット済み |
 
 ### `com.hrk-m.kot-punch.sdPlugin/`
 

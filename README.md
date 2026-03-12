@@ -29,12 +29,12 @@ cp .env.example .env
 
 | 変数名 | 値 | 説明 |
 |--------|----|------|
-| `KOT_PUNCH_DRY_RUN` | `true` / `false` | `true` のとき submit をスキップし、パスワード入力後の状態でブラウザを切断する（動作確認用）。デフォルト: `false` |
+| `KOT_PUNCH_DEBUG` | `true` / `false` | `true` のとき submit をスキップし、パスワード入力後の状態でブラウザを切断する（動作確認用）。デフォルト: `false` |
 
 **動作確認（submit をスキップしたい場合）**は `.env` の値を `true` に変更する。開発用の時に使用してください。
 
 ```
-KOT_PUNCH_DRY_RUN=true
+KOT_PUNCH_DEBUG=true
 ```
 
 > 値はビルド時に確定する。変更後は再ビルドが必要。

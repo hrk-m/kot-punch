@@ -34,9 +34,9 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 - `ui/open-request.html`: 申請画面用の 3 項目のみ
 
 **dryRun 設定**:
-- `kotPunchDryRun` は廃止。代わりにプロジェクトルートの `.env` で `KOT_PUNCH_DRY_RUN=true|false` を設定する
+- `kotPunchDryRun` は廃止。代わりにプロジェクトルートの `.env` で `KOT_PUNCH_DEBUG=true|false` を設定する
 - ビルド時（`bun run build`）に Rollup が値を inline 展開する。デフォルト（未設定）は `false`（本番打刻有効）
-- 動作確認（submit スキップ）をしたい場合は `.env` に `KOT_PUNCH_DRY_RUN=true` を設定して再ビルドする
+- 動作確認（submit スキップ）をしたい場合は `.env` に `KOT_PUNCH_DEBUG=true` を設定して再ビルドする
 
 ---
 
