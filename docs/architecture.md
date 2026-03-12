@@ -39,7 +39,7 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 | `actions/` | `SingletonAction<Settings>` を継承したアクションクラス群 |
 | `actions/punch/base-punch-action.ts` | `ClockIn` / `ClockOut` 共通の処理（`_isProcessing` フラグ・長押し判定・`onKeyDown` / `onKeyUp`）をまとめた抽象基底クラス。`SingletonAction<KotPunchSettings>` を継承し、差分（`logger` / `selector` / `successMessage`）のみサブクラスで定義する |
 | `actions/__tests__/` | アクションのユニットテスト（vitest） |
-| `services/kot/` | KOT 操作のサービス層。`auth.ts`（認証済みページ起動・JWT クッキーセット・ダイアログ検出）/ `punch.ts`（打刻ボタンクリック・ユーザー選択・パスワード入力・submit）/ `open-kot.ts`（KOT 勤怠画面を開いて disconnect）/ `open-request.ts`（申請画面にログインして disconnect）の 4 ファイル |
+| `services/kot/` | KOT 操作のサービス層。`auth.ts`（認証済みページ起動・JWT トークンセット・ダイアログ検出）/ `punch.ts`（打刻ボタンクリック・ユーザー選択・パスワード入力・submit）/ `open-kot.ts`（KOT 勤怠画面を開いて disconnect）/ `open-request.ts`（申請画面にログインして disconnect）の 4 ファイル |
 | `services/kot/__tests__/` | サービス層のユニットテスト（vitest） |
 | `platform/streamdeck/logger.ts` | Stream Deck SDK の scoped logger ラッパー。未接続やテスト環境では no-op logger を返し、アクション/サービスから同じ API で安全にログ出力できるようにする |
 | `platform/streamdeck/show-error-image.ts` | 共通エラー表示ユーティリティ。エラー画像を 3 秒表示し元の画像に戻す。フォールバックで `showAlert()` |

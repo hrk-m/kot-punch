@@ -49,7 +49,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
   ├─ 必須項目チェック → 未入力なら showAlert()
   │
   └─ Puppeteer 起動
-       ├─ JWT クッキーをセット
+       ├─ JWT トークンをセット
        ├─ 打刻ページに遷移
        ├─ ユーザー選択・パスワード入力
        ├─ KOT_PUNCH_DEBUG="true" でなければ submit

@@ -67,8 +67,8 @@ bun run build
 | 設定項目 | 説明 | 利用アクション |
 |---|---|---|
 | `kotPunchUrl` | KOT 勤怠 / 打刻画面の URL | `出勤` / `退勤` / `KING OF TIMEを開く` |
-| `kotPunchKey` | JWT クッキーのキー名 | `出勤` / `退勤` / `KING OF TIMEを開く` |
-| `kotPunchToken` | JWT トークン値 | `出勤` / `退勤` / `KING OF TIMEを開く` |
+| `kotPunchKey` | JWT トークンの Key | `出勤` / `退勤` / `KING OF TIMEを開く` |
+| `kotPunchToken` | JWT トークンの Value | `出勤` / `退勤` / `KING OF TIMEを開く` |
 | `kotPunchUsername` | 打刻ユーザー名 | `出勤` / `退勤` |
 | `kotPunchPassword` | 打刻パスワード | `出勤` / `退勤` |
 | `requestUrl` | 申請画面ログイン URL | `申請画面を開く` |

@@ -23,12 +23,12 @@ export async function openAuthenticatedKotPage(
         const pages = await browser.pages();
         const page = pages[0] ?? (await browser.newPage());
 
-        // 先に URL を開いて cookie の対象ドメインを作る。
+        // 先に URL を開いて JWT トークンの対象ドメインを作る。
         logger.puppeteer.debug(`navigating to ${kotPunchUrl}`);
         await page.goto(kotPunchUrl);
 
-        // JWT cookie を差し込む。
-        logger.puppeteer.debug(`setting cookie: ${kotPunchKey}`);
+        // JWT トークンをセットする。
+        logger.puppeteer.debug(`setting JWT token: ${kotPunchKey}`);
         await page.setCookie({ name: kotPunchKey, value: kotPunchToken });
 
         // 再読込で認証結果を反映する。

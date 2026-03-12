@@ -34,7 +34,7 @@ JWT 認証済みの Chrome ウィンドウで KING OF TIME 勤怠画面を開く
   │
   └─ Puppeteer 起動
        ├─ kotPunchUrl へアクセス（domain 確立）
-       ├─ JWT クッキーをセット
+       ├─ JWT トークンをセット
        ├─ 再アクセスして認証適用
        ├─ disconnect()（ブラウザは閉じない）
        └─ notify("KING OF TIME を開きました")

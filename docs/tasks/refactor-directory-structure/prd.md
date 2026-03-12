@@ -47,7 +47,7 @@ src/
       open-request.test.ts
   services/
     kot/                               # KOT ドメインサービス層
-      auth.ts                          # Puppeteer 起動 + Cookie 認証
+      auth.ts                          # Puppeteer 起動 + JWT トークン認証
       punch.ts                         # 打刻操作（ボタンクリック〜submit）
       open-kot.ts                      # 認証済みページを開いて disconnect
       open-request.ts                  # 申請画面へログインして disconnect
@@ -123,7 +123,7 @@ export class ClockIn extends BasePunchAction {
 
 ### `services/kot/auth.ts`
 
-- `openAuthenticatedKotPage(settings)` — Puppeteer 起動・URL ナビゲーション・Cookie 差し込み・dialog 監視による認証失敗検出
+- `openAuthenticatedKotPage(settings)` — Puppeteer 起動・URL ナビゲーション・JWT トークンセット・dialog 監視による認証失敗検出
 
 ### `services/kot/punch.ts`
 

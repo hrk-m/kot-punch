@@ -61,7 +61,7 @@ Stream Deck の退勤ボタンを押すと、Puppeteer 経由で KingOfTime (KOT
 
 ```
 1. kingOfTimeUrl へアクセス（setupAuthenticatedPage）
-2. JWT クッキーをセット（tokenKey + token）
+2. JWT トークンをセット（tokenKey + token）
 3. ページリロード（認証適用）
 4. #leave ボタンをクリック
 5. username でユーザーを確認・選択
@@ -79,7 +79,7 @@ Stream Deck の退勤ボタンを押すと、Puppeteer 経由で KingOfTime (KOT
 | `kingOfTimeUrl` | `string` | 打刻画面の URL |
 | `username` | `string` | KOT 画面上に表示される名前 |
 | `password` | `string` | 打刻確認時のパスワード |
-| `tokenKey` | `string` | JWT クッキー名 |
+| `tokenKey` | `string` | JWT トークンの Key |
 | `token` | `string` | JWT トークン値 |
 | `dryRun` | `boolean` | `true` のとき submit をスキップ |
 

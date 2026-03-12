@@ -84,7 +84,7 @@ export const logger = {
 - [ ] `setupAuthenticatedPage` に以下を追加する:
   - ブラウザ起動前: `logger.puppeteer.debug("launching browser")`
   - 1st goto: `logger.puppeteer.debug("navigating to {url}")`（URL を文字列展開）
-  - Cookie セット: `logger.puppeteer.debug("setting cookie: {key}")`（キー名のみ、トークン値は含めない）
+  - JWT トークンセット: `logger.puppeteer.debug("setting JWT token: {key}")`（キー名のみ、トークン値は含めない）
   - 2nd goto: `logger.puppeteer.debug("re-navigating for auth")`
   - 認証成功: `logger.puppeteer.debug("auth succeeded")`
   - 認証失敗: `logger.puppeteer.error("auth failed: dialog detected")`
