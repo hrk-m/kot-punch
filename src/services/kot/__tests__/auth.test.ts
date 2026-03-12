@@ -82,7 +82,7 @@ describe("openAuthenticatedKotPage", () => {
         expect(mockNewPage).not.toHaveBeenCalled();
     });
 
-    it("JWT cookie を setCookie でセットする（domain 指定なし）", async () => {
+    it("JWT トークンを setCookie でセットする（domain 指定なし）", async () => {
         await openAuthenticatedKotPage(settings);
 
         expect(mockSetCookie).toHaveBeenCalledWith({

@@ -72,7 +72,7 @@ export const logger = {
 |-----------|--------|-----------|
 | ブラウザ起動 | `debug` | `"launching browser"` |
 | 1st goto | `debug` | `"navigating to {url}"` |
-| クッキーセット | `debug` | `"setting cookie: {key}"` |
+| JWT トークンセット | `debug` | `"setting JWT token: {key}"` |
 | 2nd goto（認証適用） | `debug` | `"re-navigating for auth"` |
 | 認証成功 | `debug` | `"auth succeeded"` |
 | 認証失敗（dialog検出） | `error` | `"auth failed: dialog detected"` |

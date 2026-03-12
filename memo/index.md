@@ -56,7 +56,7 @@ King of Time (KOT) への勤怠打刻を、Stream Deck から自動実行する�
 
 ```
 1. kingOfTimeUrl へアクセス
-2. JWT クッキーをセット（tokenKey + token）
+2. JWT トークンをセット（tokenKey + token）
 3. ページリロード（認証適用）
 4. AttendAction → #attend クリック / LeaveAction → #leave クリック
 5. username でユーザーを確認・選択
@@ -80,8 +80,8 @@ King of Time (KOT) への勤怠打刻を、Stream Deck から自動実行する�
 | `kingOfTimeUrl` | `string` | 打刻画面の URL |
 | `username` | `string` | KOT 画面上に表示される名前 |
 | `password` | `string` | 打刻確認時のパスワード |
-| `tokenKey` | `string` | JWT クッキー名（例: `htjwt_xxxxx`） |
-| `token` | `string` | JWT トークン値 |
+| `tokenKey` | `string` | JWT トークンの Key（例: `htjwt_xxxxx`） |
+| `token` | `string` | JWT トークンの Value |
 | `dryRun` | `boolean` | `true` のとき submit をスキップ（テスト用） |
 | `YYYYMMDD-attend` | `boolean` | 出勤済みフラグ（日次） |
 | `YYYYMMDD-leave` | `boolean` | 退勤済みフラグ（日次） |

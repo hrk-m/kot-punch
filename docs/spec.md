@@ -15,8 +15,8 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 | 設定項目 | 型 | 用途 |
 |----------|----|------|
 | `kotPunchUrl` | string | KOT 勤怠/打刻画面の URL |
-| `kotPunchKey` | string | JWT クッキーのキー名 |
-| `kotPunchToken` | string | JWT トークン値 |
+| `kotPunchKey` | string | JWT トークンの Key |
+| `kotPunchToken` | string | JWT トークンの Value |
 | `kotPunchUsername` | string | 打刻ユーザー名 |
 | `kotPunchPassword` | string | 打刻パスワード |
 | `requestUrl` | string | 申請画面ログイン URL |

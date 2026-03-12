@@ -60,7 +60,7 @@ Stream Deck の出勤ボタンを押すと、Puppeteer 経由で KingOfTime (KOT
 
 ```
 1. kingOfTimeUrl へアクセス（既存の goto 処理を再利用）
-2. JWT クッキーをセット（tokenKey + token）
+2. JWT トークンをセット（tokenKey + token）
 3. ページリロード（認証適用）
 4. #attend ボタンをクリック
 5. username でユーザーを確認・選択

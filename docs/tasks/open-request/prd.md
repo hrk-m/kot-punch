@@ -109,6 +109,6 @@ com.hrk-m.kot-punch.sdPlugin/
 
 ## スコープ外
 
-- JWT クッキー認証（open-kot/punch 用）
+- JWT トークン認証（open-kot/punch 用）
 - dryRun 対応（ログインでは不要）
 - Windows 対応

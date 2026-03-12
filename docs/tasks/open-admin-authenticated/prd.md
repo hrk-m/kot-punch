@@ -2,7 +2,7 @@
 
 ## 概要
 
-Stream Deck の「勤怠画面を開く」ボタンを押下すると、JWT クッキーをセット済みの Chrome ウィンドウで
+Stream Deck の「勤怠画面を開く」ボタンを押下すると、JWT トークンをセット済みの Chrome ウィンドウで
 KOT 勤怠画面（`kingOfTimeUrl`）を開く。
 ユーザーはログイン操作なしで勤怠画面を即座に操作できる。
 
@@ -27,7 +27,7 @@ KOT 勤怠画面（`kingOfTimeUrl`）を開く。
    └ 未設定 → showAlert() で Property Inspector へ誘導して終了
 3. puppeteer でブラウザを起動（headless: false、--start-maximized）
 4. kingOfTimeUrl へアクセス（domain 確立）
-5. JWT クッキーをセット（{ name: tokenKey, value: token }）
+5. JWT トークンをセット（{ name: tokenKey, value: token }）
    ※ domain 未指定 → 現在のページのドメインが自動適用される
 6. kingOfTimeUrl へ再アクセス（認証適用）
    └ ダイアログ検出 → 認証失敗とみなし browser.close() してエラーをスロー
@@ -48,7 +48,7 @@ KOT 勤怠画面（`kingOfTimeUrl`）を開く。
 | キー | 型 | 説明 |
 |------|----|------|
 | `kingOfTimeUrl` | `string` | 勤怠画面 URL（例: `https://kingoftime-recorder.appspot.com/login?section=1000&param=...`） |
-| `tokenKey` | `string` | JWT クッキー名（例: `htjwt_xxxxx`） |
+| `tokenKey` | `string` | JWT トークンの Key（例: `htjwt_xxxxx`） |
 | `token` | `string` | JWT トークン値 |
 
 勤怠画面 URL は固定値ではなく `kingOfTimeUrl` 設定値を使用する（ユーザーごとに異なる）。
@@ -107,7 +107,7 @@ export async function openKotPage(settings: GlobalSettings): Promise<void> {
         const page = pages[0] ?? (await browser.newPage());
         // 1. 勤怠画面へアクセス（domain 確立）
         await page.goto(kingOfTimeUrl);
-        // 2. JWT クッキーをセット（domain 指定なし → 現在ページのドメインが適用）
+        // 2. JWT トークンをセット（domain 指定なし → 現在ページのドメインが適用）
         await page.setCookie({ name: tokenKey, value: token });
         // 3. 再アクセスして認証適用。ダイアログ = 認証失敗として扱う
         let hasAuthDialog = false;

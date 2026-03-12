@@ -2,9 +2,9 @@
 
 ## 概要
 
-Stream Deck の「勤怠画面を開く」ボタンを押下すると、JWT クッキーをセット済みの Chrome ウィンドウで
+Stream Deck の「勤怠画面を開く」ボタンを押下すると、JWT トークンをセット済みの Chrome ウィンドウで
 KOT 勤怠画面（`kingOfTimeUrl`）を開く。`puppeteer-core` でシステム Chrome を起動し、
-cookie セット後に `browser.disconnect()` でウィンドウを残したまま切断する。
+JWT トークンセット後に `browser.disconnect()` でウィンドウを残したまま切断する。
 
 ---
 
@@ -23,7 +23,7 @@ cookie セット後に `browser.disconnect()` でウィンドウを残したま�
   - 現存ファイルは空 body のみ。`open-admin.html` は sdpi-components で入力フォームを実装する必要あり
 - [x] `package.json` に `puppeteer-core` が含まれているかを確認する
   - **未インストール**。`dependencies` には `@elgato/streamdeck` のみ。Phase 3 で `bun add puppeteer-core` が必要
-- [ ]* 参照実装 `attend-kingoftime/src/punch-script.ts` の cookie セット手順を再確認する
+- [ ]* 参照実装 `attend-kingoftime/src/punch-script.ts` の JWT トークンセット手順を再確認する
 
 ### Phase 1.2: 変更候補を特定する
 
