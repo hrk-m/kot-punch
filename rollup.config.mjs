@@ -1,6 +1,7 @@
 import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import nodeResolve from "@rollup/plugin-node-resolve";
+import replace from "@rollup/plugin-replace";
 import terser from "@rollup/plugin-terser";
 import typescript from "@rollup/plugin-typescript";
 
@@ -23,6 +24,12 @@ const config = {
 		inlineDynamicImports: true,
 	},
 	plugins: [
+		replace({
+			preventAssignment: true,
+			values: {
+				"process.env.KOT_PUNCH_DRY_RUN": JSON.stringify(process.env.KOT_PUNCH_DRY_RUN ?? "true"),
+			},
+		}),
 		typescript({ tsconfig: "./tsconfig.build.json" }),
 		nodeResolve({
 			browser: false,
