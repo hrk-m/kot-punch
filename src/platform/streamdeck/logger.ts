@@ -31,6 +31,7 @@ export const logger = {
     clockOut: createScope("clock-out"),
     openKot: createScope("open-kot"),
     openRequest: createScope("open-request"),
+    resetPunchState: createScope("reset-punch-state"),
     puppeteer: createScope("puppeteer"),
     notify: createScope("notify"),
 };
