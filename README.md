@@ -22,7 +22,7 @@
 
 ## 配置サンプル
 
-<img src="./docs/imgs/layout-sample.jpg" width="400" alt="Stream Deck 配置サンプル">
+<img src="./docs/imgs/layout-sample.jpg" width="300" alt="Stream Deck 配置サンプル">
 
 ## インストール
 
