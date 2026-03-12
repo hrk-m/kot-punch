@@ -52,7 +52,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
        ├─ JWT クッキーをセット
        ├─ 打刻ページに遷移
        ├─ ユーザー選択・パスワード入力
-       ├─ KOT_PUNCH_DEBUG="false" でなければ submit
+       ├─ KOT_PUNCH_DEBUG="true" でなければ submit
        ├─ 成功: showOk() + setState(1)
        └─ notify("出勤打刻が完了しました") / notify("退勤打刻が完了しました")
 ```
