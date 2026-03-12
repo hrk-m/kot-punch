@@ -2,6 +2,17 @@ import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 
 describe("manifest template", () => {
+    it("uses a Stream Deck supported Node.js runtime version", async () => {
+        const templatePath = new URL("../../manifest.template.json", import.meta.url);
+        const manifest = JSON.parse(await readFile(templatePath, "utf8")) as {
+            Nodejs?: {
+                Version?: string;
+            };
+        };
+
+        expect(["20", "24"]).toContain(manifest.Nodejs?.Version);
+    });
+
     it("open-request action disables the title like open-kot", async () => {
         const templatePath = new URL("../../manifest.template.json", import.meta.url);
         const manifest = JSON.parse(await readFile(templatePath, "utf8")) as {

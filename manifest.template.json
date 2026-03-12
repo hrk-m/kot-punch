@@ -100,7 +100,7 @@
 		}
 	],
 	"Nodejs": {
-		"Version": "25",
+		"Version": "24",
 		"Debug": "enabled"
 	},
 	"UUID": "com.hrk-m.kot-punch"
