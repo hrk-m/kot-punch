@@ -17,7 +17,7 @@
 
 | 項目 | 型 | 説明 |
 |------|----|------|
-| 入力: `onKeyUp` イベント | `KeyUpEvent` | Stream Deck のキー離し操作 |
+| 入力: `onKeyUp` イベント | `KeyUpEvent<RequestSettings>` | Stream Deck のキー離し操作 |
 | 入力: グローバル設定 | `RequestSettings` | `requestUrl` / `requestUsername` / `requestPassword` |
 | 出力 | `void` | 副作用としてログイン済み Chrome ウィンドウを開く |
 

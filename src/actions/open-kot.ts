@@ -3,6 +3,7 @@ import type { KeyUpEvent } from "@elgato/streamdeck";
 import {
     getGlobalSettings,
     hasRequiredSettings,
+    type KotPunchSettings,
 } from "../platform/streamdeck/settings/punch-settings";
 import { openKotPage } from "../services/kot/open-kot";
 import { showErrorImage } from "../platform/streamdeck/show-error-image";
@@ -11,12 +12,12 @@ import { logger } from "../platform/streamdeck/logger";
 
 // KOT 画面を開く action。
 @action({ UUID: "com.hrk-m.kot-punch.open-kot" })
-export class OpenKot extends SingletonAction {
+export class OpenKot extends SingletonAction<KotPunchSettings> {
     // 連打を防ぐ。
     private _isProcessing = false;
 
     // 設定を確認して KOT を開く。
-    override async onKeyUp(ev: KeyUpEvent): Promise<void> {
+    override async onKeyUp(ev: KeyUpEvent<KotPunchSettings>): Promise<void> {
         logger.openKot.info("onKeyUp triggered");
 
         if (this._isProcessing) {

@@ -3,6 +3,7 @@ import type { KeyUpEvent } from "@elgato/streamdeck";
 import {
     getRequestSettings,
     hasRequiredRequestSettings,
+    type RequestSettings,
 } from "../platform/streamdeck/settings/request-settings";
 import { openRequestPage } from "../services/kot/open-request";
 import { showErrorImage } from "../platform/streamdeck/show-error-image";
@@ -11,12 +12,12 @@ import { logger } from "../platform/streamdeck/logger";
 
 // 申請画面を開く action。
 @action({ UUID: "com.hrk-m.kot-punch.open-request" })
-export class OpenRequest extends SingletonAction {
+export class OpenRequest extends SingletonAction<RequestSettings> {
     // 連打を防ぐ。
     private _isProcessing = false;
 
     // 設定を確認して申請画面を開く。
-    override async onKeyUp(ev: KeyUpEvent): Promise<void> {
+    override async onKeyUp(ev: KeyUpEvent<RequestSettings>): Promise<void> {
         logger.openRequest.info("onKeyUp triggered");
 
         // 処理中フラグが立っていれば即 return

@@ -17,7 +17,7 @@ JWT 認証済みの Chrome ウィンドウで KING OF TIME 勤怠画面を開く
 
 | 項目 | 型 | 説明 |
 |------|----|------|
-| 入力: `onKeyUp` イベント | `KeyUpEvent` | Stream Deck のキー離し操作 |
+| 入力: `onKeyUp` イベント | `KeyUpEvent<KotPunchSettings>` | Stream Deck のキー離し操作 |
 | 入力: グローバル設定 | `KotPunchSettings` | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` |
 | 出力 | `void` | 副作用として JWT 認証済み Chrome ウィンドウを開く |
 
