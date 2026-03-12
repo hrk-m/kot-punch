@@ -175,6 +175,23 @@ describe("ClockIn", () => {
             expect(setState).toHaveBeenCalledWith(0);
             expect(mockNotify).not.toHaveBeenCalled();
         });
+
+        it("エラー復旧用の setState(0) が失敗しても onKeyUp は reject しない", async () => {
+            const { action, setState } = makeSharedAction();
+            const down = makeKeyEvent(action, 0);
+            const up = makeKeyEvent(action, 0);
+            mockPunchKot.mockRejectedValueOnce(new Error("punch failed"));
+            setState.mockRejectedValueOnce(new Error("setState failed"));
+
+            await clockIn.onKeyDown(down as never);
+            await vi.advanceTimersByTimeAsync(1999);
+
+            await expect(clockIn.onKeyUp(up as never)).resolves.toBeUndefined();
+
+            expect(showErrorImage).toHaveBeenCalledOnce();
+            expect(setState).toHaveBeenCalledWith(0);
+            expect(mockNotify).not.toHaveBeenCalled();
+        });
     });
 
     describe("onKeyDown/onKeyUp - 長押し state 更新フロー", () => {

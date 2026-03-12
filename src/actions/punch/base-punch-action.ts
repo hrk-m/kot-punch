@@ -95,7 +95,13 @@ export abstract class BasePunchAction extends SingletonAction<KotPunchSettings> 
             // 失敗時はエラー画像を出して state を戻す。
             this.logger.error(`punch failed: ${error instanceof Error ? error.message : String(error)}`);
             void showErrorImage(ev.action);
-            await ev.action.setState(0);
+            void ev.action.setState(0).catch((stateError: unknown) => {
+                this.logger.error(
+                    `failed to reset state after punch error: ${
+                        stateError instanceof Error ? stateError.message : String(stateError)
+                    }`,
+                );
+            });
         } finally {
             // 終了後は処理中フラグを戻す。
             this._isProcessing = false;
