@@ -8,15 +8,15 @@ prd: `docs/tasks/reset-punch-state/prd.md`
 
 ### Phase 1.1: 関連実装を調査する
 
-- [ ] `src/actions/` 配下の既存アクション実装パターンを読む（`open-kot.ts` / `open-request.ts` が最も近い）
-- [ ] `src/plugin.ts` のアクション登録パターンを確認する
-- [ ] `manifest.template.json` のアクション定義パターンを確認する
-- [ ] `platform/streamdeck/logger.ts` の scope 定義を確認する（新スコープが必要か）
+- [x] `src/actions/` 配下の既存アクション実装パターンを読む（`open-kot.ts` / `open-request.ts` が最も近い）
+- [x] `src/plugin.ts` のアクション登録パターンを確認する
+- [x] `manifest.template.json` のアクション定義パターンを確認する
+- [x] `platform/streamdeck/logger.ts` の scope 定義を確認する（新スコープが必要か）
 - [ ]* 全体コードを俯瞰する（任意・後回し可）
 
 ### Phase 1.2: 変更候補を特定する
 
-- [ ] 以下のファイルに変更が必要なことを確認する:
+- [x] 以下のファイルに変更が必要なことを確認する:
 
 | ファイル | 変更理由 |
 |---|---|
@@ -27,8 +27,8 @@ prd: `docs/tasks/reset-punch-state/prd.md`
 | `com.hrk-m.kot-punch.sdPlugin/imgs/actions/reset-punch-state/` | アイコン画像 4 ファイルを配置（ユーザー作業） |
 | `com.hrk-m.kot-punch.sdPlugin/manifest.json` | `bun run generate-manifest` で自動生成 |
 
-- [ ] 共通化候補を確認する（なし: `BasePunchAction` は打刻処理専用のため継承しない）
-- [ ] **CHECKPOINT**: 変更対象ファイルと影響範囲が明確
+- [x] 共通化候補を確認する（なし: `BasePunchAction` は打刻処理専用のため継承しない）
+- [x] **CHECKPOINT**: 変更対象ファイルと影響範囲が明確
 
 ---
 
@@ -36,7 +36,7 @@ prd: `docs/tasks/reset-punch-state/prd.md`
 
 ### Phase 2.1: モック契約を固定する
 
-- [ ] **MOCK-CONTRACT** `src/actions/__tests__/reset-punch-state.test.ts` で使うモック型を定義する
+- [x] **MOCK-CONTRACT** `src/actions/__tests__/reset-punch-state.test.ts` で使うモック型を定義する
 
 ```typescript
 // テスト内モック設計
@@ -50,15 +50,15 @@ prd: `docs/tasks/reset-punch-state/prd.md`
 
 ### Phase 2.2: 空モックでアクションを成立させる
 
-- [ ] **MOCK-IMPL** `src/actions/reset-punch-state.ts` の空実装を作成する
+- [x] **MOCK-IMPL** `src/actions/reset-punch-state.ts` の空実装を作成する
   - `SingletonAction<Record<string, never>>` を継承する
   - `@action({ UUID: "com.hrk-m.kot-punch.reset-punch-state" })` を付与する
   - `onKeyUp` に `// TODO: implement` のみ記述する
-- [ ] `src/plugin.ts` に `ResetPunchState` を登録する
-- [ ] `manifest.template.json` に空実装用アクション定義を追加する（`States` は 1 つ、`UserTitleEnabled: false`）
-- [ ] `bun run generate-manifest` を実行して `manifest.json` を更新する
-- [ ] `bunx tsc --noEmit` でコンパイルエラーがないことを確認する
-- [ ] **CHECKPOINT**: 実データなし + 空実装でビルドが通る
+- [x] `src/plugin.ts` に `ResetPunchState` を登録する
+- [x] `manifest.template.json` に空実装用アクション定義を追加する（`States` は 1 つ、`UserTitleEnabled: false`）
+- [x] `bun run generate-manifest` を実行して `manifest.json` を更新する
+- [x] `bunx tsc --noEmit` でコンパイルエラーがないことを確認する
+- [x] **CHECKPOINT**: 実データなし + 空実装でビルドが通る
 
 ---
 
@@ -66,12 +66,12 @@ prd: `docs/tasks/reset-punch-state/prd.md`
 
 ### Phase 3.1: ロガースコープを追加する
 
-- [ ] `src/platform/streamdeck/logger.ts` に `resetPunchState` スコープを追加する
+- [x] `src/platform/streamdeck/logger.ts` に `resetPunchState` スコープを追加する
   - 既存の `clockIn` / `clockOut` スコープと同じパターンで追加する
 
 ### Phase 3.2: リセット処理を実装する
 
-- [ ] `src/actions/reset-punch-state.ts` の `onKeyUp` を実装する
+- [x] `src/actions/reset-punch-state.ts` の `onKeyUp` を実装する
 
   ```
   操作前提: clock-in / clock-out が両方とも State 1（打刻済み）
@@ -90,39 +90,16 @@ prd: `docs/tasks/reset-punch-state/prd.md`
 
 ### Phase 3.3: テストを実装する
 
-- [ ] `src/actions/__tests__/reset-punch-state.test.ts` を作成する
+- [x] `src/actions/__tests__/reset-punch-state.test.ts` を作成する
 
   **テストケース**:
 
-  - [ ] 正常系: clock-in / clock-out の全インスタンスに `setState(0)` が呼ばれる
-    ```
-    操作前提: clock-in × 1, clock-out × 1, open-kot × 1 がモックで存在
-    操作: onKeyUp を実行
-    期待結果: clock-in.setState(0) と clock-out.setState(0) が各 1 回呼ばれる
-    ```
+  - [x] 正常系: clock-in / clock-out の全インスタンスに `setState(0)` が呼ばれる
+  - [x] 正常系: `notify("打刻状態(出勤/退勤)をリセットしました")` が呼ばれる
+  - [x] 対象外アクションは影響なし: open-kot / open-request の setState が呼ばれない
+  - [x] setState 失敗時も残りを続行: 一部の setState が throw しても他のインスタンスへの処理が完走する
 
-  - [ ] 正常系: `notify("打刻状態(出勤/退勤)をリセットしました")` が呼ばれる
-    ```
-    操作前提: 同上
-    操作: onKeyUp を実行
-    期待結果: notify が "打刻状態(出勤/退勤)をリセットしました" を引数に 1 回呼ばれる
-    ```
-
-  - [ ] 対象外アクションは影響なし: open-kot / open-request の setState が呼ばれない
-    ```
-    操作前提: open-kot × 1, open-request × 1 がモックで存在
-    操作: onKeyUp を実行
-    期待結果: open-kot.setState と open-request.setState は呼ばれない
-    ```
-
-  - [ ] setState 失敗時も残りを続行: 一部の setState が throw しても他のインスタンスへの処理が完走する
-    ```
-    操作前提: clock-in.setState が throw するようモックを設定
-    操作: onKeyUp を実行
-    期待結果: clock-out.setState(0) が正常に呼ばれ、notify も呼ばれる
-    ```
-
-- [ ] `bun run test` で全テストが通ることを確認する
+- [x] `bun run test` で全テストが通ることを確認する（106 tests passed）
 
 ### Phase 3.4: アイコン画像を配置する（ユーザー作業）
 
@@ -134,7 +111,7 @@ prd: `docs/tasks/reset-punch-state/prd.md`
 
 ### Phase 3.5: 最終検証
 
-- [ ] `bun run lint && bun run test && bunx tsc --noEmit && bun run build` が全て通ることを確認する
+- [x] `bun run lint && bun run test && bunx tsc --noEmit && bun run build` が全て通ることを確認する
 - [ ] Stream Deck に「リセット」ボタンを追加し、出勤・退勤を State 1 にした後に押して State 0 に戻ることを確認する
 - [ ] macOS 通知センターに「打刻状態(出勤/退勤)をリセットしました」が表示されることを確認する
 - [ ] **CHECKPOINT**: 主要ユースケースが動作確認済み
