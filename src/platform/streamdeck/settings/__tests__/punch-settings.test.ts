@@ -1,10 +1,17 @@
-import { describe, it, expect } from "vitest";
-import {
-    hasRequiredSettings,
-    hasRequiredPunchSettings,
-    hasRequiredRequestSettings,
-} from "../settings.js";
-import type { KotPunchSettings } from "../settings.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { KotPunchSettings } from "../punch-settings";
+
+const mockGetGlobalSettings = vi.fn();
+
+vi.mock("@elgato/streamdeck", () => ({
+    default: {
+        settings: {
+            getGlobalSettings: mockGetGlobalSettings,
+        },
+    },
+}));
+
+const { getGlobalSettings, hasRequiredPunchSettings, hasRequiredSettings } = await import("../punch-settings");
 
 const openKotSettings: KotPunchSettings = {
     kotPunchUrl: "https://kingoftime-recorder.appspot.com/login",
@@ -17,6 +24,18 @@ const fullSettings = {
     kotPunchUsername: "山田 太郎",
     kotPunchPassword: "pass1234",
 };
+
+describe("getGlobalSettings", () => {
+    beforeEach(() => {
+        vi.clearAllMocks();
+    });
+
+    it("global settings をそのまま返す", async () => {
+        mockGetGlobalSettings.mockResolvedValue(fullSettings);
+
+        await expect(getGlobalSettings()).resolves.toEqual(fullSettings);
+    });
+});
 
 describe("hasRequiredSettings", () => {
     it("open-kot 用の必須項目（URL/token）のみで true を返す", () => {
@@ -64,44 +83,5 @@ describe("hasRequiredPunchSettings", () => {
 
     it("kotPunchPassword が空文字列のとき false を返す", () => {
         expect(hasRequiredPunchSettings({ ...fullSettings, kotPunchPassword: "" })).toBe(false);
-    });
-});
-
-describe("hasRequiredRequestSettings", () => {
-    const requestSettings = {
-        requestUrl: "https://s3.ta.kingoftime.jp/admin",
-        requestUsername: "admin",
-        requestPassword: "pass1234",
-    };
-
-    it("requestUrl / requestUsername / requestPassword が設定済みのとき true を返す", () => {
-        expect(hasRequiredRequestSettings(requestSettings)).toBe(true);
-    });
-
-    it("requestUrl が未設定のとき false を返す", () => {
-        const { requestUrl: _, ...rest } = requestSettings;
-        expect(hasRequiredRequestSettings(rest)).toBe(false);
-    });
-
-    it("requestUsername が未設定のとき false を返す", () => {
-        const { requestUsername: _, ...rest } = requestSettings;
-        expect(hasRequiredRequestSettings(rest)).toBe(false);
-    });
-
-    it("requestPassword が未設定のとき false を返す", () => {
-        const { requestPassword: _, ...rest } = requestSettings;
-        expect(hasRequiredRequestSettings(rest)).toBe(false);
-    });
-
-    it("requestUrl が空文字列のとき false を返す", () => {
-        expect(hasRequiredRequestSettings({ ...requestSettings, requestUrl: "" })).toBe(false);
-    });
-
-    it("requestUsername が空文字列のとき false を返す", () => {
-        expect(hasRequiredRequestSettings({ ...requestSettings, requestUsername: "" })).toBe(false);
-    });
-
-    it("requestPassword が空文字列のとき false を返す", () => {
-        expect(hasRequiredRequestSettings({ ...requestSettings, requestPassword: "" })).toBe(false);
     });
 });

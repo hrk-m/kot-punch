@@ -1,12 +1,18 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { join } from "node:path";
 
 const mockReadFileSync = vi.fn(() => Buffer.from("test-image"));
 
-vi.mock("fs", () => ({
-    readFileSync: mockReadFileSync,
-}));
+vi.mock("fs", async () => {
+    const actual = await vi.importActual("fs");
+    return {
+        ...actual,
+        readFileSync: mockReadFileSync,
+    };
+});
 
-const { showErrorImage } = await import("../showErrorImage.js");
+const showErrorImageModule = await import("../show-error-image");
+const { showErrorImage, resolveErrorImagePath } = showErrorImageModule;
 
 describe("showErrorImage", () => {
     afterEach(() => {
@@ -48,5 +54,16 @@ describe("showErrorImage", () => {
         expect(setImage).toHaveBeenCalledTimes(2);
         expect(setImage.mock.calls[1]).toEqual([]);
         expect(showAlert).not.toHaveBeenCalled();
+    });
+
+    it("bundle 実行時は plugin package 配下の error.png を参照する", () => {
+        const bundledModuleUrl = new URL(
+            "../../../../com.hrk-m.kot-punch.sdPlugin/bin/plugin.js",
+            import.meta.url,
+        );
+
+        expect(resolveErrorImagePath(bundledModuleUrl)).toBe(
+            join(process.cwd(), "com.hrk-m.kot-punch.sdPlugin/imgs/actions/common/error.png"),
+        );
     });
 });
