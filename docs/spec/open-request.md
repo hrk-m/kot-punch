@@ -17,7 +17,7 @@
 
 | 項目 | 型 | 説明 |
 |------|----|------|
-| 入力: `onKeyUp` イベント | `KeyUpEvent` | Stream Deck のキー離し操作 |
+| 入力: `onKeyUp` イベント | `KeyUpEvent<RequestSettings>` | Stream Deck のキー離し操作 |
 | 入力: グローバル設定 | `RequestSettings` | `requestUrl` / `requestUsername` / `requestPassword` |
 | 出力 | `void` | 副作用としてログイン済み Chrome ウィンドウを開く |
 
@@ -47,7 +47,7 @@
 
 | エラー条件 | 対応 |
 |---|---|
-| 必須設定が未入力 | `showAlert()` を表示して処理を中断 |
+| 必須設定が未入力 | `notify("全項目必須です。設定を確認してください。")` + `showAlert()` を表示して処理を中断 |
 | ログイン失敗・ナビゲーションタイムアウト | `browser.close()` でクリーンアップ → `showErrorImage()` でエラー表示 |
 | Puppeteer 起動・操作エラー | `showErrorImage()` でエラー表示 |
 
@@ -85,8 +85,8 @@
 
 | 依存先 | 用途 |
 |--------|------|
-| `lib/puppeteer.ts` | `openRequestPage(settings)` — Puppeteer 起動・ログイン・disconnect |
-| `lib/settings.ts` | `getRequestSettings()` / `hasRequiredRequestSettings()` — 設定取得・バリデーション |
-| `lib/showErrorImage.ts` | `showErrorImage(action)` — エラー画像表示ユーティリティ |
-| `lib/notify.ts` | `notify(message)` — 成功時の macOS 通知（fire-and-forget） |
+| `services/kot/open-request.ts` | `openRequestPage(settings)` — Puppeteer 起動・ログイン・disconnect |
+| `platform/streamdeck/settings/request-settings.ts` | `getRequestSettings()` / `hasRequiredRequestSettings()` — 設定取得・バリデーション |
+| `platform/streamdeck/show-error-image.ts` | `showErrorImage(action)` — エラー画像表示ユーティリティ |
+| `platform/desktop/notify.ts` | `notify(message)` — 成功時の macOS 通知（fire-and-forget） |
 | 申請画面（外部） | ログイン対象のウェブサービス |

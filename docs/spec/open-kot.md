@@ -17,7 +17,7 @@ JWT 認証済みの Chrome ウィンドウで KING OF TIME 勤怠画面を開く
 
 | 項目 | 型 | 説明 |
 |------|----|------|
-| 入力: `onKeyUp` イベント | `KeyUpEvent` | Stream Deck のキー離し操作 |
+| 入力: `onKeyUp` イベント | `KeyUpEvent<KotPunchSettings>` | Stream Deck のキー離し操作 |
 | 入力: グローバル設定 | `KotPunchSettings` | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` |
 | 出力 | `void` | 副作用として JWT 認証済み Chrome ウィンドウを開く |
 
@@ -46,7 +46,7 @@ JWT 認証済みの Chrome ウィンドウで KING OF TIME 勤怠画面を開く
 
 | エラー条件 | 対応 |
 |---|---|
-| 必須設定が未入力 | `showAlert()` を表示して処理を中断 |
+| 必須設定が未入力 | `notify("全項目必須です。設定を確認してください。")` + `showAlert()` を表示して処理を中断 |
 | 認証失敗（ダイアログ検出） | ブラウザを閉じてエラーを throw → `showErrorImage()` でエラー表示 |
 | Puppeteer 起動・操作エラー | `showErrorImage()` でエラー表示 |
 
@@ -84,8 +84,8 @@ JWT 認証済みの Chrome ウィンドウで KING OF TIME 勤怠画面を開く
 
 | 依存先 | 用途 |
 |--------|------|
-| `lib/puppeteer.ts` | `openKotPage(settings)` — Puppeteer 起動・JWT 認証・disconnect |
-| `lib/settings.ts` | `getGlobalSettings()` / `hasRequiredSettings()` — 設定取得・バリデーション |
-| `lib/showErrorImage.ts` | `showErrorImage(action)` — エラー画像表示ユーティリティ |
-| `lib/notify.ts` | `notify(message)` — 成功時の macOS 通知（fire-and-forget） |
+| `services/kot/open-kot.ts` | `openKotPage(settings)` — Puppeteer 起動・JWT 認証・disconnect |
+| `platform/streamdeck/settings/punch-settings.ts` | `getGlobalSettings()` / `hasRequiredSettings()` — 設定取得・バリデーション |
+| `platform/streamdeck/show-error-image.ts` | `showErrorImage(action)` — エラー画像表示ユーティリティ |
+| `platform/desktop/notify.ts` | `notify(message)` — 成功時の macOS 通知（fire-and-forget） |
 | KING OF TIME（外部） | 表示対象のウェブサービス |

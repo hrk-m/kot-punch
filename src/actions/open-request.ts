@@ -1,16 +1,23 @@
 import { action, SingletonAction } from "@elgato/streamdeck";
 import type { KeyUpEvent } from "@elgato/streamdeck";
-import { getRequestSettings, hasRequiredRequestSettings } from "../lib/settings.js";
-import { openRequestPage } from "../lib/puppeteer.js";
-import { showErrorImage } from "../lib/showErrorImage.js";
-import { notify } from "../lib/notify.js";
-import { logger } from "../lib/logger.js";
+import {
+    getRequestSettings,
+    hasRequiredRequestSettings,
+    type RequestSettings,
+} from "../platform/streamdeck/settings/request-settings";
+import { openRequestPage } from "../services/kot/open-request";
+import { showErrorImage } from "../platform/streamdeck/show-error-image";
+import { notify } from "../platform/desktop/notify";
+import { logger } from "../platform/streamdeck/logger";
 
+// 申請画面を開く action。
 @action({ UUID: "com.hrk-m.kot-punch.open-request" })
-export class OpenRequest extends SingletonAction {
+export class OpenRequest extends SingletonAction<RequestSettings> {
+    // 連打を防ぐ。
     private _isProcessing = false;
 
-    override async onKeyUp(ev: KeyUpEvent): Promise<void> {
+    // 設定を確認して申請画面を開く。
+    override async onKeyUp(ev: KeyUpEvent<RequestSettings>): Promise<void> {
         logger.openRequest.info("onKeyUp triggered");
 
         // 処理中フラグが立っていれば即 return
@@ -36,7 +43,7 @@ export class OpenRequest extends SingletonAction {
                 logger.openRequest.info("opening page");
                 await openRequestPage(settings);
                 logger.openRequest.info("page opened");
-                
+
                 void notify("申請画面を開きました");
             }
         } catch (e) {

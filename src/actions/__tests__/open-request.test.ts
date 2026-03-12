@@ -17,27 +17,27 @@ vi.mock("@elgato/streamdeck", () => {
 
 const mockGetRequestSettings = vi.fn();
 const mockHasRequiredRequestSettings = vi.fn();
-vi.mock("../../lib/settings.js", () => ({
+vi.mock("../../platform/streamdeck/settings/request-settings", () => ({
     getRequestSettings: mockGetRequestSettings,
     hasRequiredRequestSettings: mockHasRequiredRequestSettings,
 }));
 
 const mockOpenRequestPage = vi.fn();
-vi.mock("../../lib/puppeteer.js", () => ({
+vi.mock("../../services/kot/open-request", () => ({
     openRequestPage: mockOpenRequestPage,
 }));
 
 const mockShowErrorImage = vi.fn();
-vi.mock("../../lib/showErrorImage.js", () => ({
+vi.mock("../../platform/streamdeck/show-error-image", () => ({
     showErrorImage: mockShowErrorImage,
 }));
 
 const mockNotify = vi.fn();
-vi.mock("../../lib/notify.js", () => ({
+vi.mock("../../platform/desktop/notify", () => ({
     notify: mockNotify,
 }));
 
-const { OpenRequest } = await import("../open-request.js");
+const { OpenRequest } = await import("../open-request");
 
 function makeSharedAction() {
     const showAlert = vi.fn().mockResolvedValue(undefined);

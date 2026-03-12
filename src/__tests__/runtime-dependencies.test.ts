@@ -12,8 +12,10 @@ async function readPackageJson(path: URL): Promise<PackageJson> {
 
 describe("runtime dependency versions", () => {
     it("root と plugin package.json の puppeteer version を exact match で固定する", async () => {
-        const rootPackage = await readPackageJson(new URL("../../../package.json", import.meta.url));
-        const pluginPackage = await readPackageJson(new URL("../../../com.hrk-m.kot-punch.sdPlugin/package.json", import.meta.url));
+        const rootPackage = await readPackageJson(new URL("../../package.json", import.meta.url));
+        const pluginPackage = await readPackageJson(
+            new URL("../../com.hrk-m.kot-punch.sdPlugin/package.json", import.meta.url),
+        );
 
         const rootPuppeteer = rootPackage.dependencies?.puppeteer;
         const pluginPuppeteer = pluginPackage.dependencies?.puppeteer;
@@ -25,7 +27,7 @@ describe("runtime dependency versions", () => {
     });
 
     it("package script から browser install を実行できる", async () => {
-        const rootPackage = await readPackageJson(new URL("../../../package.json", import.meta.url));
+        const rootPackage = await readPackageJson(new URL("../../package.json", import.meta.url));
 
         expect(rootPackage.scripts?.["generate-manifest"]).toBe("bun scripts/generate-manifest.mts");
         expect(rootPackage.scripts?.["install-browser"]).toBe("bun scripts/install-browser.mts");

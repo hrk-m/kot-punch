@@ -1,23 +1,22 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { mockCreateScope, mockLoggerDebug, mockLoggerError, mockLoggerWarn, mockNotifierNotify } = vi.hoisted(() => ({
-    mockCreateScope: vi.fn(),
+const { mockLoggerDebug, mockLoggerError, mockLoggerWarn, mockNotifierNotify } = vi.hoisted(() => ({
     mockLoggerDebug: vi.fn(),
     mockLoggerError: vi.fn(),
     mockLoggerWarn: vi.fn(),
     mockNotifierNotify: vi.fn(),
 }));
-vi.mock("@elgato/streamdeck", () => ({
-    default: {
-        logger: {
-            createScope: mockCreateScope.mockReturnValue({
-                debug: mockLoggerDebug,
-                error: mockLoggerError,
-                warn: mockLoggerWarn,
-            }),
+
+vi.mock("../../streamdeck/logger", () => ({
+    logger: {
+        notify: {
+            debug: mockLoggerDebug,
+            error: mockLoggerError,
+            warn: mockLoggerWarn,
         },
     },
 }));
+
 vi.mock("node-notifier", () => ({
     default: { notify: mockNotifierNotify },
 }));
@@ -33,7 +32,7 @@ describe("notify", () => {
         notify("出勤打刻が完了しました");
         expect(mockNotifierNotify).toHaveBeenCalledWith(
             { title: "KOT Punch", message: "出勤打刻が完了しました", sender: "com.elgato.StreamDeck" },
-            expect.any(Function)
+            expect.any(Function),
         );
     });
 
@@ -41,7 +40,7 @@ describe("notify", () => {
         notify("申請画面を開きました");
         expect(mockNotifierNotify).toHaveBeenCalledWith(
             { title: "KOT Punch", message: "申請画面を開きました", sender: "com.elgato.StreamDeck" },
-            expect.any(Function)
+            expect.any(Function),
         );
     });
 
@@ -52,7 +51,7 @@ describe("notify", () => {
 
         expect(() => notify("テスト")).not.toThrow();
         expect(mockLoggerWarn).toHaveBeenCalledWith(
-            "Failed to send desktop notification: notification callback failed"
+            "Failed to send desktop notification: notification callback failed",
         );
     });
 
@@ -62,8 +61,6 @@ describe("notify", () => {
         });
 
         expect(() => notify("テスト")).not.toThrow();
-        expect(mockLoggerError).toHaveBeenCalledWith(
-            "Failed to send desktop notification: notification failed"
-        );
+        expect(mockLoggerError).toHaveBeenCalledWith("Failed to send desktop notification: notification failed");
     });
 });
