@@ -119,9 +119,10 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 
 | 依存先 | 用途 |
 |--------|------|
-| `lib/puppeteer.ts` | `punchKot(selector, settings)` — Puppeteer 起動・打刻操作 |
-| `lib/settings.ts` | `getGlobalSettings()` / `hasRequiredPunchSettings()` — 設定取得・バリデーション |
-| `lib/long-press.ts` | `createPressTracker()` / `LONG_PRESS_THRESHOLD_MS` — 2 秒タイマー開始・解除・成立済み状態を管理する共通 helper |
-| `lib/showErrorImage.ts` | `showErrorImage(action)` — エラー画像表示ユーティリティ |
-| `lib/notify.ts` | `notify(message)` — 成功時の macOS 通知（fire-and-forget） |
+| `actions/punch/base-punch-action.ts` | `BasePunchAction` — `ClockIn` / `ClockOut` 共通の `_isProcessing` フラグ・長押し判定・`onKeyDown` / `onKeyUp` をまとめた抽象基底クラス |
+| `services/kot/punch.ts` | `punchKot(selector, settings)` — Puppeteer 起動・打刻操作 |
+| `platform/streamdeck/settings/punch-settings.ts` | `getGlobalSettings()` / `hasRequiredPunchSettings()` — 設定取得・バリデーション |
+| `shared/long-press.ts` | `createPressTracker()` / `LONG_PRESS_THRESHOLD_MS` — 2 秒タイマー開始・解除・成立済み状態を管理する共通 helper |
+| `platform/streamdeck/show-error-image.ts` | `showErrorImage(action)` — エラー画像表示ユーティリティ |
+| `platform/desktop/notify.ts` | `notify(message)` — 成功時の macOS 通知（fire-and-forget） |
 | KING OF TIME（外部） | 打刻対象のウェブサービス |

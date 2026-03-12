@@ -84,8 +84,8 @@ JWT 認証済みの Chrome ウィンドウで KING OF TIME 勤怠画面を開く
 
 | 依存先 | 用途 |
 |--------|------|
-| `lib/puppeteer.ts` | `openKotPage(settings)` — Puppeteer 起動・JWT 認証・disconnect |
-| `lib/settings.ts` | `getGlobalSettings()` / `hasRequiredSettings()` — 設定取得・バリデーション |
-| `lib/showErrorImage.ts` | `showErrorImage(action)` — エラー画像表示ユーティリティ |
-| `lib/notify.ts` | `notify(message)` — 成功時の macOS 通知（fire-and-forget） |
+| `services/kot/open-kot.ts` | `openKotPage(settings)` — Puppeteer 起動・JWT 認証・disconnect |
+| `platform/streamdeck/settings/punch-settings.ts` | `getGlobalSettings()` / `hasRequiredSettings()` — 設定取得・バリデーション |
+| `platform/streamdeck/show-error-image.ts` | `showErrorImage(action)` — エラー画像表示ユーティリティ |
+| `platform/desktop/notify.ts` | `notify(message)` — 成功時の macOS 通知（fire-and-forget） |
 | KING OF TIME（外部） | 表示対象のウェブサービス |

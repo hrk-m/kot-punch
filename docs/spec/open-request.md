@@ -85,8 +85,8 @@
 
 | 依存先 | 用途 |
 |--------|------|
-| `lib/puppeteer.ts` | `openRequestPage(settings)` — Puppeteer 起動・ログイン・disconnect |
-| `lib/settings.ts` | `getRequestSettings()` / `hasRequiredRequestSettings()` — 設定取得・バリデーション |
-| `lib/showErrorImage.ts` | `showErrorImage(action)` — エラー画像表示ユーティリティ |
-| `lib/notify.ts` | `notify(message)` — 成功時の macOS 通知（fire-and-forget） |
+| `services/kot/open-request.ts` | `openRequestPage(settings)` — Puppeteer 起動・ログイン・disconnect |
+| `platform/streamdeck/settings/request-settings.ts` | `getRequestSettings()` / `hasRequiredRequestSettings()` — 設定取得・バリデーション |
+| `platform/streamdeck/show-error-image.ts` | `showErrorImage(action)` — エラー画像表示ユーティリティ |
+| `platform/desktop/notify.ts` | `notify(message)` — 成功時の macOS 通知（fire-and-forget） |
 | 申請画面（外部） | ログイン対象のウェブサービス |

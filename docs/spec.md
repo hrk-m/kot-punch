@@ -40,7 +40,7 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 
 ### macOS システム通知
 
-全 4 アクション（Clock In / Clock Out / Open KOT / Open Request）は、処理成功時に macOS 通知センターへポップアップ通知を送る（`lib/notify.ts` が担当）。
+全 4 アクション（Clock In / Clock Out / Open KOT / Open Request）は、処理成功時に macOS 通知センターへポップアップ通知を送る（`platform/desktop/notify.ts` が担当）。
 
 | アクション | 通知メッセージ |
 |---|---|
