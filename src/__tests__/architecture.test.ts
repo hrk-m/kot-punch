@@ -1,5 +1,4 @@
-import { access } from "node:fs/promises";
-import { readdir, readFile } from "node:fs/promises";
+import { access, readdir, readFile } from "node:fs/promises";
 import { constants } from "node:fs";
 import { describe, expect, it } from "vitest";
 

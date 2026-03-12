@@ -10,10 +10,10 @@ export type LoggerScope = {
 
 // テスト時は空実装に落とす。
 const noop: LoggerScope = {
-    debug: (_msg: string) => {},
-    info: (_msg: string) => {},
-    warn: (_msg: string) => {},
-    error: (_msg: string) => {},
+    debug: () => {},
+    info: () => {},
+    warn: () => {},
+    error: () => {},
 };
 
 // Stream Deck の scoped logger を取る。

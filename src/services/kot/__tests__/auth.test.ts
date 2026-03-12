@@ -67,12 +67,12 @@ describe("openAuthenticatedKotPage", () => {
         });
     });
 
-    it("kotPunchUrl へ 2 回 goto する（domain 確立 → 認証適用）", async () => {
+    it("kotPunchUrl へ 2 回 goto し、認証適用後の再遷移は load 完了まで待つ", async () => {
         await openAuthenticatedKotPage(settings);
 
         expect(mockGoto).toHaveBeenCalledTimes(2);
         expect(mockGoto).toHaveBeenNthCalledWith(1, settings.kotPunchUrl);
-        expect(mockGoto).toHaveBeenNthCalledWith(2, settings.kotPunchUrl);
+        expect(mockGoto).toHaveBeenNthCalledWith(2, settings.kotPunchUrl, { waitUntil: "load" });
     });
 
     it("既存タブを再利用し、不要な newPage を作らない", async () => {

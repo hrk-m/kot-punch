@@ -1,9 +1,11 @@
-import puppeteer from "puppeteer";
+import puppeteer, { type Browser, type Page } from "puppeteer";
 import type { KotPunchSettings } from "../../platform/streamdeck/settings/punch-settings";
 import { logger } from "../../platform/streamdeck/logger";
 
 // 認証済みの KOT ページを用意する。
-export async function openAuthenticatedKotPage(settings: KotPunchSettings) {
+export async function openAuthenticatedKotPage(
+    settings: KotPunchSettings,
+): Promise<{ browser: Browser; page: Page }> {
     const { kotPunchUrl = "", kotPunchKey = "", kotPunchToken = "" } = settings;
 
     // 後続処理へ渡す browser を握る。
@@ -37,7 +39,8 @@ export async function openAuthenticatedKotPage(settings: KotPunchSettings) {
             await dialog.dismiss();
         });
 
-        await page.goto(kotPunchUrl);
+        // dialog 判定は load 待ちとセットで扱う。
+        await page.goto(kotPunchUrl, { waitUntil: "load" });
 
         // dialog は認証失敗として扱う。
         if (hasAuthDialog) {

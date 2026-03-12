@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockOpenAuthenticatedKotPage = vi.fn();
+const mockInfo = vi.fn();
 
 vi.mock("../auth", () => ({
     openAuthenticatedKotPage: mockOpenAuthenticatedKotPage,
@@ -10,7 +11,7 @@ vi.mock("../../../platform/streamdeck/logger", () => ({
     logger: {
         puppeteer: {
             debug: vi.fn(),
-            info: vi.fn(),
+            info: mockInfo,
             warn: vi.fn(),
             error: vi.fn(),
         },
@@ -53,5 +54,22 @@ describe("openKotPage", () => {
             }),
         ).rejects.toBe(disconnectError);
         expect(close).toHaveBeenCalledOnce();
+    });
+
+    it("disconnect 成功後に後続処理で失敗しても close しない", async () => {
+        const logError = new Error("log failed");
+        mockInfo.mockImplementationOnce(() => {
+            throw logError;
+        });
+
+        await expect(
+            openKotPage({
+                kotPunchUrl: "https://example.com",
+                kotPunchKey: "key",
+                kotPunchToken: "token",
+            }),
+        ).rejects.toBe(logError);
+        expect(disconnect).toHaveBeenCalledOnce();
+        expect(close).not.toHaveBeenCalled();
     });
 });
