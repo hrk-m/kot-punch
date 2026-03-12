@@ -5,11 +5,11 @@ import { ClockOut } from "./actions/clock-out";
 import { OpenKot } from "./actions/open-kot";
 import { OpenRequest } from "./actions/open-request";
 
-// Register the clock-in, clock-out, open-kot, and open-request actions.
+// 4 つの action を登録する。
 streamDeck.actions.registerAction(new ClockIn());
 streamDeck.actions.registerAction(new ClockOut());
 streamDeck.actions.registerAction(new OpenKot());
 streamDeck.actions.registerAction(new OpenRequest());
 
-// Finally, connect to the Stream Deck.
+// Stream Deck と接続する。
 streamDeck.connect();
