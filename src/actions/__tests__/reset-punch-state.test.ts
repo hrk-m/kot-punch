@@ -47,6 +47,10 @@ function makeAction(manifestId: string, setState = vi.fn().mockResolvedValue(und
     return { manifestId, isKey: () => true, setState };
 }
 
+function makeNonKeyAction(manifestId: string) {
+    return { manifestId, isKey: () => false, setState: vi.fn() };
+}
+
 function makeKeyUpEvent() {
     return {};
 }
@@ -82,6 +86,17 @@ describe("ResetPunchState", () => {
             await resetPunchState.onKeyUp(makeKeyUpEvent() as never);
 
             expect(mockNotify).toHaveBeenCalledWith("打刻状態(出勤/退勤)をリセットしました");
+        });
+
+        it("isKey() が false のアクションは対象 UUID でも setState されない", async () => {
+            const nonKeyClockIn = makeNonKeyAction("com.hrk-m.kot-punch.clock-in");
+            const nonKeyClockOut = makeNonKeyAction("com.hrk-m.kot-punch.clock-out");
+            setMockActions([nonKeyClockIn, nonKeyClockOut]);
+
+            await resetPunchState.onKeyUp(makeKeyUpEvent() as never);
+
+            expect(nonKeyClockIn.setState).not.toHaveBeenCalled();
+            expect(nonKeyClockOut.setState).not.toHaveBeenCalled();
         });
 
         it("対象外アクション（open-kot / open-request）の setState は呼ばれない", async () => {
