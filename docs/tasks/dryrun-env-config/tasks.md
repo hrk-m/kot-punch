@@ -14,13 +14,13 @@
 
 ### Phase 1.1: 関連実装を調査する
 
-- [ ] `src/platform/streamdeck/settings/punch-settings.ts` を読み、`kotPunchDryRun` の型定義と利用箇所を確認する
-- [ ] `src/services/kot/punch.ts` を読み、`kotPunchDryRun` の参照方法を確認する
-- [ ] `com.hrk-m.kot-punch.sdPlugin/ui/clock-in.html` / `clock-out.html` を読み、dryRun checkbox の記述を確認する
-- [ ] `rollup.config.mjs` を読み、既存の plugins 構成を確認する
-- [ ] `src/services/kot/__tests__/punch.test.ts` を読み、`kotPunchDryRun` を使ったテストケースを洗い出す
-- [ ] `src/platform/streamdeck/settings/__tests__/punch-settings.test.ts` を読み、`kotPunchDryRun` 関連テストを確認する（なし）
-- [ ]* `src/actions/__tests__/clock-in.test.ts` / `clock-out.test.ts` を読み、`kotPunchDryRun` 参照の有無を確認する（なし）
+- [x] `src/platform/streamdeck/settings/punch-settings.ts` を読み、`kotPunchDryRun` の型定義と利用箇所を確認する
+- [x] `src/services/kot/punch.ts` を読み、`kotPunchDryRun` の参照方法を確認する
+- [x] `com.hrk-m.kot-punch.sdPlugin/ui/clock-in.html` / `clock-out.html` を読み、dryRun checkbox の記述を確認する
+- [x] `rollup.config.mjs` を読み、既存の plugins 構成を確認する
+- [x] `src/services/kot/__tests__/punch.test.ts` を読み、`kotPunchDryRun` を使ったテストケースを洗い出す
+- [x] `src/platform/streamdeck/settings/__tests__/punch-settings.test.ts` を読み、`kotPunchDryRun` 関連テストを確認する（なし）
+- [x]* `src/actions/__tests__/clock-in.test.ts` / `clock-out.test.ts` を読み、`kotPunchDryRun` 参照の有無を確認する（なし）
 
 ### Phase 1.2: 変更候補を特定する
 
@@ -38,7 +38,7 @@
 | `src/services/kot/__tests__/punch.test.ts` | 編集 | `kotPunchDryRun` の settings 渡しを `process.env.KOT_PUNCH_DRY_RUN` の設定・クリーンアップに変更する |
 | `src/platform/streamdeck/settings/__tests__/punch-settings.test.ts` | 編集 | `kotPunchDryRun` 関連テストケースを削除する |
 
-- [ ] **CHECKPOINT**: 変更対象ファイルと影響範囲が明確
+- [x] **CHECKPOINT**: 変更対象ファイルと影響範囲が明確
 
 ---
 
@@ -75,20 +75,20 @@ replace({
 
 ### Phase 2.2: 実装する
 
-- [ ] `.env.example` を作成する（内容: `KOT_PUNCH_DRY_RUN=false`）
-- [ ] `.gitignore` に `.env` を追記する
-- [ ] `rollup.config.mjs` に `@rollup/plugin-replace` を追加する
+- [x] `.env.example` を作成する（内容: `KOT_PUNCH_DRY_RUN=false`）
+- [x] `.gitignore` に `.env` を追記する
+- [x] `rollup.config.mjs` に `@rollup/plugin-replace` を追加する
   - `import replace from "@rollup/plugin-replace"` を追加
   - `plugins` 配列の先頭に `replace({ preventAssignment: true, values: { "process.env.KOT_PUNCH_DRY_RUN": JSON.stringify(process.env.KOT_PUNCH_DRY_RUN ?? "false") } })` を追加
-- [ ] `package.json` の devDependencies に `@rollup/plugin-replace` が存在するか確認し、なければ `bun add -D @rollup/plugin-replace` で追加する（v6.0.3 追加済み）
-- [ ] `src/platform/streamdeck/settings/punch-settings.ts` から `kotPunchDryRun?: boolean` を削除する
-- [ ] `src/services/kot/punch.ts` の `settings.kotPunchDryRun` を `process.env.KOT_PUNCH_DRY_RUN === "true"` に置き換える
+- [x] `package.json` の devDependencies に `@rollup/plugin-replace` が存在するか確認し、なければ `bun add -D @rollup/plugin-replace` で追加する（v6.0.3 追加済み）
+- [x] `src/platform/streamdeck/settings/punch-settings.ts` から `kotPunchDryRun?: boolean` を削除する
+- [x] `src/services/kot/punch.ts` の `settings.kotPunchDryRun` を `process.env.KOT_PUNCH_DRY_RUN === "true"` に置き換える
   - 変数名は `dryRun` とし、`const dryRun = process.env.KOT_PUNCH_DRY_RUN === "true";` で宣言する
   - `settings` の分割代入から `kotPunchDryRun` を削除する
-- [ ] `com.hrk-m.kot-punch.sdPlugin/ui/clock-in.html` から dryRun の `<sdpi-item>` ブロックを削除する
-- [ ] `com.hrk-m.kot-punch.sdPlugin/ui/clock-out.html` から dryRun の `<sdpi-item>` ブロックを削除する
-- [ ] `bun run lint && bun run test && bunx tsc --noEmit && bun run build` を実行し、全て pass することを確認する
-- [ ] **CHECKPOINT**: `bun run build` 成功 + `bun run test` 全 pass + checkbox 削除済み
+- [x] `com.hrk-m.kot-punch.sdPlugin/ui/clock-in.html` から dryRun の `<sdpi-item>` ブロックを削除する
+- [x] `com.hrk-m.kot-punch.sdPlugin/ui/clock-out.html` から dryRun の `<sdpi-item>` ブロックを削除する
+- [x] `bun run lint && bun run test && bunx tsc --noEmit && bun run build` を実行し、全て pass することを確認する
+- [x] **CHECKPOINT**: `bun run build` 成功 + `bun run test` 全 pass + checkbox 削除済み
 
 ---
 
@@ -96,7 +96,7 @@ replace({
 
 ### Phase 3.1: テストを更新する
 
-- [ ] `src/services/kot/__tests__/punch.test.ts` の dryRun 関連テストを更新する
+- [x] `src/services/kot/__tests__/punch.test.ts` の dryRun 関連テストを更新する
 
   **変更前** (settings 経由):
   ```ts
@@ -123,9 +123,9 @@ replace({
   | `#leave` + dryRun=true | `process.env.KOT_PUNCH_DRY_RUN = "true"` 設定済み | `punchKot("#leave", settings)` 呼び出し | `#leave` クリック・`disconnect` 1 回 |
   | エスケープ + dryRun=true | `process.env.KOT_PUNCH_DRY_RUN = "true"` 設定済み | 特殊文字ユーザー名で `punchKot` 呼び出し | CSS セレクタがエスケープされる |
 
-- [ ] `src/platform/streamdeck/settings/__tests__/punch-settings.test.ts` から `kotPunchDryRun` 関連のテストケースを削除する（対象テスト自体なし）
-- [ ] `bun run test` を再実行し、全テストが pass することを確認する（101 tests passed）
-- [ ] **CHECKPOINT**: 主要ユースケース（dryRun on/off・`#attend`/`#leave`・特殊文字）がテストで再現可能
+- [x] `src/platform/streamdeck/settings/__tests__/punch-settings.test.ts` から `kotPunchDryRun` 関連のテストケースを削除する（対象テスト自体なし）
+- [x] `bun run test` を再実行し、全テストが pass することを確認する（101 tests passed）
+- [x] **CHECKPOINT**: 主要ユースケース（dryRun on/off・`#attend`/`#leave`・特殊文字）がテストで再現可能
 
 ### Phase 3.2: 最終検証
 

@@ -43,7 +43,7 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 | `services/kot/__tests__/` | サービス層のユニットテスト（vitest） |
 | `platform/streamdeck/logger.ts` | Stream Deck SDK の scoped logger ラッパー。未接続やテスト環境では no-op logger を返し、アクション/サービスから同じ API で安全にログ出力できるようにする |
 | `platform/streamdeck/show-error-image.ts` | 共通エラー表示ユーティリティ。エラー画像を 3 秒表示し元の画像に戻す。フォールバックで `showAlert()` |
-| `platform/streamdeck/settings/punch-settings.ts` | `KotPunchSettings` 型定義（`kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` / `kotPunchDryRun`）・`getGlobalSettings()` / `hasRequiredSettings()` / `hasRequiredPunchSettings()` を提供 |
+| `platform/streamdeck/settings/punch-settings.ts` | `KotPunchSettings` 型定義（`kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword`）・`getGlobalSettings()` / `hasRequiredSettings()` / `hasRequiredPunchSettings()` を提供 |
 | `platform/streamdeck/settings/request-settings.ts` | `RequestSettings` 型定義（`requestUrl` / `requestUsername` / `requestPassword`）・`getRequestSettings()` / `hasRequiredRequestSettings()` を提供 |
 | `platform/streamdeck/__tests__/` | Stream Deck プラットフォーム層のユニットテスト（vitest） |
 | `platform/streamdeck/settings/__tests__/` | 設定ヘルパーのユニットテスト（vitest） |
@@ -51,7 +51,7 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 | `platform/desktop/__tests__/` | デスクトップ層のユニットテスト（vitest） |
 | `shared/long-press.ts` | 打刻ボタンの 2 秒長押し判定 helper。action instance ごとの `id` をキーに 2 秒タイマー、成立済みフラグ、解除処理を保持する `createPressTracker()` と `LONG_PRESS_THRESHOLD_MS` を提供 |
 | `shared/__tests__/` | shared 層のユニットテスト（vitest） |
-| `__tests__/` | リポジトリレベルのテスト。アーキテクチャ構造確認（`architecture.test.ts`）・manifest 生成回帰（`manifest.test.ts` / `manifest-template.test.ts`）・ランタイム依存バージョン固定（`runtime-dependencies.test.ts`） |
+| `__tests__/` | リポジトリレベルのテスト。アーキテクチャ構造確認（`architecture.test.ts`）・manifest 生成回帰（`manifest.test.ts` / `manifest-template.test.ts`）・ランタイム依存バージョン固定（`runtime-dependencies.test.ts`）・Node.js バージョン統一確認（`node-version-config.test.ts`） |
 
 ### リポジトリルート
 
@@ -60,7 +60,8 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 | `manifest.template.json` | プラグイン manifest のテンプレート兼 source of truth。各アクション定義と表示名をそのまま保持する |
 | `scripts/generate-manifest.mts` | `manifest.template.json` を `com.hrk-m.kot-punch.sdPlugin/manifest.json` へコピーする生成スクリプト。CLI からの実行に加えて `generateManifest(rootDir)` を export し、テンポラリディレクトリを使う unit test からも再利用できる |
 | `scripts/install-browser.mts` | Puppeteer が管理する Chrome for Testing を自動インストールするスクリプト。`ensureChromeInstalled(rootDir)` をエクスポートし、実行ファイルが存在しない場合のみ `bunx puppeteer browsers install chrome` を実行する。`postinstall` フックで `bun install` 時に自動実行される |
-| `rollup.config.mjs` | plugin bundle の出力設定。単一ファイル化、minify、external 依存の維持、`bin/package.json` の emit を担当 |
+| `rollup.config.mjs` | plugin bundle の出力設定。単一ファイル化、minify、external 依存の維持、`bin/package.json` の emit を担当。`@rollup/plugin-replace` で `process.env.KOT_PUNCH_DRY_RUN` をビルド時に inline 展開する（`.env` の値を使用、デフォルト `"true"`） |
+| `.env` | ローカル環境設定（gitignore 対象）。`KOT_PUNCH_DRY_RUN=true\|false` で dryRun モードを制御する。`.env.example` がサンプルとしてコミット済み |
 
 ### `com.hrk-m.kot-punch.sdPlugin/`
 
@@ -135,5 +136,6 @@ Stream Deck SDK には `ev.payload.isInMultiAction` / `ev.payload.userDesiredSta
 - `src/platform/desktop/__tests__/notify.test.ts` では `node-notifier` をモックし、通知送信の callback error と同期例外が呼び出し元へ伝播しないことを固定する
 - ランタイム依存バージョンは `src/__tests__/runtime-dependencies.test.ts` で固定する。`package.json`（ルート）と `com.hrk-m.kot-punch.sdPlugin/package.json` の `puppeteer` バージョンが完全一致し、かつ `generate-manifest` / `install-browser` / `postinstall` の各スクリプトが正しく定義されていることを検証する
 - ディレクトリ構造の整合性は `src/__tests__/architecture.test.ts` で保証する。新ディレクトリ（`services/` / `platform/` / `shared/`）のファイル存在と旧 `lib/` ファイルの不在、TypeScript 相対 import に `.js` 拡張子が使われていないことを自動検証する
+- Node.js バージョンの統一は `src/__tests__/node-version-config.test.ts` で固定する。`.node-version` / `.tool-versions` / `package.json`（`@types/node`）/ `manifest.template.json` / `manifest.json` の各 Node.js バージョンが 24 系で一致していることを検証する
 - `src/actions/punch/base-punch-action.typecheck.ts` で `BasePunchAction` の `SingletonAction<KotPunchSettings>` 継承と、`onKeyDown` / `onKeyUp` のイベント型が `KotPunchSettings` と一致することを型レベルで固定する
 - テストフレームワーク: vitest
