@@ -27,7 +27,7 @@ const config = {
 		replace({
 			preventAssignment: true,
 			values: {
-				"process.env.KOT_PUNCH_DRY_RUN": JSON.stringify(process.env.KOT_PUNCH_DRY_RUN ?? "true"),
+				"process.env.KOT_PUNCH_DRY_RUN": JSON.stringify(process.env.KOT_PUNCH_DRY_RUN ?? "false"),
 			},
 		}),
 		typescript({ tsconfig: "./tsconfig.build.json" }),
