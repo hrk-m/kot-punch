@@ -20,6 +20,10 @@
 - `リセット`: 出勤・退勤ボタンの打刻済み state を未打刻に戻す
 - 各アクション成功時に macOS 通知を表示
 
+## 配置サンプル
+
+![Stream Deck 配置サンプル](./docs/imgs/layout-sample.jpg)
+
 ## インストール
 
 現行リポジトリは Marketplace 配布ではなく、ローカルビルドして `sdPlugin` ディレクトリを配置する前提です。
