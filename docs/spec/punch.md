@@ -9,6 +9,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 ## 前提条件
 
 - グローバル設定に `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` が設定済みであること
+- `kotPunchHeadless` は任意（未設定 / `false` のときブラウザが表示される。`true` のときブラウザが非表示で起動する）
 - Stream Deck プラグインが起動していること
 
 ---
@@ -19,7 +20,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 |------|----|------|
 | 入力: `onKeyDown` イベント | `KeyDownEvent` | Stream Deck のキー押下開始操作。長押し判定の起点 |
 | 入力: `onKeyUp` イベント | `KeyUpEvent` | Stream Deck のキー離し操作 |
-| 入力: グローバル設定 | `KotPunchSettings` | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` |
+| 入力: グローバル設定 | `KotPunchSettings` | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` / `kotPunchHeadless`（任意） |
 | 入力: 環境変数 | `process.env.KOT_PUNCH_DEBUG` | `"true"` のとき dryRun 有効（submit スキップ）。ビルド時に inline 展開される（デフォルト `"false"`） |
 | 出力 | `void` | 副作用として打刻を実行し、UI 状態を更新する |
 
@@ -48,7 +49,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
   ├─ グローバル設定取得
   ├─ 必須項目チェック → 未入力なら showAlert()
   │
-  └─ Puppeteer 起動
+  └─ Puppeteer 起動（kotPunchHeadless=true なら非表示、false/未設定なら可視）
        ├─ JWT トークンをセット
        ├─ 打刻ページに遷移
        ├─ ユーザー選択・パスワード入力

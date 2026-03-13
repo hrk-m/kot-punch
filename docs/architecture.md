@@ -43,7 +43,7 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 | `services/kot/__tests__/` | サービス層のユニットテスト（vitest） |
 | `platform/streamdeck/logger.ts` | Stream Deck SDK の scoped logger ラッパー。未接続やテスト環境では no-op logger を返し、アクション/サービスから同じ API で安全にログ出力できるようにする |
 | `platform/streamdeck/show-error-image.ts` | 共通エラー表示ユーティリティ。エラー画像を 3 秒表示し元の画像に戻す。フォールバックで `showAlert()` |
-| `platform/streamdeck/settings/punch-settings.ts` | `KotPunchSettings` 型定義（`kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword`）・`getGlobalSettings()` / `hasRequiredSettings()` / `hasRequiredPunchSettings()` を提供 |
+| `platform/streamdeck/settings/punch-settings.ts` | `KotPunchSettings` 型定義（`kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` / `kotPunchHeadless`）・`getGlobalSettings()` / `hasRequiredSettings()` / `hasRequiredPunchSettings()` を提供 |
 | `platform/streamdeck/settings/request-settings.ts` | `RequestSettings` 型定義（`requestUrl` / `requestUsername` / `requestPassword`）・`getRequestSettings()` / `hasRequiredRequestSettings()` を提供 |
 | `platform/streamdeck/__tests__/` | Stream Deck プラットフォーム層のユニットテスト（vitest） |
 | `platform/streamdeck/settings/__tests__/` | 設定ヘルパーのユニットテスト（vitest） |
@@ -116,7 +116,7 @@ Stream Deck SDK には `ev.payload.isInMultiAction` / `ev.payload.userDesiredSta
 ### Property Inspector パターン
 
 - 現行の `ui/*.html` はすべて `global setting` のみを扱い、アクション個別設定は持たない
-- `clock-in.html` / `clock-out.html` は同じ KOT 打刻設定セットを共有し、差分は表示文言のみ
+- `clock-in.html` / `clock-out.html` は同じ KOT 打刻設定セット（URL / Key / Token / Username / Password / ヘッドレス）を共有し、差分は表示文言のみ
 - `open-kot.html` は KOT 認証に必要な最小 3 項目だけを露出する
 - `open-request.html` は申請画面ログイン専用の URL / ユーザー ID / パスワードだけを扱う
 
