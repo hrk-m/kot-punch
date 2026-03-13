@@ -7,7 +7,7 @@ export async function openKotPage(settings: KotPunchSettings): Promise<void> {
     let browser;
     try {
         // 認証済みページを作ってブラウザを切り離す。
-        ({ browser } = await openAuthenticatedKotPage(settings));
+        ({ browser } = await openAuthenticatedKotPage({ ...settings, kotPunchHeadless: false }));
         await browser.disconnect();
         browser = undefined;
         logger.puppeteer.info("kot page opened");

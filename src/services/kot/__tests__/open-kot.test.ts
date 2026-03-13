@@ -42,6 +42,22 @@ describe("openKotPage", () => {
         expect(close).not.toHaveBeenCalled();
     });
 
+    it("kotPunchHeadless=true を渡しても open-kot は headless:false で認証ページを開く", async () => {
+        await openKotPage({
+            kotPunchUrl: "https://example.com",
+            kotPunchKey: "key",
+            kotPunchToken: "token",
+            kotPunchHeadless: true,
+        });
+
+        expect(mockOpenAuthenticatedKotPage).toHaveBeenCalledWith({
+            kotPunchUrl: "https://example.com",
+            kotPunchKey: "key",
+            kotPunchToken: "token",
+            kotPunchHeadless: false,
+        });
+    });
+
     it("disconnect に失敗したら browser.close() でクリーンアップして rethrow する", async () => {
         const disconnectError = new Error("disconnect failed");
         disconnect.mockRejectedValueOnce(disconnectError);
