@@ -20,6 +20,10 @@
 - `リセット`: 出勤・退勤ボタンの打刻済み state を未打刻に戻す
 - 各アクション成功時に macOS 通知を表示
 
+## ドキュメント(自動生成)
+
+- [docs/spec.md](./docs/spec.md): アプリ全体の機能要件
+
 ## 配置サンプル
 
 <img src="./docs/imgs/layout-sample.jpg" width="300" alt="Stream Deck 配置サンプル">
@@ -153,11 +157,3 @@ bun run build
 ```bash
 bun run logs
 ```
-
-## ドキュメント
-
-- [docs/spec.md](./docs/spec.md): アプリ全体の機能要件・グローバル設定・アクション一覧
-- [docs/spec/punch.md](./docs/spec/punch.md): 打刻ボタンの詳細仕様
-- [docs/spec/open-kot.md](./docs/spec/open-kot.md): Open KOT の詳細仕様
-- [docs/spec/open-request.md](./docs/spec/open-request.md): Open Request の詳細仕様
-- [docs/architecture.md](./docs/architecture.md): ディレクトリ構成・実装責務・テスト戦略
