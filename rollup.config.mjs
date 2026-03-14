@@ -4,8 +4,28 @@ import nodeResolve from "@rollup/plugin-node-resolve";
 import replace from "@rollup/plugin-replace";
 import terser from "@rollup/plugin-terser";
 import typescript from "@rollup/plugin-typescript";
+import { join } from "node:path";
+import { loadEnvFile } from "node:process";
 
 const sdPlugin = "com.hrk-m.kot-punch.sdPlugin";
+
+export function resolveKotPunchDebugValue(rootDir = process.cwd()) {
+	if (process.env.KOT_PUNCH_DEBUG !== undefined) {
+		return process.env.KOT_PUNCH_DEBUG;
+	}
+
+	try {
+		loadEnvFile(join(rootDir, ".env"));
+	} catch (error) {
+		if (!(error instanceof Error) || !("code" in error) || error.code !== "ENOENT") {
+			throw error;
+		}
+	}
+
+	return process.env.KOT_PUNCH_DEBUG ?? "false";
+}
+
+const kotPunchDebugValue = resolveKotPunchDebugValue();
 
 /**
  * @type {import('rollup').RollupOptions}
@@ -27,7 +47,7 @@ const config = {
 		replace({
 			preventAssignment: true,
 			values: {
-				"process.env.KOT_PUNCH_DEBUG": JSON.stringify(process.env.KOT_PUNCH_DEBUG ?? "false"),
+				"process.env.KOT_PUNCH_DEBUG": JSON.stringify(kotPunchDebugValue),
 			},
 		}),
 		typescript({ tsconfig: "./tsconfig.build.json" }),
