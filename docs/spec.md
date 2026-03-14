@@ -36,7 +36,9 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 
 **dryRun 設定**:
 - `kotPunchDryRun` は廃止。代わりにプロジェクトルートの `.env` で `KOT_PUNCH_DEBUG=true|false` を設定する
-- ビルド時（`bun run build`）に Rollup が値を inline 展開する。デフォルト（未設定）は `false`（本番打刻有効）
+- ビルド時（`bun run build`）に `rollup.config.mjs` の `resolveKotPunchDebugValue()` が debug 値を解決し、Rollup が値を inline 展開する
+- `process.env.KOT_PUNCH_DEBUG` が明示されている場合はその値を優先し、未設定時のみプロジェクトルートの `.env` を読む
+- デフォルト（`process.env` / `.env` とも未設定）は `false`（本番打刻有効）
 - 動作確認（submit スキップ）をしたい場合は `.env` に `KOT_PUNCH_DEBUG=true` を設定して再ビルドする
 
 ---

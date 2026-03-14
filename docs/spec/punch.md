@@ -21,7 +21,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 | 入力: `onKeyDown` イベント | `KeyDownEvent` | Stream Deck のキー押下開始操作。長押し判定の起点 |
 | 入力: `onKeyUp` イベント | `KeyUpEvent` | Stream Deck のキー離し操作 |
 | 入力: グローバル設定 | `KotPunchSettings` | `kotPunchUrl` / `kotPunchKey` / `kotPunchToken` / `kotPunchUsername` / `kotPunchPassword` / `kotPunchHeadless`（任意） |
-| 入力: 環境変数 | `process.env.KOT_PUNCH_DEBUG` | `"true"` のとき dryRun 有効（submit スキップ）。ビルド時に inline 展開される（デフォルト `"false"`） |
+| 入力: ビルド時 debug 設定 | `process.env.KOT_PUNCH_DEBUG` / `.env` | `resolveKotPunchDebugValue()` が `"true"` を解決したとき dryRun 有効（submit スキップ）。`process.env` を優先し、未設定時のみ `.env` を読む。ビルド時に inline 展開される（既定値 `"false"`） |
 | 出力 | `void` | 副作用として打刻を実行し、UI 状態を更新する |
 
 ---
@@ -83,7 +83,7 @@ Stream Deck のボタンを押すだけで出勤・退勤打刻を実行する�
 ## 制約・非機能要件
 
 - 連打防止: `_isProcessing` フラグで処理中の重複実行を防ぐ
-- dryRun モード: `.env` の `KOT_PUNCH_DEBUG=true` でビルドした場合は submit をスキップし、パスワード入力まで確認できる状態でブラウザを切断する。デフォルト（未設定）および `.env.example` コピー直後は `false`（本番打刻有効）
+- dryRun モード: `process.env.KOT_PUNCH_DEBUG` または `.env` で `KOT_PUNCH_DEBUG=true` を解決してビルドした場合は submit をスキップし、パスワード入力まで確認できる状態でブラウザを切断する。`process.env` を優先し、未設定時のみ `.env` を読む。デフォルト（未設定）および `.env.example` コピー直後は `false`（本番打刻有効）
 - State はセッション内のみ保持（プラグイン再起動でリセット）、当日限りの打刻管理として意図的に非永続化
 - 長押しの閾値は 2 秒固定で、2 秒到達前のタイトル変更や進捗表示は行わない
 - Multi-Action は未対応: `manifest.template.json` で `SupportedInMultiActions: false` を設定し、状態遷移は単体キー押下だけを前提にする

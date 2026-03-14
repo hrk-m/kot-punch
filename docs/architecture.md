@@ -51,7 +51,7 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 | `platform/desktop/__tests__/` | デスクトップ層のユニットテスト（vitest） |
 | `shared/long-press.ts` | 打刻ボタンの 2 秒長押し判定 helper。action instance ごとの `id` をキーに 2 秒タイマー、成立済みフラグ、解除処理を保持する `createPressTracker()` と `LONG_PRESS_THRESHOLD_MS` を提供 |
 | `shared/__tests__/` | shared 層のユニットテスト（vitest） |
-| `__tests__/` | リポジトリレベルのテスト。アーキテクチャ構造確認（`architecture.test.ts`）・manifest 生成回帰（`manifest.test.ts` / `manifest-template.test.ts`）・ランタイム依存バージョン固定（`runtime-dependencies.test.ts`）・Node.js バージョン統一確認（`node-version-config.test.ts`） |
+| `__tests__/` | リポジトリレベルのテスト。アーキテクチャ構造確認（`architecture.test.ts`）・manifest 生成回帰（`manifest.test.ts` / `manifest-template.test.ts`）・ランタイム依存バージョン固定（`runtime-dependencies.test.ts`）・Node.js バージョン統一確認（`node-version-config.test.ts`）・Rollup config の `resolveKotPunchDebugValue` 単体検証（`rollup-config.test.ts`） |
 
 ### リポジトリルート
 
@@ -60,7 +60,8 @@ com.hrk-m.kot-punch.sdPlugin/package.json
 | `manifest.template.json` | プラグイン manifest のテンプレート兼 source of truth。各アクション定義と表示名をそのまま保持する |
 | `scripts/generate-manifest.mts` | `manifest.template.json` を `com.hrk-m.kot-punch.sdPlugin/manifest.json` へコピーする生成スクリプト。CLI からの実行に加えて `generateManifest(rootDir)` を export し、テンポラリディレクトリを使う unit test からも再利用できる |
 | `scripts/install-browser.mts` | Puppeteer が管理する Chrome for Testing を自動インストールするスクリプト。`ensureChromeInstalled(rootDir)` をエクスポートし、実行ファイルが存在しない場合のみ `bunx puppeteer browsers install chrome` を実行する。`postinstall` フックで `bun install` 時に自動実行される |
-| `rollup.config.mjs` | plugin bundle の出力設定。単一ファイル化、minify、external 依存の維持、`bin/package.json` の emit を担当。`@rollup/plugin-replace` で `process.env.KOT_PUNCH_DEBUG` をビルド時に inline 展開する（`.env` の値を使用、デフォルト `"false"`） |
+| `rollup.config.mjs` | plugin bundle の出力設定。単一ファイル化、minify、external 依存の維持、`bin/package.json` の emit を担当。`@rollup/plugin-replace` で `process.env.KOT_PUNCH_DEBUG` をビルド時に inline 展開する。`resolveKotPunchDebugValue(rootDir?)` は `process.env.KOT_PUNCH_DEBUG` を優先し、未設定時のみ `loadEnvFile()` でプロジェクトルートの `.env` を読み、どちらにも値がなければ `"false"` を返す。テストから再利用できる named export でもある |
+| `rollup.config.d.mts` | `rollup.config.mjs` の TypeScript 型宣言ファイル。`resolveKotPunchDebugValue` の型を提供し、テストが型安全に import できるようにする |
 | `.env` | ローカル環境設定（gitignore 対象）。`KOT_PUNCH_DEBUG=true\|false` で dryRun モードを制御する。デフォルト・`.env.example` コピー直後は `false`（本番打刻有効）。動作確認時のみ `true` に変更して再ビルドする。`.env.example` がサンプルとしてコミット済み |
 
 ### `com.hrk-m.kot-punch.sdPlugin/`
@@ -138,5 +139,6 @@ Stream Deck SDK には `ev.payload.isInMultiAction` / `ev.payload.userDesiredSta
 - ランタイム依存バージョンは `src/__tests__/runtime-dependencies.test.ts` で固定する。`package.json`（ルート）と `com.hrk-m.kot-punch.sdPlugin/package.json` の `puppeteer` バージョンが完全一致し、かつ `generate-manifest` / `install-browser` / `postinstall` の各スクリプトが正しく定義されていることを検証する
 - ディレクトリ構造の整合性は `src/__tests__/architecture.test.ts` で保証する。新ディレクトリ（`services/` / `platform/` / `shared/`）のファイル存在と旧 `lib/` ファイルの不在、TypeScript 相対 import に `.js` 拡張子が使われていないことを自動検証する
 - Node.js バージョンの統一は `src/__tests__/node-version-config.test.ts` で固定する。`.node-version` / `.tool-versions` / `package.json`（`@types/node`）/ `manifest.template.json` / `manifest.json` の各 Node.js バージョンが 24 系で一致していることを検証する
+- `rollup.config.mjs` の `resolveKotPunchDebugValue` は `src/__tests__/rollup-config.test.ts` で単体テストする。`.env` ファイルの有無・`process.env.KOT_PUNCH_DEBUG` の有無に応じた返り値をテンポラリディレクトリを使って検証する
 - `src/actions/punch/base-punch-action.typecheck.ts` で `BasePunchAction` の `SingletonAction<KotPunchSettings>` 継承と、`onKeyDown` / `onKeyUp` のイベント型が `KotPunchSettings` と一致することを型レベルで固定する
 - テストフレームワーク: vitest
