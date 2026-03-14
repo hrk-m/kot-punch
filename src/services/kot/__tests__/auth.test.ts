@@ -165,22 +165,26 @@ describe("openAuthenticatedKotPage", () => {
             });
         });
 
-        it("kotPunchHeadless に文字列が混入したときは headless:false に正規化する", async () => {
+        it('kotPunchHeadless が文字列 "true" のとき headless:true に正規化する', async () => {
             await openAuthenticatedKotPage({
                 ...settings,
                 kotPunchHeadless: "true" as unknown as boolean,
             });
+
+            expect(mockLaunch).toHaveBeenCalledWith({
+                headless: true,
+                defaultViewport: null,
+                args: ["--start-maximized"],
+            });
+        });
+
+        it('kotPunchHeadless が文字列 "false" のとき headless:false に正規化する', async () => {
             await openAuthenticatedKotPage({
                 ...settings,
                 kotPunchHeadless: "false" as unknown as boolean,
             });
 
-            expect(mockLaunch).toHaveBeenNthCalledWith(1, {
-                headless: false,
-                defaultViewport: null,
-                args: ["--start-maximized"],
-            });
-            expect(mockLaunch).toHaveBeenNthCalledWith(2, {
+            expect(mockLaunch).toHaveBeenCalledWith({
                 headless: false,
                 defaultViewport: null,
                 args: ["--start-maximized"],
