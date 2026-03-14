@@ -19,17 +19,18 @@ Stream Deck のグローバル設定で以下を管理する。設定は全ア�
 | `kotPunchToken` | string | JWT トークンの Value |
 | `kotPunchUsername` | string | 打刻ユーザー名 |
 | `kotPunchPassword` | string | 打刻パスワード |
+| `kotPunchHeadless` | boolean | ヘッドレスモード（true=ブラウザ非表示で打刻、false/未設定=ブラウザ表示） |
 | `requestUrl` | string | 申請画面ログイン URL |
 | `requestUsername` | string | 申請画面ログインユーザー名 |
 | `requestPassword` | string | 申請画面ログインパスワード |
 
 **必須項目の区分**:
 - Open KOT: `kotPunchUrl`, `kotPunchKey`, `kotPunchToken`
-- 打刻（Clock In / Clock Out）: 上記 3 項目 + `kotPunchUsername`, `kotPunchPassword`
+- 打刻（Clock In / Clock Out）: 上記 3 項目 + `kotPunchUsername`, `kotPunchPassword`（任意: `kotPunchHeadless`）
 - Open Request: `requestUrl`, `requestUsername`, `requestPassword`
 
 **Property Inspector の設定分担**:
-- `ui/clock-in.html` / `ui/clock-out.html`: 打刻用 KOT 設定一式（URL / Key / Token / Username / Password）
+- `ui/clock-in.html` / `ui/clock-out.html`: 打刻用 KOT 設定一式（URL / Key / Token / Username / Password / ヘッドレスモード）
 - `ui/open-kot.html`: KOT 認証に必要な 3 項目のみ
 - `ui/open-request.html`: 申請画面用の 3 項目のみ
 

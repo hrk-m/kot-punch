@@ -7,14 +7,15 @@ export async function openAuthenticatedKotPage(
     settings: KotPunchSettings,
 ): Promise<{ browser: Browser; page: Page }> {
     const { kotPunchUrl = "", kotPunchKey = "", kotPunchToken = "" } = settings;
+    const headless = String(settings.kotPunchHeadless) === "true";
 
     // 後続処理へ渡す browser を握る。
     let browser;
     try {
-        // ブラウザを可視モードで起動する。
+        // 設定に応じたモード（可視/非可視）でブラウザを起動する。
         logger.puppeteer.debug("launching browser");
         browser = await puppeteer.launch({
-            headless: false,
+            headless,
             defaultViewport: null,
             args: ["--start-maximized"],
         });

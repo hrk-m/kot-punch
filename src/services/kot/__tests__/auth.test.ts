@@ -133,4 +133,62 @@ describe("openAuthenticatedKotPage", () => {
         await expect(openAuthenticatedKotPage(settings)).rejects.toBe(navigationError);
         expect(mockClose).toHaveBeenCalledOnce();
     });
+
+    describe("kotPunchHeadless オプション", () => {
+        it("kotPunchHeadless=true のとき launch が headless:true で呼ばれる", async () => {
+            await openAuthenticatedKotPage({ ...settings, kotPunchHeadless: true });
+
+            expect(mockLaunch).toHaveBeenCalledWith({
+                headless: true,
+                defaultViewport: null,
+                args: ["--start-maximized"],
+            });
+        });
+
+        it("kotPunchHeadless=false のとき launch が headless:false で呼ばれる", async () => {
+            await openAuthenticatedKotPage({ ...settings, kotPunchHeadless: false });
+
+            expect(mockLaunch).toHaveBeenCalledWith({
+                headless: false,
+                defaultViewport: null,
+                args: ["--start-maximized"],
+            });
+        });
+
+        it("kotPunchHeadless が未設定のとき launch が headless:false で呼ばれる", async () => {
+            await openAuthenticatedKotPage(settings);
+
+            expect(mockLaunch).toHaveBeenCalledWith({
+                headless: false,
+                defaultViewport: null,
+                args: ["--start-maximized"],
+            });
+        });
+
+        it('kotPunchHeadless が文字列 "true" のとき headless:true に正規化する', async () => {
+            await openAuthenticatedKotPage({
+                ...settings,
+                kotPunchHeadless: "true" as unknown as boolean,
+            });
+
+            expect(mockLaunch).toHaveBeenCalledWith({
+                headless: true,
+                defaultViewport: null,
+                args: ["--start-maximized"],
+            });
+        });
+
+        it('kotPunchHeadless が文字列 "false" のとき headless:false に正規化する', async () => {
+            await openAuthenticatedKotPage({
+                ...settings,
+                kotPunchHeadless: "false" as unknown as boolean,
+            });
+
+            expect(mockLaunch).toHaveBeenCalledWith({
+                headless: false,
+                defaultViewport: null,
+                args: ["--start-maximized"],
+            });
+        });
+    });
 });
