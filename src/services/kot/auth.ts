@@ -7,6 +7,7 @@ export async function openAuthenticatedKotPage(
     settings: KotPunchSettings,
 ): Promise<{ browser: Browser; page: Page }> {
     const { kotPunchUrl = "", kotPunchKey = "", kotPunchToken = "" } = settings;
+    const headless = settings.kotPunchHeadless === true;
 
     // 後続処理へ渡す browser を握る。
     let browser;
@@ -14,7 +15,7 @@ export async function openAuthenticatedKotPage(
         // ブラウザを可視モードで起動する。
         logger.puppeteer.debug("launching browser");
         browser = await puppeteer.launch({
-            headless: settings.kotPunchHeadless ?? false,
+            headless,
             defaultViewport: null,
             args: ["--start-maximized"],
         });

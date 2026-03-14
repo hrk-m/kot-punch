@@ -164,5 +164,27 @@ describe("openAuthenticatedKotPage", () => {
                 args: ["--start-maximized"],
             });
         });
+
+        it("kotPunchHeadless に文字列が混入したときは headless:false に正規化する", async () => {
+            await openAuthenticatedKotPage({
+                ...settings,
+                kotPunchHeadless: "true" as unknown as boolean,
+            });
+            await openAuthenticatedKotPage({
+                ...settings,
+                kotPunchHeadless: "false" as unknown as boolean,
+            });
+
+            expect(mockLaunch).toHaveBeenNthCalledWith(1, {
+                headless: false,
+                defaultViewport: null,
+                args: ["--start-maximized"],
+            });
+            expect(mockLaunch).toHaveBeenNthCalledWith(2, {
+                headless: false,
+                defaultViewport: null,
+                args: ["--start-maximized"],
+            });
+        });
     });
 });
